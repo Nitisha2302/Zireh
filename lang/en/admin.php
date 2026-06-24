@@ -183,5 +183,5 @@ return [
     'action' => 'Action',
     'address' => 'Address',
     'date_of_birth' => 'Date of Birth',
-    'plateforms' => 'Platforms',
+    'platforms' => 'Platforms',
 ];

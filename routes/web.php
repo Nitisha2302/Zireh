@@ -2,7 +2,7 @@
 
 use App\Http\Controllers\PublicController;
 use App\Livewire\Admin\DashboardPage;
-use App\Livewire\Admin\Plateform\PlateformListPage;
+use App\Livewire\Admin\Platform\{PlatformListPage, PlatformCreatePage, PlatformEditPage};
 use App\Livewire\Admin\ProfilePage;
 use App\Livewire\Admin\Settings\DiditSettingsPage;
 use App\Livewire\Admin\Settings\FileManagerSettingsPage;
@@ -28,5 +28,7 @@ Route::prefix('admin')->name('admin.')->middleware(['is_auth:admin'])->group(fun
     Route::get('settings/file-manager', FileManagerSettingsPage::class)->name('settings.file-manager');
     Route::get('settings/privacy-terms', PrivacyTermsSettingsPage::class)->name('settings.privacy-terms');
 
-    Route::get('plateforms', PlateformListPage::class)->name('platforms');
+    Route::get('platforms', PlatformListPage::class)->name('platforms.index');
+    Route::get('platforms/create', PlatformCreatePage::class)->name('platforms.create');
+    Route::get('platforms/{plateform}/edit', PlatformEditPage::class)->name('platforms.edit');
 });
