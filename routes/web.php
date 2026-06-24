@@ -3,6 +3,7 @@
 use App\Http\Controllers\PublicController;
 use App\Livewire\Admin\DashboardPage;
 use App\Livewire\Admin\Platform\{PlatformListPage, PlatformCreatePage, PlatformEditPage};
+use App\Livewire\Admin\PlatformSlider\{PlatformSliderListPage, PlatformSliderCreatePage, PlatformSliderEditPage};
 use App\Livewire\Admin\ProfilePage;
 use App\Livewire\Admin\Settings\DiditSettingsPage;
 use App\Livewire\Admin\Settings\FileManagerSettingsPage;
@@ -31,4 +32,7 @@ Route::prefix('admin')->name('admin.')->middleware(['is_auth:admin'])->group(fun
     Route::get('platforms', PlatformListPage::class)->name('platforms.index');
     Route::get('platforms/create', PlatformCreatePage::class)->name('platforms.create');
     Route::get('platforms/{plateform}/edit', PlatformEditPage::class)->name('platforms.edit');
+    Route::get('platform-sliders', PlatformSliderListPage::class)->name('platform-sliders.index');
+    Route::get('platform-sliders/create', PlatformSliderCreatePage::class)->name('platform-sliders.create');
+    Route::get('platform-sliders/{platformSlider}/edit', PlatformSliderEditPage::class)->name('platform-sliders.edit');
 });

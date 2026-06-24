@@ -184,4 +184,5 @@ return [
     'address' => 'Address',
     'date_of_birth' => 'Date of Birth',
     'platforms' => 'Platforms',
+    'profile_description' => 'Profile description',
 ];
