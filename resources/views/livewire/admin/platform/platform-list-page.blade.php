@@ -30,6 +30,7 @@
                         <th width="180">Created</th>
                         <th width="100"></th>
                     </tr>
+                    {{-- @include('livewire.admin.partials._table-header') --}}
                 </thead>
                 <tbody>
                     @forelse($platforms as $platform)

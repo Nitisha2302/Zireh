@@ -124,4 +124,5 @@ return [
     'address' => 'Адрес',
     'date_of_birth' => 'Дата рождения',
     'platforms' => 'Платформа',
+    'profile_description'  => 'Описание профиля',
 ];

@@ -149,4 +149,5 @@ return [
     'address' => 'Суроға',
     'date_of_birth' => 'Санаи таваллуд',
     'platforms' => 'Платформа',
+    'profile_description' => 'Тавсифи профаили',
 ];
