@@ -5,21 +5,24 @@ namespace App\Livewire\Admin\Platform;
 use Livewire\Component;
 use App\Models\Platform;
 use Livewire\Attributes\Layout;
+use Livewire\WithFileUploads;
 use App\Services\FileManager;
 use Illuminate\Validation\ValidationException;
 #[Layout('layouts::admin', ['title' => 'Plateform Create'])]
 class PlatformCreatePage extends Component
 {
+    use WithFileUploads;
+
     public array $name = [
         'en' => '',
         'ru' => '',
         'tg' => '',
     ];
 
-    public array $images = [
-        'en' => '',
-        'ru' => '',
-        'tg' => '',
+    public array $logos = [
+        'en' => null,
+        'ru' => null,
+        'tg' => null,
     ];
 
     public bool $is_available = true;
@@ -30,7 +33,9 @@ class PlatformCreatePage extends Component
             'name.en' => ['required', 'string', 'max:255'],
             'name.ru' => ['required', 'string', 'max:255'],
             'name.tg' => ['required', 'string', 'max:255'],
-            'image' => ['nullable', 'image', 'max:2048'],
+            'logos.en' => ['nullable', 'image', 'max:2048'],
+            'logos.ru' => ['nullable', 'image', 'max:2048'],
+            'logos.tg' => ['nullable', 'image', 'max:2048'],
             'is_available' => ['required', 'boolean'],
         ];
     }
@@ -56,26 +61,33 @@ class PlatformCreatePage extends Component
         try {
             $validated = $this->validate();
 
+            $logos = [];
+            foreach (array_keys($this->logos) as $locale) {
+                if ($this->logos[$locale]) {
+                    $logos[$locale] = $fileManager->store($this->logos[$locale], 'platforms/logos');
+                }
+            }
+
             Platform::create([
                 'name' => $validated['name'],
-                'image' => $fileManager->store($this->image, 'cuisines'),
-                'is_available' => $validated['status'],
+                'logo' => $logos,
+                'is_available' => $validated['is_available'],
             ]);
 
             flash()->success(
                 'Platform created successfully.'
             );
 
-            $this->redirectRoute('admin.platform.index');
+            $this->redirectRoute('admin.platforms.index');
         } catch (ValidationException $e) {
 
             $errors = $e->validator->errors();
 
-            if ($errors->has('name.en')) {
+            if ($errors->has('name.en') || $errors->has('logos.en')) {
                 $this->dispatch('switch-tab', tab: 'en');
-            } elseif ($errors->has('name.ru')) {
+            } elseif ($errors->has('name.ru') || $errors->has('logos.ru')) {
                 $this->dispatch('switch-tab', tab: 'ru');
-            } elseif ($errors->has('name.tg')) {
+            } elseif ($errors->has('name.tg') || $errors->has('logos.tg')) {
                 $this->dispatch('switch-tab', tab: 'tg');
             }
 
