@@ -49,6 +49,13 @@ new class extends Component {
                 </a>
             </li>
 
+            <li class="menu-item {{ request()->routeIs('admin.platforms') ? 'active' : '' }}">
+                <a href="{{ route('admin.platforms') }}" class="menu-link">
+                    <i class="menu-icon icon-base ti tabler-devices"></i>
+                    <div>{{ __('admin.plateforms') }}</div>
+                </a>
+            </li>
+
             <li class="menu-item {{ request()->routeIs('admin.profile') ? 'active' : '' }}">
                 <a href="{{ route('admin.profile') }}" class="menu-link">
                     <i class="menu-icon icon-base ti tabler-user"></i>

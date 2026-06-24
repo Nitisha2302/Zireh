@@ -57,4 +57,5 @@ return [
     'seller_registration_not_found' => 'Seller not found for the provided phone number.',
     'seller_account_deleted' => 'Seller account deleted successfully.',
     'seller_profile_updated' => 'Seller profile updated successfully.',
+    'plateform_listed' => 'Platform fetched successfully.',
 ];
