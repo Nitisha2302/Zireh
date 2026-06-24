@@ -148,5 +148,5 @@ return [
     'action' => 'Давлат',
     'address' => 'Суроға',
     'date_of_birth' => 'Санаи таваллуд',
-    'plateforms' => 'Платформа',
+    'platforms' => 'Платформа',
 ];

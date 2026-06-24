@@ -123,5 +123,5 @@ return [
     'action' => 'Действие',
     'address' => 'Адрес',
     'date_of_birth' => 'Дата рождения',
-    'plateforms' => 'Платформа',
+    'platforms' => 'Платформа',
 ];
