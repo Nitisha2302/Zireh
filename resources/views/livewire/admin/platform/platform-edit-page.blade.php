@@ -1,3 +1,32 @@
-<div>
-    {{-- Waste no more time arguing what a good man should be, be one. - Marcus Aurelius --}}
+<div class="container-xxl flex-grow-1 container-p-y">
+    <form wire:submit="update">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-1">Edit platform</h5><small class="text-body-secondary">Update the platform name
+                            and logo for each language.</small>
+                    </div>
+                    <div class="card-body">@include('livewire.admin.platform.partials.translation-fields', ['editing' => true])</div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Publish</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-check form-switch mb-4"><input class="form-check-input" type="checkbox"
+                                id="is_available" wire:model="is_available"><label class="form-check-label"
+                                for="is_available">Active</label></div>
+                        <button type="submit" class="btn btn-primary w-100"><i
+                                class="icon-base ti tabler-device-floppy"></i> Update Platform</button>
+                        <a href="{{ route('admin.platforms.index') }}"
+                            class="btn btn-label-secondary w-100 mt-2">Cancel</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
 </div>
+@include('livewire.admin.platform.partials.tab-script')

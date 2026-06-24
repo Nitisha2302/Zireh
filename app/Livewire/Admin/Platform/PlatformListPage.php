@@ -7,6 +7,7 @@ use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
 use Livewire\Attributes\On;
 use App\Models\Platform;
+use App\Services\FileManager;
 
 #[Layout('layouts::admin', ['title' => 'Plateform List'])]
 class PlatformListPage extends Component
@@ -26,7 +27,7 @@ class PlatformListPage extends Component
         $platform = Platform::findOrFail($id);
 
         $platform->update([
-            'is_available' => ! $platform->status,
+            'is_available' => ! $platform->is_available,
         ]);
     }
 
@@ -42,6 +43,10 @@ class PlatformListPage extends Component
     public function onConfirmed(array $payload): void
     {
         $platform = Platform::findOrFail($this->deleteId);
+        foreach ($platform->getTranslations('logo') as $logo) {
+            app(FileManager::class)->delete($logo);
+        }
+
         $platform->delete();
         $this->deleteId = null;
         flash()->info('Platform successfully deleted.');
