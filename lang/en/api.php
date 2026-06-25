@@ -60,4 +60,8 @@ return [
     'plateform_listed' => 'Platform fetched successfully.',
     'platforms_listed' => 'Platforms fetched successfully.',
     'platform_sliders_listed' => 'Platform sliders fetched successfully.',
+    'elim_products_listed' => 'Products fetched successfully.',
+    'elim_product_fetched' => 'Product fetched successfully.',
+    'elim_categories_listed' => 'Categories fetched successfully.',
+    'elim_image_uploaded' => 'Image uploaded successfully.',
 ];

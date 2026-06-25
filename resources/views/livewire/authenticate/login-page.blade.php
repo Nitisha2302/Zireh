@@ -24,7 +24,7 @@
                                     </svg>
                                 </span>
                             </span> --}}
-                            <span class="app-brand-text demo text-heading fw-bold">FDB</span>
+                            <span class="app-brand-text demo text-heading fw-bold">Cargo Admin</span>
                         </a>
                     </div>
 
