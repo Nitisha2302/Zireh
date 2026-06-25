@@ -54,6 +54,7 @@ class PlatformSliderEditPage extends Component
 
         $this->platformSlider->update($attributes);
         $this->platformSlider->platforms()->sync($validated['platformIds']);
+        PlatformSlider::clearCatalogCache();
 
         flash()->success('Platform slider updated successfully.');
         $this->redirectRoute('admin.platform-sliders.index');
