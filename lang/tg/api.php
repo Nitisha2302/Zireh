@@ -47,4 +47,6 @@ return [
     'seller_registration_not_found' => 'Фурӯшанда барои рақами телефони дода нашуд.',
     'seller_account_deleted' => 'Фурӯшанда бомуваффақият нест.',
     'seller_profile_updated' => 'Профили фурӯшанда бомуваффақият нав шуд.',
+    'platforms_listed' => 'Платформаҳо бомуваффақият гирифта шуданд.',
+    'platform_sliders_listed' => 'Слайдерҳои платформа бомуваффақият гирифта шуданд.',
 ];

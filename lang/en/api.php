@@ -58,4 +58,6 @@ return [
     'seller_account_deleted' => 'Seller account deleted successfully.',
     'seller_profile_updated' => 'Seller profile updated successfully.',
     'plateform_listed' => 'Platform fetched successfully.',
+    'platforms_listed' => 'Platforms fetched successfully.',
+    'platform_sliders_listed' => 'Platform sliders fetched successfully.',
 ];

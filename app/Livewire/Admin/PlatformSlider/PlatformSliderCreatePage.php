@@ -41,6 +41,7 @@ class PlatformSliderCreatePage extends Component
         ]);
 
         $slider->platforms()->sync($validated['platformIds']);
+        PlatformSlider::clearCatalogCache();
 
         flash()->success('Platform slider created successfully.');
         $this->redirectRoute('admin.platform-sliders.index');

@@ -46,4 +46,6 @@ return [
     'seller_registration_not_found' => 'Продавец с таким номером телефона не найден.',
     'seller_account_deleted' => 'Продавец успешно удален.',
     'seller_profile_updated' => 'Профиль продавца успешно обновлен.',
+    'platforms_listed' => 'Платформы успешно получены.',
+    'platform_sliders_listed' => 'Слайдеры платформ успешно получены.',
 ];
