@@ -48,4 +48,8 @@ return [
     'seller_profile_updated' => 'Профиль продавца успешно обновлен.',
     'platforms_listed' => 'Платформы успешно получены.',
     'platform_sliders_listed' => 'Слайдеры платформ успешно получены.',
+    'elim_products_listed' => 'Products fetched successfully.',
+    'elim_product_fetched' => 'Product fetched successfully.',
+    'elim_categories_listed' => 'Categories fetched successfully.',
+    'elim_image_uploaded' => 'Image uploaded successfully.',
 ];

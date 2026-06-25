@@ -49,4 +49,8 @@ return [
     'seller_profile_updated' => 'Профили фурӯшанда бомуваффақият нав шуд.',
     'platforms_listed' => 'Платформаҳо бомуваффақият гирифта шуданд.',
     'platform_sliders_listed' => 'Слайдерҳои платформа бомуваффақият гирифта шуданд.',
+    'elim_products_listed' => 'Products fetched successfully.',
+    'elim_product_fetched' => 'Product fetched successfully.',
+    'elim_categories_listed' => 'Categories fetched successfully.',
+    'elim_image_uploaded' => 'Image uploaded successfully.',
 ];

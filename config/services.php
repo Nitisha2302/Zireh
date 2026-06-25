@@ -67,4 +67,38 @@ return [
         'sender' => env('OSONSMS_SENDER'),
     ],
 
+    'elim' => [
+        'base_url' => env('ELIM_BASE_URL', 'https://openapi.elim.asia'),
+        'email' => env('ELIM_EMAIL'),
+        'password' => env('ELIM_PASSWORD'),
+        'timeout' => env('ELIM_TIMEOUT', 20),
+        'retries' => env('ELIM_RETRIES', 2),
+        'retry_sleep' => env('ELIM_RETRY_SLEEP', 300),
+        'token_ttl' => env('ELIM_TOKEN_TTL', 3300),
+        'default_lang' => env('ELIM_DEFAULT_LANG', 'en'),
+        'default_query' => env('ELIM_DEFAULT_QUERY', 'bag'),
+        'cache' => [
+            'products_ttl' => env('ELIM_PRODUCTS_CACHE_TTL', 900),
+            'categories_ttl' => env('ELIM_CATEGORIES_CACHE_TTL', 86400),
+        ],
+        'categories' => [
+            'taobao' => [
+                ['id' => 'women-fashion', 'name' => 'Women Fashion'],
+                ['id' => 'men-fashion', 'name' => 'Men Fashion'],
+                ['id' => 'bags', 'name' => 'Bags'],
+                ['id' => 'shoes', 'name' => 'Shoes'],
+                ['id' => 'electronics', 'name' => 'Electronics'],
+                ['id' => 'home', 'name' => 'Home & Living'],
+            ],
+            '1688' => [
+                ['id' => 'apparel', 'name' => 'Apparel Wholesale'],
+                ['id' => 'bags', 'name' => 'Bags Wholesale'],
+                ['id' => 'shoes', 'name' => 'Shoes Wholesale'],
+                ['id' => 'electronics', 'name' => 'Electronics Wholesale'],
+                ['id' => 'industrial', 'name' => 'Industrial Supplies'],
+                ['id' => 'home', 'name' => 'Home & Living Wholesale'],
+            ],
+        ],
+    ],
+
 ];
