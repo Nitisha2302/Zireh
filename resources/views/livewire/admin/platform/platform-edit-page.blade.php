@@ -7,7 +7,14 @@
                         <h5 class="mb-1">Edit platform</h5><small class="text-body-secondary">Update the platform name
                             and logo for each language.</small>
                     </div>
-                    <div class="card-body">@include('livewire.admin.platform.partials.translation-fields', ['editing' => true])</div>
+                    <div class="card-body">
+                        <div class="mb-4">
+                            <label class="form-label" for="code">Platform code</label>
+                            <input id="code" type="text" wire:model.blur="code" class="form-control @error('code') is-invalid @enderror" placeholder="taobao">
+                            <small class="text-body-secondary">Optional API identifier (e.g. taobao, 1688). Lowercase letters and numbers only.</small>
+                            @error('code') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                        </div>
+                        @include('livewire.admin.platform.partials.translation-fields', ['editing' => true])</div>
                 </div>
             </div>
             <div class="col-lg-4">

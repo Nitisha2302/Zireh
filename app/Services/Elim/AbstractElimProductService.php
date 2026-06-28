@@ -3,6 +3,7 @@
 namespace App\Services\Elim;
 
 use App\Services\Elim\Contracts\MarketplaceProductService;
+use App\Services\PlatformCategoryService;
 use App\Support\Elim\ProductNormalizer;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
@@ -54,16 +55,7 @@ abstract class AbstractElimProductService implements MarketplaceProductService
 
     public function categories(string|null $lang = null): array
     {
-        $language = $this->lang($lang);
-
-        return Cache::remember($this->cacheKey('categories', ['lang' => $language]), $this->categoryTtl(), function () use ($language): array {
-            return [
-                'platform' => $this->platform(),
-                'language' => $language,
-                'items' => config("services.elim.categories.{$this->platform()}", []),
-                'source' => 'local_config',
-            ];
-        });
+        return app(PlatformCategoryService::class)->listForPlatformKey($this->platform(), $lang);
     }
 
     public function searchByImage(array $filters): array

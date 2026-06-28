@@ -27,9 +27,12 @@ class PlatformCreatePage extends Component
 
     public bool $is_available = true;
 
+    public string $code = '';
+
     protected function rules(): array
     {
         return [
+            'code' => ['nullable', 'string', 'max:50', 'regex:/^[a-z0-9]+$/', 'unique:platforms,code'],
             'name.en' => ['required', 'string', 'max:255'],
             'name.ru' => ['required', 'string', 'max:255'],
             'name.tg' => ['required', 'string', 'max:255'],
@@ -69,6 +72,7 @@ class PlatformCreatePage extends Component
             }
 
             Platform::create([
+                'code' => filled($validated['code']) ? $validated['code'] : null,
                 'name' => $validated['name'],
                 'logo' => $logos,
                 'is_available' => $validated['is_available'],

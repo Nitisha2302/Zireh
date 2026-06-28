@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Cache;
 use Spatie\Translatable\HasTranslations;
 
@@ -14,6 +15,7 @@ class Platform extends Model
     use SoftDeletes;
 
     protected $fillable = [
+        'code',
         'name',
         'logo',
         'is_available',
@@ -35,6 +37,11 @@ class Platform extends Model
     public function sliders(): BelongsToMany
     {
         return $this->belongsToMany(PlatformSlider::class, 'platform_slider_platform')->withTimestamps();
+    }
+
+    public function categories(): HasMany
+    {
+        return $this->hasMany(PlatformCategory::class);
     }
 
     protected static function booted(): void
