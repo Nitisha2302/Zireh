@@ -3,17 +3,20 @@
 namespace App\Http\Controllers\Api\V1\Auth;
 
 use App\Http\Controllers\Api\ApiController;
-use App\Http\Requests\Api\V1\Auth\PasswordLoginRequest;
-use App\Http\Requests\Api\V1\Auth\RegisterCustomerRequest;
-use App\Http\Requests\Api\V1\Auth\SendOtpRequest;
+use App\Http\Requests\Api\V1\Auth\CompleteRegistrationRequest;
+use App\Http\Requests\Api\V1\Auth\ResendOtpRequest;
+use App\Http\Requests\Api\V1\Auth\SendLoginOtpRequest;
+use App\Http\Requests\Api\V1\Auth\SendRegistrationOtpRequest;
 use App\Http\Requests\Api\V1\Auth\UpdateLanguageRequest;
-use App\Http\Requests\Api\V1\Auth\VerifyOtpLoginRequest;
+use App\Http\Requests\Api\V1\Auth\UpdateProfileRequest;
+use App\Http\Requests\Api\V1\Auth\VerifyLoginOtpRequest;
+use App\Http\Requests\Api\V1\Auth\VerifyRegistrationOtpRequest;
+use App\Http\Resources\Api\V1\Auth\AuthTokenResource;
 use App\Http\Resources\Api\V1\Auth\CustomerResource;
 use App\Services\Auth\AppleAuthService;
 use App\Services\Auth\Contracts\SocialAuthServiceInterface;
 use App\Services\Auth\CustomerAuthService;
 use App\Services\Auth\GoogleAuthService;
-use App\Services\Auth\OtpService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -22,113 +25,77 @@ class CustomerAuthController extends ApiController
 {
     public function __construct(
         protected CustomerAuthService $customerAuthService,
-        protected OtpService $otpService,
         protected GoogleAuthService $googleAuthService,
         protected AppleAuthService $appleAuthService,
     ) {}
 
-    /**
-     * Register a new customer account using phone OTP verification.
-     */
-    public function register(RegisterCustomerRequest $request): JsonResponse
+    public function sendRegistrationOtp(SendRegistrationOtpRequest $request): JsonResponse
     {
-        $resource = $this->customerAuthService->register($request->validated(), $request);
-
-        return $this->successResponse($resource->resolve(), __('api.customer_registered'), 201);
-    }
-
-    /**
-     * Authenticate a customer using email or phone number and issue a Sanctum token.
-     */
-    public function login(PasswordLoginRequest $request): JsonResponse
-    {
-        $resource = $this->customerAuthService->login($request->validated(), $request);
-
-        return $this->successResponse($resource->resolve(), __('api.customer_logged_in'));
-    }
-
-    /**
-     * Send an OTP for customer registration or login.
-     */
-    public function sendOtp(SendOtpRequest $request): JsonResponse
-    {
-        $payload = $this->otpService->send(
-            $request->validated('phone_number'),
-            $request->validated('purpose'),
-            ['preferred_language' => app()->getLocale()]
-        );
+        $payload = $this->customerAuthService->sendRegistrationOtp($request->validated('phone_number'));
 
         return $this->successResponse($payload, __('api.otp_sent'));
     }
 
-    /**
-     * Verify an OTP for registration or log in a customer with OTP.
-     */
-    public function verifyOtp(VerifyOtpLoginRequest $request): JsonResponse
+    public function verifyRegistrationOtp(VerifyRegistrationOtpRequest $request): JsonResponse
     {
-        $validated = $request->validated();
-
-        if ($validated['purpose'] === 'register') {
-            $verification = $this->otpService->verify($validated['phone_number'], 'register', $validated['otp']);
-
-            return $this->successResponse([
-                'phone_number' => $verification->phone,
-                'verified_at' => $verification->verified_at,
-            ], __('api.otp_verified'));
-        }
-
-        $resource = $this->customerAuthService->loginWithOtp($validated, $request);
-
-        return $this->successResponse($resource->resolve(), __('api.customer_logged_in_with_otp'));
-    }
-
-    /**
-     * Generate the redirect URL for Google or Apple login.
-     */
-    public function socialRedirect(Request $request, string $provider): JsonResponse
-    {
-        $url = $this->socialService($provider)->redirectUrl();
-
-        return $this->successResponse([
-            'provider' => $provider,
-            'redirect_url' => $url,
-        ], __('api.social_redirect_generated', ['provider' => ucfirst($provider)]));
-    }
-
-    /**
-     * Handle the Google or Apple callback and return a customer access token.
-     */
-    public function socialCallback(Request $request, string $provider): JsonResponse
-    {
-        $validated = validator($request->all(), [
-            'device_name' => ['nullable', 'string', 'max:255'],
-            'device_token' => ['nullable', 'string'],
-            'preferred_language' => ['nullable', 'string', 'max:10'],
-            'location_permission' => ['nullable', 'boolean'],
-            'referral_code' => ['nullable', 'string', 'max:30'],
-        ])->validate();
-
-        $resource = $this->customerAuthService->loginWithSocialProvider(
-            $provider,
-            $this->socialService($provider)->userFromCallback(),
-            $request,
-            $validated
+        $payload = $this->customerAuthService->verifyRegistrationOtp(
+            $request->validated('phone_number'),
+            $request->validated('otp')
         );
 
-        return $this->successResponse($resource->resolve(), __('api.social_login_successful', ['provider' => ucfirst($provider)]));
+        return $this->successResponse($payload, __('api.otp_verified'));
     }
 
-    /**
-     * Fetch the currently authenticated customer profile.
-     */
+    public function completeRegistration(CompleteRegistrationRequest $request): JsonResponse
+    {
+        $resource = $this->customerAuthService->completeRegistration($request->validated(), $request);
+
+        return $this->successResponse($resource->resolve(), __('api.customer_registered'), 201);
+    }
+
+    public function sendLoginOtp(SendLoginOtpRequest $request): JsonResponse
+    {
+        $payload = $this->customerAuthService->sendLoginOtp($request->validated('phone_number'));
+
+        return $this->successResponse($payload, __('api.otp_sent'));
+    }
+
+    public function verifyLoginOtp(VerifyLoginOtpRequest $request): JsonResponse
+    {
+        $result = $this->customerAuthService->verifyLoginOtp($request->validated(), $request);
+
+        if (is_array($result)) {
+            return $this->successResponse($result, __('api.profile_completion_required'));
+        }
+
+        return $this->successResponse($result->resolve(), __('api.customer_logged_in_with_otp'));
+    }
+
+    public function resendOtp(ResendOtpRequest $request): JsonResponse
+    {
+        $payload = $this->customerAuthService->resendOtp(
+            $request->validated('phone_number'),
+            $request->validated('purpose')
+        );
+
+        return $this->successResponse($payload, __('api.otp_resent'));
+    }
+
     public function me(Request $request): JsonResponse
     {
         return $this->successResponse(new CustomerResource($request->user()), __('api.customer_profile_fetched'));
     }
 
-    /**
-     * Revoke the current customer access token and log the logout event.
-     */
+    public function updateProfile(UpdateProfileRequest $request): JsonResponse
+    {
+        $user = $this->customerAuthService->updateProfile($request->user(), $request->validated());
+
+        return $this->successResponse(
+            (new CustomerResource($user))->resolve(),
+            __('api.customer_profile_updated')
+        );
+    }
+
     public function logout(Request $request): JsonResponse
     {
         $user = $request->user();
@@ -146,20 +113,42 @@ class CustomerAuthController extends ApiController
 
     public function updateLanguage(UpdateLanguageRequest $request): JsonResponse
     {
-        $user = $request->user();
-
-        if (! $user) {
-            throw ValidationException::withMessages([
-                'auth' => [__('api.unauthenticated')],
-            ]);
-        }
-
-        $user = $this->customerAuthService->updateLanguage($user, $request->validated('language'));
+        $user = $this->customerAuthService->updateLanguage(
+            $request->user(),
+            $request->validated('language')
+        );
 
         return $this->successResponse(
             (new CustomerResource($user))->resolve(),
             __('api.language_updated')
         );
+    }
+
+    public function socialRedirect(Request $request, string $provider): JsonResponse
+    {
+        $url = $this->socialService($provider)->redirectUrl();
+
+        return $this->successResponse([
+            'provider' => $provider,
+            'redirect_url' => $url,
+        ], __('api.social_redirect_generated', ['provider' => ucfirst($provider)]));
+    }
+
+    public function socialCallback(Request $request, string $provider): JsonResponse
+    {
+        $validated = validator($request->all(), [
+            'device_name' => ['nullable', 'string', 'max:255'],
+            'device_token' => ['nullable', 'string'],
+        ])->validate();
+
+        $resource = $this->customerAuthService->loginWithSocialProvider(
+            $provider,
+            $this->socialService($provider)->userFromCallback(),
+            $request,
+            $validated
+        );
+
+        return $this->successResponse($resource->resolve(), __('api.social_login_successful', ['provider' => ucfirst($provider)]));
     }
 
     protected function socialService(string $provider): SocialAuthServiceInterface

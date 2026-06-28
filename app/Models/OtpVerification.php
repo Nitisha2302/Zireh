@@ -14,6 +14,7 @@ class OtpVerification extends Model
         'expires_at',
         'verified_at',
         'attempts',
+        'resend_count',
         'last_sent_at',
     ];
 
@@ -24,6 +25,7 @@ class OtpVerification extends Model
             'expires_at' => 'datetime',
             'verified_at' => 'datetime',
             'last_sent_at' => 'datetime',
+            'resend_count' => 'integer',
         ];
     }
 }

@@ -1,0 +1,812 @@
+{
+  "info": {
+    "_postman_id": "96a52859-f67e-4228-944e-1602b020e93a",
+    "name": "Cargo-Admin API",
+    "description": "Laravel public API collection generated from routes/api.php. Set collection variables before running requests.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "29209019"
+  },
+  "item": [
+    {
+      "name": "01 - Platform Catalog",
+      "item": [
+        {
+          "name": "List Platforms",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Accept-Language", "value": "{{locale}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/platforms",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "platforms"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Platform Sliders",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Accept-Language", "value": "{{locale}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/platform-sliders",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "platform-sliders"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "02 - Taobao",
+      "item": [
+        {
+          "name": "Products List",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Accept-Language", "value": "{{locale}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/taobao/products?q={{search_query}}&lang={{elim_lang}}&page={{page}}&size={{size}}&sort={{sort}}",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "taobao", "products"],
+              "query": [
+                { "key": "q", "value": "{{search_query}}", "description": "Optional; defaults server-side if blank." },
+                { "key": "lang", "value": "{{elim_lang}}", "description": "ELIM supports en or vi." },
+                { "key": "page", "value": "{{page}}" },
+                { "key": "size", "value": "{{size}}" },
+                { "key": "sort", "value": "{{sort}}" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Search Products",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Accept-Language", "value": "{{locale}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/taobao/search?q={{search_query}}&lang={{elim_lang}}&page={{page}}&size={{size}}&sort={{sort}}",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "taobao", "search"],
+              "query": [
+                { "key": "q", "value": "{{search_query}}" },
+                { "key": "lang", "value": "{{elim_lang}}" },
+                { "key": "page", "value": "{{page}}" },
+                { "key": "size", "value": "{{size}}" },
+                { "key": "sort", "value": "{{sort}}" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Product Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Accept-Language", "value": "{{locale}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/taobao/products/{{taobao_product_id}}?lang={{elim_lang}}",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "taobao", "products", "{{taobao_product_id}}"],
+              "query": [
+                { "key": "lang", "value": "{{elim_lang}}" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Categories",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Accept-Language", "value": "{{locale}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/taobao/categories?lang={{elim_lang}}",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "taobao", "categories"],
+              "query": [
+                { "key": "lang", "value": "{{elim_lang}}" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Image Search",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Accept-Language", "value": "{{locale}}", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"img_url\": \"{{image_url}}\",\n  \"img_id\": \"{{image_id}}\",\n  \"lang\": \"{{elim_lang}}\",\n  \"page\": {{page}},\n  \"size\": {{size}},\n  \"sort\": \"{{image_sort}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/taobao/image-search",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "taobao", "image-search"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Upload Image",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Accept-Language", "value": "{{locale}}", "type": "text" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file", "type": "file", "src": [] }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/taobao/upload-image",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "taobao", "upload-image"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "03 - 1688",
+      "item": [
+        {
+          "name": "Products List",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Accept-Language", "value": "{{locale}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/1688/products?q={{search_query}}&lang={{elim_lang}}&page={{page}}&size={{size}}&sort={{sort}}",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "1688", "products"],
+              "query": [
+                { "key": "q", "value": "{{search_query}}", "description": "Optional; defaults server-side if blank." },
+                { "key": "lang", "value": "{{elim_lang}}", "description": "ELIM supports en or vi." },
+                { "key": "page", "value": "{{page}}" },
+                { "key": "size", "value": "{{size}}" },
+                { "key": "sort", "value": "{{sort}}" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Search Products",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Accept-Language", "value": "{{locale}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/1688/search?q={{search_query}}&lang={{elim_lang}}&page={{page}}&size={{size}}&sort={{sort}}",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "1688", "search"],
+              "query": [
+                { "key": "q", "value": "{{search_query}}" },
+                { "key": "lang", "value": "{{elim_lang}}" },
+                { "key": "page", "value": "{{page}}" },
+                { "key": "size", "value": "{{size}}" },
+                { "key": "sort", "value": "{{sort}}" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Product Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Accept-Language", "value": "{{locale}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/1688/products/{{alibaba_product_id}}?lang={{elim_lang}}",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "1688", "products", "{{alibaba_product_id}}"],
+              "query": [
+                { "key": "lang", "value": "{{elim_lang}}" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Categories",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Accept-Language", "value": "{{locale}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/1688/categories?lang={{elim_lang}}",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "1688", "categories"],
+              "query": [
+                { "key": "lang", "value": "{{elim_lang}}" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Image Search",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Accept-Language", "value": "{{locale}}", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"img_url\": \"{{image_url}}\",\n  \"img_id\": \"{{image_id}}\",\n  \"lang\": \"{{elim_lang}}\",\n  \"page\": {{page}},\n  \"size\": {{size}},\n  \"sort\": \"{{image_sort}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/1688/image-search",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "1688", "image-search"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Upload Image",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Accept-Language", "value": "{{locale}}", "type": "text" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file", "type": "file", "src": [] }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/1688/upload-image",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "1688", "upload-image"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "04 - Customer Auth",
+      "item": [
+        {
+          "name": "Register - Send OTP",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Registration OTP response is successful', function () {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "if (json?.data?.otp) pm.collectionVariables.set('register_otp', json.data.otp);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Accept-Language", "value": "{{locale}}", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone_number\": \"{{phone_number}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/auth/register/otp/send",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "auth", "register", "otp", "send"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Register - Verify OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Accept-Language", "value": "{{locale}}", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone_number\": \"{{phone_number}}\",\n  \"otp\": \"{{register_otp}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/auth/register/otp/verify",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "auth", "register", "otp", "verify"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Register - Complete",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json?.data?.token) pm.collectionVariables.set('customer_token', json.data.token);",
+                  "if (json?.data?.customer?.id) pm.collectionVariables.set('customer_id', json.data.customer.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Accept-Language", "value": "{{locale}}", "type": "text" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "full_name", "value": "{{full_name}}", "type": "text" },
+                { "key": "phone_number", "value": "{{phone_number}}", "type": "text" },
+                { "key": "email", "value": "{{email}}", "type": "text" },
+                { "key": "password", "value": "{{password}}", "type": "text" },
+                { "key": "password_confirmation", "value": "{{password}}", "type": "text" },
+                { "key": "device_name", "value": "{{device_name}}", "type": "text" },
+                { "key": "device_token", "value": "{{device_token}}", "type": "text" },
+                { "key": "profile_photo", "type": "file", "src": [], "disabled": true }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/auth/register/complete",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "auth", "register", "complete"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login - Send OTP",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Login OTP response is successful', function () {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "if (json?.data?.otp) pm.collectionVariables.set('login_otp', json.data.otp);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Accept-Language", "value": "{{locale}}", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone_number\": \"{{phone_number}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/auth/login/otp/send",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "auth", "login", "otp", "send"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login - Verify OTP",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json?.data?.token) pm.collectionVariables.set('customer_token', json.data.token);",
+                  "if (json?.data?.customer?.id) pm.collectionVariables.set('customer_id', json.data.customer.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Accept-Language", "value": "{{locale}}", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone_number\": \"{{phone_number}}\",\n  \"otp\": \"{{login_otp}}\",\n  \"device_name\": \"{{device_name}}\",\n  \"device_token\": \"{{device_token}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/auth/login/otp/verify",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "auth", "login", "otp", "verify"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "OTP - Resend",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Accept-Language", "value": "{{locale}}", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone_number\": \"{{phone_number}}\",\n  \"purpose\": \"login\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/auth/otp/resend",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "auth", "otp", "resend"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Me",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{customer_token}}", "type": "string" }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Accept-Language", "value": "{{locale}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/auth/me",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "auth", "me"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{customer_token}}", "type": "string" }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Accept-Language", "value": "{{locale}}", "type": "text" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "full_name", "value": "{{full_name}}", "type": "text" },
+                { "key": "email", "value": "{{email}}", "type": "text" },
+                { "key": "password", "value": "", "type": "text", "disabled": true },
+                { "key": "password_confirmation", "value": "", "type": "text", "disabled": true },
+                { "key": "device_token", "value": "{{device_token}}", "type": "text" },
+                { "key": "profile_photo", "type": "file", "src": [], "disabled": true }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/auth/profile",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "auth", "profile"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Profile (PUT)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{customer_token}}", "type": "string" }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Accept-Language", "value": "{{locale}}", "type": "text" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "full_name", "value": "{{full_name}}", "type": "text" },
+                { "key": "email", "value": "{{email}}", "type": "text" },
+                { "key": "device_token", "value": "{{device_token}}", "type": "text" },
+                { "key": "profile_photo", "type": "file", "src": [], "disabled": true }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/auth/profile",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "auth", "profile"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Language",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{customer_token}}", "type": "string" }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Accept-Language", "value": "{{locale}}", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"language\": \"{{locale}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/auth/language",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "auth", "language"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{customer_token}}", "type": "string" }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Accept-Language", "value": "{{locale}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/auth/logout",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "auth", "logout"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "05 - Customer Addresses",
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          { "key": "token", "value": "{{customer_token}}", "type": "string" }
+        ]
+      },
+      "item": [
+        {
+          "name": "List Addresses",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Accept-Language", "value": "{{locale}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/auth/addresses",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "auth", "addresses"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Address",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json?.data?.id) pm.collectionVariables.set('address_id', json.data.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Accept-Language", "value": "{{locale}}", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"{{full_name}}\",\n  \"phone\": \"{{phone_number}}\",\n  \"alternate_phone\": \"\",\n  \"address_line_1\": \"123 Test Street\",\n  \"address_line_2\": \"Suite 1\",\n  \"landmark\": \"Near Market\",\n  \"city\": \"Dushanbe\",\n  \"state\": \"Dushanbe\",\n  \"country\": \"Tajikistan\",\n  \"postal_code\": \"734000\",\n  \"address_type\": \"home\",\n  \"latitude\": 38.5598,\n  \"longitude\": 68.7870,\n  \"is_default\": true\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/auth/addresses",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "auth", "addresses"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Address",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Accept-Language", "value": "{{locale}}", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"city\": \"Dushanbe\",\n  \"state\": \"Dushanbe\",\n  \"postal_code\": \"734000\",\n  \"is_default\": true\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/auth/addresses/{{address_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "auth", "addresses", "{{address_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Address (PUT)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Accept-Language", "value": "{{locale}}", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"city\": \"Dushanbe\",\n  \"state\": \"Dushanbe\",\n  \"postal_code\": \"734000\",\n  \"is_default\": true\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/auth/addresses/{{address_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "auth", "addresses", "{{address_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Set Default Address",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Accept-Language", "value": "{{locale}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/auth/addresses/{{address_id}}/default",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "auth", "addresses", "{{address_id}}", "default"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Address",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Accept-Language", "value": "{{locale}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/auth/addresses/{{address_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "auth", "addresses", "{{address_id}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "base_url", "value": "http://127.0.0.1:8000/api", "type": "string" },
+    { "key": "locale", "value": "en", "type": "string" },
+    { "key": "elim_lang", "value": "en", "type": "string" },
+    { "key": "phone_number", "value": "+919999999999", "type": "string" },
+    { "key": "register_otp", "value": "", "type": "string" },
+    { "key": "login_otp", "value": "", "type": "string" },
+    { "key": "customer_token", "value": "", "type": "string" },
+    { "key": "customer_id", "value": "", "type": "string" },
+    { "key": "full_name", "value": "Test Customer", "type": "string" },
+    { "key": "email", "value": "customer@example.com", "type": "string" },
+    { "key": "password", "value": "password123", "type": "string" },
+    { "key": "device_name", "value": "Postman", "type": "string" },
+    { "key": "device_token", "value": "postman-device-token", "type": "string" },
+    { "key": "address_id", "value": "1", "type": "string" },
+    { "key": "search_query", "value": "bag", "type": "string" },
+    { "key": "page", "value": "1", "type": "string" },
+    { "key": "size", "value": "20", "type": "string" },
+    { "key": "sort", "value": "PRICE_ASC", "type": "string" },
+    { "key": "image_sort", "value": "PRICE_ASC", "type": "string" },
+    { "key": "image_url", "value": "https://img.alicdn.com/bao/uploaded/i3/694223667/O1CN01zSjKgp1cxXRQZsDLA_!!694223667.jpg", "type": "string" },
+    { "key": "image_id", "value": "", "type": "string" },
+    { "key": "taobao_product_id", "value": "123456789", "type": "string" },
+    { "key": "alibaba_product_id", "value": "123456789", "type": "string" }
+  ]
+}
