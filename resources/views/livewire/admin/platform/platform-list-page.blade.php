@@ -26,6 +26,8 @@
                     <tr>
                         <th width="80">ID</th>
                         <th>Platform translations and logos</th>
+                        <th width="140">Code</th>
+                        <th width="140">Commision</th>
                         <th width="140">Status</th>
                         <th width="180">Created</th>
                         <th width="100"></th>
@@ -55,6 +57,8 @@
                                     </div>
                                 @endforeach
                             </td>
+                            <td><code>{{ $platform->code }}</code></td>
+                            <td><code>{{ $platform->commission }}%</code></td>
                             <td>
                                 @if ($platform->is_available)
                                 <span class="badge bg-label-success">Active</span>@else<span
@@ -79,9 +83,9 @@
                                         <li>
                                             <hr class="dropdown-divider">
                                         </li>
-                                        <li><button type="button" class="dropdown-item text-danger"
+                                        {{-- <li><button type="button" class="dropdown-item text-danger"
                                                 wire:click="delete({{ $platform->id }})"><i
-                                                    class="icon-base ti tabler-trash me-2"></i>Delete</button></li>
+                                                    class="icon-base ti tabler-trash me-2"></i>Delete</button></li> --}}
                                     </ul>
                                 </div>
                             </td>

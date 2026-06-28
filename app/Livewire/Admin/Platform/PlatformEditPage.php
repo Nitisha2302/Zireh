@@ -21,11 +21,13 @@ class PlatformEditPage extends Component
     public bool $is_available = true;
 
     public string $code = '';
+    public float $commission = 0;
 
     public function mount(Platform $plateform): void
     {
         $this->platform = $plateform;
         $this->code = $plateform->code ?? '';
+        $this->commission = $plateform->commission;
         $this->name = array_replace($this->name, $plateform->getTranslations('name'));
         $this->is_available = $plateform->is_available;
     }
@@ -34,6 +36,7 @@ class PlatformEditPage extends Component
     {
         return [
             'code' => ['nullable', 'string', 'max:50', 'regex:/^[a-z0-9]+$/', 'unique:platforms,code,'.$this->platform->id],
+            'commission' => ['required', 'numeric', 'min:0', 'max:100'],
             'name.en' => ['required', 'string', 'max:255'],
             'name.ru' => ['required', 'string', 'max:255'],
             'name.tg' => ['required', 'string', 'max:255'],
@@ -66,6 +69,7 @@ class PlatformEditPage extends Component
                 'name' => $validated['name'],
                 'logo' => $logos,
                 'is_available' => $validated['is_available'],
+                'commission' => $validated['commission'],
             ]);
 
             flash()->success('Platform updated successfully.');

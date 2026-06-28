@@ -19,6 +19,7 @@ class Platform extends Model
         'name',
         'logo',
         'is_available',
+        'commission'
     ];
 
     public array $translatable = [
@@ -31,6 +32,7 @@ class Platform extends Model
     {
         return [
             'is_available' => 'boolean',
+            'commission' => 'float',
         ];
     }
 
@@ -46,9 +48,9 @@ class Platform extends Model
 
     protected static function booted(): void
     {
-        static::saved(fn () => static::clearCatalogCache());
-        static::deleted(fn () => static::clearCatalogCache());
-        static::restored(fn () => static::clearCatalogCache());
+        static::saved(fn() => static::clearCatalogCache());
+        static::deleted(fn() => static::clearCatalogCache());
+        static::restored(fn() => static::clearCatalogCache());
     }
 
     public static function clearCatalogCache(): void

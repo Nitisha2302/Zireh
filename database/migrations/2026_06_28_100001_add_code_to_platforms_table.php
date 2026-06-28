@@ -10,6 +10,7 @@ return new class extends Migration
     {
         Schema::table('platforms', function (Blueprint $table) {
             $table->string('code')->nullable()->unique()->after('id');
+            $table->double('commission')->default(0)->after('code');
         });
     }
 
