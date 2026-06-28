@@ -20,9 +20,12 @@ class PlatformEditPage extends Component
     public array $logos = ['en' => null, 'ru' => null, 'tg' => null];
     public bool $is_available = true;
 
+    public string $code = '';
+
     public function mount(Platform $plateform): void
     {
         $this->platform = $plateform;
+        $this->code = $plateform->code ?? '';
         $this->name = array_replace($this->name, $plateform->getTranslations('name'));
         $this->is_available = $plateform->is_available;
     }
@@ -30,6 +33,7 @@ class PlatformEditPage extends Component
     protected function rules(): array
     {
         return [
+            'code' => ['nullable', 'string', 'max:50', 'regex:/^[a-z0-9]+$/', 'unique:platforms,code,'.$this->platform->id],
             'name.en' => ['required', 'string', 'max:255'],
             'name.ru' => ['required', 'string', 'max:255'],
             'name.tg' => ['required', 'string', 'max:255'],
@@ -58,6 +62,7 @@ class PlatformEditPage extends Component
             }
 
             $this->platform->update([
+                'code' => filled($validated['code']) ? $validated['code'] : null,
                 'name' => $validated['name'],
                 'logo' => $logos,
                 'is_available' => $validated['is_available'],
