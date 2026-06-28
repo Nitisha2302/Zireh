@@ -10,6 +10,7 @@ class ProductListRequest extends ApiRequest
     {
         return [
             'q' => ['nullable', 'string', 'max:255'],
+            'category_id' => ['nullable', 'string', 'max:255', 'regex:/^[a-z0-9\-_]+$/'],
             'lang' => ['nullable', 'in:vi,en'],
             'sort' => ['nullable', 'in:PRICE_ASC,PRICE_DESC,SALE_QTY_ASC,SALE_QTY_DESC,RETENTION_ASC,RETENTION_DESC'],
             'page' => ['nullable', 'integer', 'min:1'],

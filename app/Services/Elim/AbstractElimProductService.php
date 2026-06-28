@@ -2,6 +2,7 @@
 
 namespace App\Services\Elim;
 
+use App\Exceptions\Elim\ElimException;
 use App\Services\Elim\Contracts\MarketplaceProductService;
 use App\Services\PlatformCategoryService;
 use App\Support\Elim\ProductNormalizer;
@@ -20,6 +21,7 @@ abstract class AbstractElimProductService implements MarketplaceProductService
 
     public function search(array $filters): array
     {
+        $filters = $this->filtersWithCategory($filters);
         $payload = $this->payload($filters);
         $cacheKey = $this->cacheKey('search', $payload);
 
@@ -32,6 +34,8 @@ abstract class AbstractElimProductService implements MarketplaceProductService
 
     public function list(array $filters): array
     {
+        $filters = $this->filtersWithCategory($filters);
+
         return $this->search([
             ...$filters,
             'q' => $filters['q'] ?? config('services.elim.default_query', 'bag'),
@@ -89,6 +93,31 @@ abstract class AbstractElimProductService implements MarketplaceProductService
             'page' => (int) ($filters['page'] ?? 1),
             'size' => (int) ($filters['size'] ?? 20),
         ], fn (mixed $value): bool => $value !== null && $value !== '');
+    }
+
+    protected function filtersWithCategory(array $filters): array
+    {
+        if (empty($filters['category_id'])) {
+            unset($filters['category_id']);
+
+            return $filters;
+        }
+
+        $keyword = app(PlatformCategoryService::class)->keywordForPlatform(
+            $this->platform(),
+            $filters['category_id']
+        );
+
+        if ($keyword === null) {
+            throw new ElimException(__('api.invalid_category_id'), 422, context: [
+                'category_id' => [__('api.invalid_category_id')],
+            ]);
+        }
+
+        unset($filters['category_id']);
+        $filters['q'] = $keyword;
+
+        return $filters;
     }
 
     protected function lang(string|null $lang): string
