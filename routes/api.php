@@ -1,8 +1,9 @@
 <?php
 
+use App\Http\Controllers\Api\V1\Auth\CustomerAuthController;
+use App\Http\Controllers\Api\V1\Auth\UserAddressController;
 use App\Http\Controllers\Api\V1\Elim\Alibaba1688CatalogController;
 use App\Http\Controllers\Api\V1\Elim\TaobaoCatalogController;
-use App\Http\Controllers\Api\V1\Auth\CustomerAuthController;
 use App\Http\Controllers\Api\V1\PlatformCatalogController;
 use Illuminate\Support\Facades\Route;
 
@@ -29,9 +30,30 @@ Route::prefix('v1')->group(function () {
     });
 
     Route::prefix('auth')->group(function () {
-        Route::post('register', [CustomerAuthController::class, 'register']);
-        Route::post('login', [CustomerAuthController::class, 'login']);
-        Route::post('otp/send', [CustomerAuthController::class, 'sendOtp']);
-        Route::post('otp/verify', [CustomerAuthController::class, 'verifyOtp']);
+        Route::prefix('register')->group(function () {
+            Route::post('otp/send', [CustomerAuthController::class, 'sendRegistrationOtp']);
+            Route::post('otp/verify', [CustomerAuthController::class, 'verifyRegistrationOtp']);
+            Route::post('complete', [CustomerAuthController::class, 'completeRegistration']);
+        });
+
+        Route::prefix('login')->group(function () {
+            Route::post('otp/send', [CustomerAuthController::class, 'sendLoginOtp']);
+            Route::post('otp/verify', [CustomerAuthController::class, 'verifyLoginOtp']);
+        });
+
+        Route::post('otp/resend', [CustomerAuthController::class, 'resendOtp']);
+
+        Route::middleware(['auth:sanctum', 'customer.active'])->group(function () {
+            Route::get('me', [CustomerAuthController::class, 'me']);
+            Route::match(['put', 'patch'], 'profile', [CustomerAuthController::class, 'updateProfile']);
+            Route::post('logout', [CustomerAuthController::class, 'logout']);
+            Route::patch('language', [CustomerAuthController::class, 'updateLanguage']);
+
+            Route::get('addresses', [UserAddressController::class, 'index']);
+            Route::post('addresses', [UserAddressController::class, 'store']);
+            Route::match(['put', 'patch'], 'addresses/{address}', [UserAddressController::class, 'update']);
+            Route::delete('addresses/{address}', [UserAddressController::class, 'destroy']);
+            Route::post('addresses/{address}/default', [UserAddressController::class, 'setDefault']);
+        });
     });
 });

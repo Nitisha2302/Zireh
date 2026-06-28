@@ -2,12 +2,12 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Translation\HasLocalePreference;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -19,11 +19,9 @@ use Laravel\Sanctum\HasApiTokens;
     'email',
     'profile_photo',
     'password',
+    'status',
     'preferred_language',
     'device_token',
-    'location_permission',
-    'referral_code',
-    'referred_by_code',
     'google_id',
     'apple_id',
     'phone_verified_at',
@@ -36,23 +34,43 @@ class User extends Authenticatable implements HasLocalePreference
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
 
+    public const STATUS_ACTIVE = 'active';
+
+    public const STATUS_INACTIVE = 'inactive';
+
+    public const STATUS_BLOCKED = 'blocked';
+
     public function loginLogs(): MorphMany
     {
         return $this->morphMany(LoginLog::class, 'authenticatable');
     }
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
+    public function addresses(): HasMany
+    {
+        return $this->hasMany(UserAddress::class);
+    }
+
+    public function defaultAddress(): HasMany
+    {
+        return $this->hasMany(UserAddress::class)->where('is_default', true);
+    }
+
+    public function isActive(): bool
+    {
+        return $this->status === self::STATUS_ACTIVE;
+    }
+
+    public function isBlocked(): bool
+    {
+        return $this->status === self::STATUS_BLOCKED;
+    }
+
     protected function casts(): array
     {
         return [
             'phone_verified_at' => 'datetime',
             'email_verified_at' => 'datetime',
             'last_login_at' => 'datetime',
-            'location_permission' => 'boolean',
             'password' => 'hashed',
         ];
     }

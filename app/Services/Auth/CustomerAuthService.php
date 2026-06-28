@@ -3,6 +3,7 @@
 namespace App\Services\Auth;
 
 use App\Http\Resources\Api\V1\Auth\AuthTokenResource;
+use App\Http\Resources\Api\V1\Auth\CustomerResource;
 use App\Models\LoginLog;
 use App\Models\User;
 use App\Services\FileManager;
@@ -22,9 +23,45 @@ class CustomerAuthService
         protected FileManager $fileManager,
     ) {}
 
-    public function register(array $data, Request $request): AuthTokenResource
+    public function sendRegistrationOtp(string $phoneNumber): array
     {
-        $this->otpService->verify($data['phone_number'], 'register', $data['otp']);
+        if (User::query()->where('phone', $phoneNumber)->exists()) {
+            throw ValidationException::withMessages([
+                'phone_number' => [__('api.phone_already_registered')],
+            ]);
+        }
+
+        return $this->otpService->send($phoneNumber, 'register', [
+            'preferred_language' => app()->getLocale(),
+        ]);
+    }
+
+    public function verifyRegistrationOtp(string $phoneNumber, string $otp): array
+    {
+        if (User::query()->where('phone', $phoneNumber)->exists()) {
+            throw ValidationException::withMessages([
+                'phone_number' => [__('api.phone_already_registered')],
+            ]);
+        }
+
+        $verification = $this->otpService->verify($phoneNumber, 'register', $otp);
+
+        return [
+            'phone_number' => $verification->phone,
+            'verified_at' => $verification->verified_at,
+            'profile_completion_required' => true,
+        ];
+    }
+
+    public function completeRegistration(array $data, Request $request): AuthTokenResource
+    {
+        if (User::query()->where('phone', $data['phone_number'])->exists()) {
+            throw ValidationException::withMessages([
+                'phone_number' => [__('api.phone_already_registered')],
+            ]);
+        }
+
+        $this->otpService->assertRecentlyVerified($data['phone_number'], 'register');
 
         return DB::transaction(function () use ($data, $request) {
             $user = User::create([
@@ -32,12 +69,10 @@ class CustomerAuthService
                 'phone' => $data['phone_number'],
                 'email' => $data['email'] ?? null,
                 'profile_photo' => $this->storeProfilePhoto($data['profile_photo'] ?? null),
-                'password' => $data['password'] ?? null,
+                'password' => $data['password'],
+                'status' => User::STATUS_ACTIVE,
                 'preferred_language' => app()->getLocale(),
                 'device_token' => $data['device_token'] ?? null,
-                'location_permission' => (bool) ($data['location_permission'] ?? false),
-                'referral_code' => $this->generateReferralCode(),
-                'referred_by_code' => $data['referral_code'] ?? null,
                 'phone_verified_at' => now(),
                 'email_verified_at' => isset($data['email']) ? now() : null,
                 'last_login_at' => now(),
@@ -47,40 +82,48 @@ class CustomerAuthService
         });
     }
 
-    public function login(array $data, Request $request): AuthTokenResource
+    public function sendLoginOtp(string $phoneNumber): array
     {
-        $field = filter_var($data['login'], FILTER_VALIDATE_EMAIL) ? 'email' : 'phone';
+        $user = User::query()->where('phone', $phoneNumber)->first();
 
-        $user = User::query()->where($field, $data['login'])->first();
-
-        if (! $user || ! $user->password || ! Hash::check($data['password'], $user->password)) {
-            LoginLog::recordFailure('customer', $data['login'], $request, $user, 'Invalid credentials');
-
+        if (! $user && ! $this->otpService->hasRecentlyVerifiedRegistration($phoneNumber)) {
             throw ValidationException::withMessages([
-                'login' => [__('api.invalid_credentials')],
+                'phone_number' => [__('api.customer_not_found')],
             ]);
         }
 
-        $user->forceFill([
-            'device_token' => $data['device_token'] ?? $user->device_token,
-            'preferred_language' => app()->getLocale(),
-            'last_login_at' => now(),
-        ])->save();
+        if ($user?->isBlocked()) {
+            throw ValidationException::withMessages([
+                'phone_number' => [__('api.customer_account_blocked')],
+            ]);
+        }
 
-        return $this->issueToken($user, $data['device_name'], $request, $data['login'], __('api.customer_logged_in'));
+        return $this->otpService->send($phoneNumber, 'login', [
+            'preferred_language' => app()->getLocale(),
+        ]);
     }
 
-    public function loginWithOtp(array $data, Request $request): AuthTokenResource
+    public function verifyLoginOtp(array $data, Request $request): array|AuthTokenResource
     {
         $this->otpService->verify($data['phone_number'], 'login', $data['otp']);
 
         $user = User::query()->where('phone', $data['phone_number'])->first();
 
         if (! $user) {
+            if ($this->otpService->hasRecentlyVerifiedRegistration($data['phone_number'])) {
+                return [
+                    'profile_completion_required' => true,
+                    'phone_number' => $data['phone_number'],
+                    'message' => __('api.profile_completion_required'),
+                ];
+            }
+
             throw ValidationException::withMessages([
                 'phone_number' => [__('api.customer_not_found')],
             ]);
         }
+
+        $this->assertCustomerCanAuthenticate($user);
 
         $user->forceFill([
             'phone_verified_at' => $user->phone_verified_at ?? now(),
@@ -92,13 +135,79 @@ class CustomerAuthService
         return $this->issueToken($user, $data['device_name'], $request, $user->phone, __('api.customer_logged_in_with_otp'));
     }
 
+    public function resendOtp(string $phoneNumber, string $purpose): array
+    {
+        if ($purpose === 'register') {
+            if (User::query()->where('phone', $phoneNumber)->exists()) {
+                throw ValidationException::withMessages([
+                    'phone_number' => [__('api.phone_already_registered')],
+                ]);
+            }
+        }
+
+        if ($purpose === 'login') {
+            $user = User::query()->where('phone', $phoneNumber)->first();
+
+            if (! $user && ! $this->otpService->hasRecentlyVerifiedRegistration($phoneNumber)) {
+                throw ValidationException::withMessages([
+                    'phone_number' => [__('api.customer_not_found')],
+                ]);
+            }
+
+            if ($user?->isBlocked()) {
+                throw ValidationException::withMessages([
+                    'phone_number' => [__('api.customer_account_blocked')],
+                ]);
+            }
+        }
+
+        return $this->otpService->resend($phoneNumber, $purpose, [
+            'preferred_language' => app()->getLocale(),
+        ]);
+    }
+
+    public function updateProfile(User $user, array $data): User
+    {
+        $attributes = [];
+
+        if (array_key_exists('full_name', $data)) {
+            $attributes['name'] = $data['full_name'];
+        }
+
+        if (array_key_exists('email', $data)) {
+            $attributes['email'] = $data['email'];
+            $attributes['email_verified_at'] = filled($data['email']) ? now() : null;
+        }
+
+        if (array_key_exists('password', $data) && filled($data['password'])) {
+            $attributes['password'] = $data['password'];
+        }
+
+        if (array_key_exists('device_token', $data)) {
+            $attributes['device_token'] = $data['device_token'];
+        }
+
+        if (array_key_exists('profile_photo', $data)) {
+            if ($data['profile_photo'] instanceof UploadedFile) {
+                $this->fileManager->delete($user->profile_photo);
+                $attributes['profile_photo'] = $this->storeProfilePhoto($data['profile_photo']);
+            }
+        }
+
+        if ($attributes !== []) {
+            $user->forceFill($attributes)->save();
+        }
+
+        return $user->fresh();
+    }
+
     public function loginWithSocialProvider(
         string $provider,
         SocialiteUser $socialiteUser,
         Request $request,
         array $attributes = []
     ): AuthTokenResource {
-        $providerIdColumn = $provider.'_id';
+        $providerIdColumn = $provider . '_id';
 
         $query = User::query()->where($providerIdColumn, $socialiteUser->getId());
 
@@ -111,7 +220,6 @@ class CustomerAuthService
         $user = DB::transaction(function () use ($user, $providerIdColumn, $socialiteUser, $attributes) {
             if (! $user) {
                 $user = new User;
-                $user->referral_code = $this->generateReferralCode();
             }
 
             $user->fill([
@@ -120,8 +228,7 @@ class CustomerAuthService
                 'profile_photo' => $socialiteUser->getAvatar() ?: $user->profile_photo,
                 'preferred_language' => app()->getLocale(),
                 'device_token' => $attributes['device_token'] ?? $user->device_token,
-                'location_permission' => (bool) ($attributes['location_permission'] ?? $user->location_permission),
-                'referred_by_code' => $attributes['referral_code'] ?? $user->referred_by_code,
+                'status' => $user->status ?? User::STATUS_ACTIVE,
                 'last_login_at' => now(),
             ]);
 
@@ -136,9 +243,11 @@ class CustomerAuthService
             return $user;
         });
 
+        $this->assertCustomerCanAuthenticate($user);
+
         return $this->issueToken(
             $user,
-            $attributes['device_name'] ?? ucfirst($provider).' OAuth',
+            $attributes['device_name'] ?? ucfirst($provider) . ' OAuth',
             $request,
             $socialiteUser->getEmail() ?: $socialiteUser->getId(),
             __('api.social_login_successful', ['provider' => ucfirst($provider)])
@@ -160,6 +269,30 @@ class CustomerAuthService
             'token_id' => $currentTokenId,
             'ip' => $request->ip(),
         ]);
+    }
+
+    public function updateLanguage(User $user, string $language): User
+    {
+        $user->forceFill([
+            'preferred_language' => $language,
+        ])->save();
+
+        return $user->fresh();
+    }
+
+    protected function assertCustomerCanAuthenticate(User $user): void
+    {
+        if ($user->isBlocked()) {
+            throw ValidationException::withMessages([
+                'phone_number' => [__('api.customer_account_blocked')],
+            ]);
+        }
+
+        if (! $user->isActive()) {
+            throw ValidationException::withMessages([
+                'phone_number' => [__('api.customer_account_inactive')],
+            ]);
+        }
     }
 
     protected function issueToken(
@@ -187,26 +320,12 @@ class CustomerAuthService
         ]);
     }
 
-    public function updateLanguage(User $user, string $language): User
+    protected function storeProfilePhoto(mixed $file): ?string
     {
-        $user->forceFill([
-            'preferred_language' => $language,
-        ])->save();
+        if ($file instanceof UploadedFile) {
+            return $this->fileManager->store($file, 'customers/profile-photos');
+        }
 
-        return $user->fresh();
-    }
-
-    protected function generateReferralCode(): string
-    {
-        do {
-            $code = strtoupper(Str::random(8));
-        } while (User::query()->where('referral_code', $code)->exists());
-
-        return $code;
-    }
-
-    protected function storeProfilePhoto(?UploadedFile $file): ?string
-    {
-        return $this->fileManager->store($file, 'customers/profile-photos');
+        return null;
     }
 }

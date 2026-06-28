@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('guard', 50)->index();
             $table->string('login')->nullable();
             $table->string('ip_address', 45)->nullable();
+            $table->string('access_token_id')->nullable()->index();
             $table->text('user_agent')->nullable();
             $table->string('session_id')->nullable()->index();
             $table->timestamp('login_at')->nullable()->index();

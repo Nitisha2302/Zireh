@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'is_auth' => AdminAuthMiddleware::class,
             'set_locale' => SetApplicationLocale::class,
+            'customer.active' => \App\Http\Middleware\EnsureCustomerIsActive::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
