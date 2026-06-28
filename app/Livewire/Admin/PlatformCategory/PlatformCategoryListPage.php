@@ -71,7 +71,7 @@ class PlatformCategoryListPage extends Component
                         ->orWhere('keyword', 'like', "%{$this->search}%");
                 });
             })
-            ->when($this->platformFilter, fn ($query) => $query->where('platform_id', $this->platformFilter))
+            ->when($this->platformFilter, fn($query) => $query->where('platform_id', $this->platformFilter))
             ->latest()
             ->paginate(15);
 
