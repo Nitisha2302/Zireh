@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\PublicController;
+use App\Livewire\Admin\Customer\{CustomerAddressCreatePage, CustomerAddressEditPage, CustomerAddressListPage, CustomerEditPage, CustomerListPage};
 use App\Livewire\Admin\DashboardPage;
 use App\Livewire\Admin\Platform\{PlatformListPage, PlatformCreatePage, PlatformEditPage};
 use App\Livewire\Admin\PlatformSlider\{PlatformSliderListPage, PlatformSliderCreatePage, PlatformSliderEditPage};
@@ -29,6 +30,12 @@ Route::prefix('admin')->name('admin.')->middleware(['is_auth:admin'])->group(fun
     Route::get('settings/didit', DiditSettingsPage::class)->name('settings.didit');
     Route::get('settings/file-manager', FileManagerSettingsPage::class)->name('settings.file-manager');
     Route::get('settings/privacy-terms', PrivacyTermsSettingsPage::class)->name('settings.privacy-terms');
+
+    Route::get('customers', CustomerListPage::class)->name('customers.index');
+    Route::get('customers/{customer}/edit', CustomerEditPage::class)->name('customers.edit');
+    Route::get('customers/{customer}/addresses', CustomerAddressListPage::class)->name('customers.addresses.index');
+    Route::get('customers/{customer}/addresses/create', CustomerAddressCreatePage::class)->name('customers.addresses.create');
+    Route::get('customers/{customer}/addresses/{userAddress}/edit', CustomerAddressEditPage::class)->name('customers.addresses.edit');
 
     Route::get('platforms', PlatformListPage::class)->name('platforms.index');
     Route::get('platforms/create', PlatformCreatePage::class)->name('platforms.create');
