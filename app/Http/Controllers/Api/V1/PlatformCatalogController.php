@@ -9,6 +9,7 @@ use App\Services\FileManager;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
 
+
 class PlatformCatalogController extends ApiController
 {
     private const CACHE_TTL_SECONDS = 3600;

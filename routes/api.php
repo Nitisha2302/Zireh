@@ -1,16 +1,9 @@
 <?php
 
-use App\Http\Controllers\Api\V1\Auth\CustomerAuthController;
 use App\Http\Controllers\Api\V1\Elim\Alibaba1688CatalogController;
 use App\Http\Controllers\Api\V1\Elim\TaobaoCatalogController;
-use App\Http\Controllers\Api\V1\Seller\DashboardController;
-use App\Http\Controllers\Api\V1\Seller\MenuController;
-use App\Http\Controllers\Api\V1\Seller\ProductController;
-use App\Http\Controllers\Api\V1\Seller\RestaurantBusinessHourController;
-use App\Http\Controllers\Api\V1\Seller\SellerAuthController;
+use App\Http\Controllers\Api\V1\Auth\CustomerAuthController;
 use App\Http\Controllers\Api\V1\PlatformCatalogController;
-use App\Http\Middleware\TrackCustomerApiActivity;
-use App\Http\Middleware\TrackSellerApiActivity;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
@@ -33,5 +26,12 @@ Route::prefix('v1')->group(function () {
         Route::get('categories', [Alibaba1688CatalogController::class, 'categories'])->name('categories.index');
         Route::post('image-search', [Alibaba1688CatalogController::class, 'imageSearch'])->name('products.image-search');
         Route::post('upload-image', [Alibaba1688CatalogController::class, 'uploadImage'])->name('products.upload-image');
+    });
+
+    Route::prefix('auth')->group(function () {
+        Route::post('register', [CustomerAuthController::class, 'register']);
+        Route::post('login', [CustomerAuthController::class, 'login']);
+        Route::post('otp/send', [CustomerAuthController::class, 'sendOtp']);
+        Route::post('otp/verify', [CustomerAuthController::class, 'verifyOtp']);
     });
 });

@@ -98,7 +98,7 @@ class CustomerAuthService
         Request $request,
         array $attributes = []
     ): AuthTokenResource {
-        $providerIdColumn = $provider . '_id';
+        $providerIdColumn = $provider.'_id';
 
         $query = User::query()->where($providerIdColumn, $socialiteUser->getId());
 
@@ -138,7 +138,7 @@ class CustomerAuthService
 
         return $this->issueToken(
             $user,
-            $attributes['device_name'] ?? ucfirst($provider) . ' OAuth',
+            $attributes['device_name'] ?? ucfirst($provider).' OAuth',
             $request,
             $socialiteUser->getEmail() ?: $socialiteUser->getId(),
             __('api.social_login_successful', ['provider' => ucfirst($provider)])
