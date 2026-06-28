@@ -125,4 +125,5 @@ return [
     'date_of_birth' => 'Дата рождения',
     'platforms' => 'Платформа',
     'profile_description'  => 'Описание профиля',
+    'cache_cleared' => 'Кэш очищен успешно.',
 ];

@@ -150,4 +150,5 @@ return [
     'date_of_birth' => 'Санаи таваллуд',
     'platforms' => 'Платформа',
     'profile_description' => 'Тавсифи профаили',
+    'cache_cleared' => 'Кэш навсозӣ шуданд.',
 ];
