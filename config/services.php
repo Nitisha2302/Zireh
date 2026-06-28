@@ -81,24 +81,6 @@ return [
             'products_ttl' => env('ELIM_PRODUCTS_CACHE_TTL', 900),
             'categories_ttl' => env('ELIM_CATEGORIES_CACHE_TTL', 86400),
         ],
-        'categories' => [
-            'taobao' => [
-                ['id' => 'women-fashion', 'name' => 'Women Fashion'],
-                ['id' => 'men-fashion', 'name' => 'Men Fashion'],
-                ['id' => 'bags', 'name' => 'Bags'],
-                ['id' => 'shoes', 'name' => 'Shoes'],
-                ['id' => 'electronics', 'name' => 'Electronics'],
-                ['id' => 'home', 'name' => 'Home & Living'],
-            ],
-            '1688' => [
-                ['id' => 'apparel', 'name' => 'Apparel Wholesale'],
-                ['id' => 'bags', 'name' => 'Bags Wholesale'],
-                ['id' => 'shoes', 'name' => 'Shoes Wholesale'],
-                ['id' => 'electronics', 'name' => 'Electronics Wholesale'],
-                ['id' => 'industrial', 'name' => 'Industrial Supplies'],
-                ['id' => 'home', 'name' => 'Home & Living Wholesale'],
-            ],
-        ],
     ],
 
 ];
