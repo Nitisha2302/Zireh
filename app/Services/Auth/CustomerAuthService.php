@@ -87,9 +87,12 @@ class CustomerAuthService
         $user = User::query()->where('phone', $phoneNumber)->first();
 
         if (! $user && ! $this->otpService->hasRecentlyVerifiedRegistration($phoneNumber)) {
-            throw ValidationException::withMessages([
-                'phone_number' => [__('api.customer_not_found')],
+            $user = User::create([
+                'phone' => $phoneNumber,
             ]);
+            // throw ValidationException::withMessages([
+            //     'phone_number' => [__('api.customer_not_found')],
+            // ]);
         }
 
         if ($user?->isBlocked()) {
