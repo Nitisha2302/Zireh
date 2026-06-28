@@ -52,4 +52,5 @@ return [
     'elim_product_fetched' => 'Product fetched successfully.',
     'elim_categories_listed' => 'Categories fetched successfully.',
     'elim_image_uploaded' => 'Image uploaded successfully.',
+    'invalid_category_id' => 'The selected category is invalid or inactive for this platform.',
 ];

@@ -54,6 +54,21 @@ class PlatformCategoryService
         }
     }
 
+    public function keywordForPlatform(string $platformKey, string $categoryId): ?string
+    {
+        $platform = Platform::query()->where('code', $platformKey)->first();
+
+        if (! $platform) {
+            return null;
+        }
+
+        return PlatformCategory::query()
+            ->where('platform_id', $platform->id)
+            ->where('keyword', $categoryId)
+            ->where('is_active', true)
+            ->value('keyword');
+    }
+
     protected function cacheKey(string $platformKey, string $language): string
     {
         $payload = ['lang' => $language];
