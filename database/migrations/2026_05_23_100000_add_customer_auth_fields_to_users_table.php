@@ -23,6 +23,7 @@ return new class extends Migration
             $table->string('google_id')->nullable()->unique()->after('referred_by_code');
             $table->string('apple_id')->nullable()->unique()->after('google_id');
             $table->timestamp('last_login_at')->nullable()->after('apple_id');
+            $table->string('name')->nullable()->change();
         });
     }
 
