@@ -21,16 +21,16 @@ class PlatformCategoryService
 
                 $items = $platform
                     ? PlatformCategory::query()
-                        ->where('platform_id', $platform->id)
-                        ->where('is_active', true)
-                        ->orderBy('name->en')
-                        ->get()
-                        ->map(fn (PlatformCategory $category): array => [
-                            'id' => $category->keyword,
-                            'name' => $category->getTranslation('name', $locale),
-                        ])
-                        ->values()
-                        ->all()
+                    ->where('platform_id', $platform->id)
+                    ->where('is_active', true)
+                    ->orderBy('name->en')
+                    ->get()
+                    ->map(fn(PlatformCategory $category): array => [
+                        'id' => $category->keyword,
+                        'name' => $category->getTranslation('name', $locale),
+                    ])
+                    ->values()
+                    ->all()
                     : [];
 
                 return [
@@ -74,7 +74,7 @@ class PlatformCategoryService
         $payload = ['lang' => $language];
         ksort($payload);
 
-        return 'elim:'.$platformKey.':categories:'.md5(json_encode($payload));
+        return 'elim:' . $platformKey . ':categories:' . md5(json_encode($payload));
     }
 
     protected function lang(string|null $lang): string

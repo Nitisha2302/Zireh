@@ -70,6 +70,13 @@ new class extends Component {
                 </a>
             </li>
 
+            <li class="menu-item {{ request()->routeIs('admin.customers.*') ? 'active' : '' }}">
+                <a href="{{ route('admin.customers.index') }}" class="menu-link">
+                    <i class="menu-icon icon-base ti tabler-users"></i>
+                    <div>Customers</div>
+                </a>
+            </li>
+
             <li class="menu-item {{ request()->routeIs('admin.profile') ? 'active' : '' }}">
                 <a href="{{ route('admin.profile') }}" class="menu-link">
                     <i class="menu-icon icon-base ti tabler-user"></i>

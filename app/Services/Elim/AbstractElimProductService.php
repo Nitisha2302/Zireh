@@ -14,8 +14,7 @@ abstract class AbstractElimProductService implements MarketplaceProductService
     public function __construct(
         protected readonly ElimApiClient $client,
         protected readonly ProductNormalizer $normalizer
-    ) {
-    }
+    ) {}
 
     abstract public function platform(): string;
 
@@ -92,7 +91,7 @@ abstract class AbstractElimProductService implements MarketplaceProductService
             'filter' => $filters['filter'] ?? null,
             'page' => (int) ($filters['page'] ?? 1),
             'size' => (int) ($filters['size'] ?? 20),
-        ], fn (mixed $value): bool => $value !== null && $value !== '');
+        ], fn(mixed $value): bool => $value !== null && $value !== '');
     }
 
     protected function filtersWithCategory(array $filters): array
@@ -134,7 +133,7 @@ abstract class AbstractElimProductService implements MarketplaceProductService
     {
         ksort($payload);
 
-        return 'elim:'.$this->platform().':'.$scope.':'.md5(json_encode($payload));
+        return 'elim:' . $this->platform() . ':' . $scope . ':' . md5(json_encode($payload));
     }
 
     protected function productTtl(): int
