@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('phone', 30)->index();
             $table->string('purpose', 50)->index();
+            $table->string('context', 50)->index();
             $table->string('code');
             $table->timestamp('expires_at')->index();
             $table->timestamp('verified_at')->nullable();
