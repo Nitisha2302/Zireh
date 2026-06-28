@@ -185,4 +185,5 @@ return [
     'date_of_birth' => 'Date of Birth',
     'platforms' => 'Platforms',
     'profile_description' => 'Profile description',
+    'cache_cleared' => 'Cache cleared successfully.',
 ];

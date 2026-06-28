@@ -5,8 +5,7 @@ use App\Support\LocaleManager;
 use Illuminate\Support\Facades\Log;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public $admin;
     public array $locales = [];
     public string $currentLocale = 'en';
@@ -23,7 +22,7 @@ new class extends Component
     {
         $manager = app(LocaleManager::class);
 
-        if (! $manager->isSupported($locale)) {
+        if (!$manager->isSupported($locale)) {
             return;
         }
 
@@ -32,6 +31,14 @@ new class extends Component
         app()->setLocale($locale);
 
         return $this->redirect(url()->previous() ?: route('admin.dashboard'), navigate: false);
+    }
+
+    public function clearCache()
+    {
+        Artisan::call('cache:clear');
+        Artisan::call('view:clear');
+        flash()->success(__('admin.cache_cleared'));
+        return $this->redirectRoute('admin.dashboard');
     }
 
     public function logout()
@@ -72,8 +79,19 @@ new class extends Component
 
     <div class="navbar-nav-right d-flex align-items-center justify-content-end" id="navbar-collapse">
         <ul class="navbar-nav flex-row align-items-center ms-md-auto">
+            {{-- Clear Cache --}}
+            <li class="nav-item navbar-dropdown dropdown-user dropdown">
+                <a class="nav-link dropdown-toggle hide-arrow px-2" href="javascript:void(0);"
+                    wire:click.prevent="clearCache">
+                    <i class="icon-base ti tabler-refresh icon-md"></i>
+                </a>
+            </li>
+
+
+            {{-- Language --}}
             <li class="nav-item dropdown me-3">
-                <a class="nav-link dropdown-toggle hide-arrow px-2" href="javascript:void(0);" data-bs-toggle="dropdown">
+                <a class="nav-link dropdown-toggle hide-arrow px-2" href="javascript:void(0);"
+                    data-bs-toggle="dropdown">
                     <i class="icon-base ti tabler-language icon-md"></i>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end">
@@ -82,11 +100,14 @@ new class extends Component
                         <li>
                             <a class="dropdown-item {{ $currentLocale === $code ? 'active' : '' }}" href="#"
                                 wire:click.prevent="setLocale('{{ $code }}')">
-                                <span>{{ __('admin.'.match ($code) {
-                                    'ru' => 'russian',
-                                    'tg' => 'tajik',
-                                    default => 'english',
-                                }) }}</span>
+                                <span>{{ __(
+                                    'admin.' .
+                                        match ($code) {
+                                            'ru' => 'russian',
+                                            'tg' => 'tajik',
+                                            default => 'english',
+                                        },
+                                ) }}</span>
                             </a>
                         </li>
                     @endforeach
@@ -104,7 +125,8 @@ new class extends Component
                             <div class="d-flex">
                                 <div class="flex-shrink-0 me-3">
                                     <div class="avatar avatar-online">
-                                        <img src="{{ $admin->avatar ?? '' }}" alt="Admin avatar" class="w-px-40 h-auto rounded-circle" />
+                                        <img src="{{ $admin->avatar ?? '' }}" alt="Admin avatar"
+                                            class="w-px-40 h-auto rounded-circle" />
                                     </div>
                                 </div>
                                 <div class="flex-grow-1">
@@ -119,7 +141,8 @@ new class extends Component
                     </li>
                     <li>
                         <a class="dropdown-item" href="{{ route('admin.profile') }}">
-                            <i class="icon-base ti tabler-user icon-md me-3"></i><span>{{ __('admin.my_profile') }}</span>
+                            <i
+                                class="icon-base ti tabler-user icon-md me-3"></i><span>{{ __('admin.my_profile') }}</span>
                         </a>
                     </li>
                     <li>

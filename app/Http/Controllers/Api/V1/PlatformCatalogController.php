@@ -31,6 +31,7 @@ class PlatformCatalogController extends ApiController
                         'id' => $platform->id,
                         'name' => $platform->getTranslation('name', $locale),
                         'logo' => $fileManager->url($platform->getTranslation('logo', $locale)),
+                        'commission' => $platform->commission,
                         'sliders' => $platform->sliders->map(fn(PlatformSlider $slider): array => [
                             'id' => $slider->id,
                             'heading' => $slider->heading,
