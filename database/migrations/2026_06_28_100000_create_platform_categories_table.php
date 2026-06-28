@@ -13,6 +13,7 @@ return new class extends Migration
             $table->foreignId('platform_id')->constrained('platforms')->cascadeOnDelete();
             $table->json('name');
             $table->string('keyword');
+            $table->boolean('is_default')->default(false);
             $table->boolean('is_active')->default(true);
             $table->timestamps();
             $table->softDeletes();
