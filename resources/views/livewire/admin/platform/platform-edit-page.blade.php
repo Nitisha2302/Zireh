@@ -18,15 +18,6 @@
                                 <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
                         </div>
-                        <div class="mb-4">
-                            <label class="form-label" for="code">Platform commission</label>
-                            <input id="commission" type="number" wire:model.blur="commission"
-                                class="form-control @error('commission') is-invalid @enderror" placeholder="5">
-                            <small class="text-body-secondary"> Enter the platform commission in %.</small>
-                            @error('commission')
-                                <div class="invalid-feedback d-block">{{ $message }}</div>
-                            @enderror
-                        </div>
                         @include('livewire.admin.platform.partials.translation-fields', [
                             'editing' => true,
                         ])
@@ -42,6 +33,9 @@
                         <div class="form-check form-switch mb-4"><input class="form-check-input" type="checkbox"
                                 id="is_available" wire:model="is_available"><label class="form-check-label"
                                 for="is_available">Active</label></div>
+                        <a href="{{ route('admin.platforms.commission-slabs.index', $platform) }}" class="btn btn-label-primary w-100 mb-2">
+                            <i class="icon-base ti tabler-percentage me-1"></i> Commission Slabs
+                        </a>
                         <button type="submit" class="btn btn-primary w-100"><i
                                 class="icon-base ti tabler-device-floppy"></i> Update Platform</button>
                         <a href="{{ route('admin.platforms.index') }}"

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Cache;
 use Spatie\Translatable\HasTranslations;
+use App\Services\PlatformCommissionService;
 
 class Platform extends Model
 {
@@ -19,7 +20,6 @@ class Platform extends Model
         'name',
         'logo',
         'is_available',
-        'commission'
     ];
 
     public array $translatable = [
@@ -32,7 +32,6 @@ class Platform extends Model
     {
         return [
             'is_available' => 'boolean',
-            'commission' => 'float',
         ];
     }
 
@@ -46,11 +45,25 @@ class Platform extends Model
         return $this->hasMany(PlatformCategory::class);
     }
 
+    public function commissionSlabs(): HasMany
+    {
+        return $this->hasMany(PlatformCommissionSlab::class)->orderBy('min_amount');
+    }
+
     protected static function booted(): void
     {
-        static::saved(fn() => static::clearCatalogCache());
-        static::deleted(fn() => static::clearCatalogCache());
-        static::restored(fn() => static::clearCatalogCache());
+        static::saved(function (Platform $platform): void {
+            static::clearCatalogCache();
+            $platform->clearCommissionSlabCache();
+        });
+        static::deleted(function (Platform $platform): void {
+            static::clearCatalogCache();
+            $platform->clearCommissionSlabCache();
+        });
+        static::restored(function (Platform $platform): void {
+            static::clearCatalogCache();
+            $platform->clearCommissionSlabCache();
+        });
     }
 
     public static function clearCatalogCache(): void
@@ -59,5 +72,10 @@ class Platform extends Model
             Cache::forget("api:platform-catalog:platforms:{$locale}");
             Cache::forget("api:platform-catalog:sliders:{$locale}");
         }
+    }
+
+    public function clearCommissionSlabCache(): void
+    {
+        app(PlatformCommissionService::class)->clearCache($this->id);
     }
 }

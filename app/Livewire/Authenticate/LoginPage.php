@@ -60,7 +60,7 @@ class LoginPage extends Component
 
         $admin = Auth::guard('admin')->user();
 
-        // LoginLog::recordSuccess($admin, 'admin', $login, request());
+        LoginLog::recordSuccess($admin, 'admin', $login, request());
 
         Log::info('Admin logged in.', [
             'admin_id' => $admin->id,

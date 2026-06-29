@@ -21,6 +21,12 @@ return new class extends Migration
         });
 
         Schema::table('users', function (Blueprint $table) {
+            if (Schema::hasColumn('users', 'referral_code')) {
+                $table->dropUnique(['referral_code']);
+            }
+        });
+
+        Schema::table('users', function (Blueprint $table) {
             foreach (['location_permission', 'referral_code', 'referred_by_code'] as $column) {
                 if (Schema::hasColumn('users', $column)) {
                     $table->dropColumn($column);

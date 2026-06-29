@@ -6,8 +6,10 @@ use App\Http\Controllers\Api\ApiController;
 use App\Models\Platform;
 use App\Models\PlatformSlider;
 use App\Services\FileManager;
+use App\Services\PlatformCommissionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Validation\ValidationException;
 
 
 class PlatformCatalogController extends ApiController
@@ -24,15 +26,25 @@ class PlatformCatalogController extends ApiController
             function () use ($locale, $fileManager): array {
                 return Platform::query()
                     ->where('is_available', true)
-                    ->with('sliders:id,heading,link,image')
+                    ->with([
+                        'sliders:id,heading,link,image',
+                        'commissionSlabs' => fn ($query) => $query
+                            ->where('is_active', true)
+                            ->orderBy('min_amount'),
+                    ])
                     ->orderBy('id')
                     ->get()
-                    ->map(fn(Platform $platform): array => [
+                    ->map(fn (Platform $platform): array => [
                         'id' => $platform->id,
                         'name' => $platform->getTranslation('name', $locale),
                         'logo' => $fileManager->url($platform->getTranslation('logo', $locale)),
-                        'commission' => $platform->commission,
-                        'sliders' => $platform->sliders->map(fn(PlatformSlider $slider): array => [
+                        'commission_slabs' => $platform->commissionSlabs->map(fn ($slab): array => [
+                            'id' => $slab->id,
+                            'min_amount' => (float) $slab->min_amount,
+                            'max_amount' => $slab->max_amount !== null ? (float) $slab->max_amount : null,
+                            'commission_percentage' => (float) $slab->commission_percentage,
+                        ])->values()->all(),
+                        'sliders' => $platform->sliders->map(fn (PlatformSlider $slider): array => [
                             'id' => $slider->id,
                             'heading' => $slider->heading,
                             'link' => $slider->link,
@@ -48,6 +60,20 @@ class PlatformCatalogController extends ApiController
             ['language' => $locale, 'platforms' => $data],
             __('api.platforms_listed')
         )->header('Content-Language', $locale);
+    }
+
+    public function commissionSlabs(Platform $platform, PlatformCommissionService $commissionService): JsonResponse
+    {
+        if (! $platform->is_available) {
+            throw ValidationException::withMessages([
+                'platform_id' => [__('api.platform_not_available')],
+            ]);
+        }
+
+        return $this->successResponse(
+            $commissionService->listForPlatform($platform->id),
+            __('api.commission_slabs_listed')
+        );
     }
 
     public function sliders(FileManager $fileManager): JsonResponse
