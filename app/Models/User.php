@@ -50,6 +50,11 @@ class User extends Authenticatable implements HasLocalePreference
         return $this->hasMany(UserAddress::class);
     }
 
+    public function wishlists(): HasMany
+    {
+        return $this->hasMany(UserWishlistItem::class);
+    }
+
     public function defaultAddress(): HasMany
     {
         return $this->hasMany(UserAddress::class)->where('is_default', true);

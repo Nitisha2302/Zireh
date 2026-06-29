@@ -28,23 +28,24 @@ class PlatformCatalogController extends ApiController
                     ->where('is_available', true)
                     ->with([
                         'sliders:id,heading,link,image',
-                        'commissionSlabs' => fn ($query) => $query
+                        'commissionSlabs' => fn($query) => $query
                             ->where('is_active', true)
                             ->orderBy('min_amount'),
                     ])
                     ->orderBy('id')
                     ->get()
-                    ->map(fn (Platform $platform): array => [
+                    ->map(fn(Platform $platform): array => [
                         'id' => $platform->id,
                         'name' => $platform->getTranslation('name', $locale),
                         'logo' => $fileManager->url($platform->getTranslation('logo', $locale)),
-                        'commission_slabs' => $platform->commissionSlabs->map(fn ($slab): array => [
+                        'code' => $platform->code,
+                        'commission_slabs' => $platform->commissionSlabs->map(fn($slab): array => [
                             'id' => $slab->id,
                             'min_amount' => (float) $slab->min_amount,
                             'max_amount' => $slab->max_amount !== null ? (float) $slab->max_amount : null,
                             'commission_percentage' => (float) $slab->commission_percentage,
                         ])->values()->all(),
-                        'sliders' => $platform->sliders->map(fn (PlatformSlider $slider): array => [
+                        'sliders' => $platform->sliders->map(fn(PlatformSlider $slider): array => [
                             'id' => $slider->id,
                             'heading' => $slider->heading,
                             'link' => $slider->link,
