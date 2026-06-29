@@ -27,7 +27,7 @@
                         <th width="80">ID</th>
                         <th>Platform translations and logos</th>
                         <th width="140">Code</th>
-                        <th width="140">Commision</th>
+                        <th width="140">Commission Slabs</th>
                         <th width="140">Status</th>
                         <th width="180">Created</th>
                         <th width="100"></th>
@@ -58,7 +58,11 @@
                                 @endforeach
                             </td>
                             <td><code>{{ $platform->code }}</code></td>
-                            <td><code>{{ $platform->commission }}%</code></td>
+                            <td>
+                                <a href="{{ route('admin.platforms.commission-slabs.index', $platform) }}" class="badge bg-label-primary text-decoration-none">
+                                    {{ $platform->commission_slabs_count }} slab(s)
+                                </a>
+                            </td>
                             <td>
                                 @if ($platform->is_available)
                                 <span class="badge bg-label-success">Active</span>@else<span
@@ -73,6 +77,9 @@
                                 <div class="dropdown"><button class="btn btn-sm btn-icon" data-bs-toggle="dropdown"><i
                                             class="icon-base ti tabler-dots-vertical"></i></button>
                                     <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><a href="{{ route('admin.platforms.commission-slabs.index', $platform) }}"
+                                                class="dropdown-item"><i
+                                                    class="icon-base ti tabler-percentage me-2"></i>Commission Slabs</a></li>
                                         <li><a href="{{ route('admin.platforms.edit', $platform) }}"
                                                 class="dropdown-item"><i
                                                     class="icon-base ti tabler-pencil me-2"></i>Edit</a></li>

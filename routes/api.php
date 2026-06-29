@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
     Route::get('platforms', [PlatformCatalogController::class, 'platforms']);
+    Route::get('platforms/{platform}/commission-slabs', [PlatformCatalogController::class, 'commissionSlabs']);
     Route::get('platform-sliders', [PlatformCatalogController::class, 'sliders']);
 
     Route::prefix('taobao')->name('api.taobao.')->group(function () {

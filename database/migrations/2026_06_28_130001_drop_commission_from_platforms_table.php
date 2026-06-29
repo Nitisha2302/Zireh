@@ -8,15 +8,17 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('platforms', function (Blueprint $table) {
-            $table->string('code')->nullable()->unique()->after('id');
-        });
+        if (Schema::hasColumn('platforms', 'commission')) {
+            Schema::table('platforms', function (Blueprint $table) {
+                $table->dropColumn('commission');
+            });
+        }
     }
 
     public function down(): void
     {
         Schema::table('platforms', function (Blueprint $table) {
-            $table->dropColumn('code');
+            $table->double('commission')->default(0)->after('code');
         });
     }
 };

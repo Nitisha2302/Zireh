@@ -61,6 +61,7 @@ class PlatformListPage extends Component
     public function render()
     {
         $platforms = Platform::query()
+            ->withCount('commissionSlabs')
             ->when($this->search, function ($query) {
                 $query->where('name->en', 'like', "%{$this->search}%")
                     ->orWhere('name->ru', 'like', "%{$this->search}%")

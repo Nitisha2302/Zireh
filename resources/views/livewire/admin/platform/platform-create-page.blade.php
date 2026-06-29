@@ -18,15 +18,6 @@
                                 <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
                         </div>
-                        <div class="mb-4">
-                            <label class="form-label" for="code">Platform commission</label>
-                            <input id="commission" type="number" wire:model.blur="commission"
-                                class="form-control @error('commission') is-invalid @enderror" placeholder="5">
-                            <small class="text-body-secondary"> Enter the platform commission in %.</small>
-                            @error('commission')
-                                <div class="invalid-feedback d-block">{{ $message }}</div>
-                            @enderror
-                        </div>
                         @include('livewire.admin.platform.partials.translation-fields', [
                             'editing' => false,
                         ])

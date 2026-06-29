@@ -31,10 +31,6 @@ class AdminAuthMiddleware
             LoginLog::touchCurrentSession(Auth::guard('admin')->user(), 'admin', $request);
         }
 
-        if ($guard === 'seller' && Auth::guard('seller')->check()) {
-            LoginLog::touchCurrentSession(Auth::guard('seller')->user(), 'seller', $request);
-        }
-
         return $next($request);
     }
 }

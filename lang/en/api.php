@@ -81,4 +81,7 @@ return [
     'address_deleted' => 'Address deleted successfully.',
     'address_not_found' => 'Address not found.',
     'default_address_updated' => 'Default address updated successfully.',
+    'commission_slab_not_found' => 'No active commission slab matches this transaction amount for the selected platform.',
+    'commission_slabs_listed' => 'Commission slabs fetched successfully.',
+    'platform_not_available' => 'The selected platform is not available.',
 ];
