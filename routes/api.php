@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\Auth\CustomerAuthController;
 use App\Http\Controllers\Api\V1\Auth\UserAddressController;
+use App\Http\Controllers\Api\V1\Auth\WishlistController;
 use App\Http\Controllers\Api\V1\Elim\Alibaba1688CatalogController;
 use App\Http\Controllers\Api\V1\Elim\TaobaoCatalogController;
 use App\Http\Controllers\Api\V1\PlatformCatalogController;
@@ -55,6 +56,10 @@ Route::prefix('v1')->group(function () {
             Route::match(['put', 'patch'], 'addresses/{address}', [UserAddressController::class, 'update']);
             Route::delete('addresses/{address}', [UserAddressController::class, 'destroy']);
             Route::post('addresses/{address}/default', [UserAddressController::class, 'setDefault']);
+
+            Route::get('wishlist', [WishlistController::class, 'index']);
+            Route::post('wishlist', [WishlistController::class, 'store']);
+            Route::delete('wishlist/{wishlist}', [WishlistController::class, 'destroy']);
         });
     });
 });

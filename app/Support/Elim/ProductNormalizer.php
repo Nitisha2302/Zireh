@@ -60,6 +60,28 @@ class ProductNormalizer
         ];
     }
 
+    public function wishlistSnapshot(array $detail): array
+    {
+        $images = $detail['images'] ?? [];
+        $shop = $detail['shop'] ?? [];
+
+        return [
+            'platform' => $detail['platform'] ?? null,
+            'id' => (string) ($detail['id'] ?? ''),
+            'title' => $detail['title'] ?? null,
+            'original_title' => $detail['original_title'] ?? null,
+            'url' => $detail['url'] ?? null,
+            'image' => $images[0] ?? null,
+            'price' => $detail['price'] ?? null,
+            'promotion_price' => $detail['promotion_price'] ?? null,
+            'unit' => $detail['unit'] ?? null,
+            'shop' => [
+                'id' => $shop['id'] ?? null,
+                'name' => $shop['name'] ?? null,
+            ],
+        ];
+    }
+
     private function listItem(array $item, string $platform): array
     {
         return [
