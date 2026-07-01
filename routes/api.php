@@ -2,7 +2,12 @@
 
 use App\Http\Controllers\Api\V1\Auth\CustomerAuthController;
 use App\Http\Controllers\Api\V1\Auth\UserAddressController;
+use App\Http\Controllers\Api\V1\Auth\WalletController;
 use App\Http\Controllers\Api\V1\Auth\WishlistController;
+use App\Http\Controllers\Api\V1\Cart\Platform1688\Platform1688CartController;
+use App\Http\Controllers\Api\V1\Cart\Platform1688\Platform1688CheckoutController;
+use App\Http\Controllers\Api\V1\Cart\Taobao\TaobaoCartController;
+use App\Http\Controllers\Api\V1\Cart\Taobao\TaobaoCheckoutController;
 use App\Http\Controllers\Api\V1\Elim\Alibaba1688CatalogController;
 use App\Http\Controllers\Api\V1\Elim\TaobaoCatalogController;
 use App\Http\Controllers\Api\V1\PlatformCatalogController;
@@ -60,6 +65,33 @@ Route::prefix('v1')->group(function () {
             Route::get('wishlist', [WishlistController::class, 'index']);
             Route::post('wishlist', [WishlistController::class, 'store']);
             Route::delete('wishlist/{wishlist}', [WishlistController::class, 'destroy']);
+
+            Route::get('wallet', [WalletController::class, 'show']);
+            Route::get('wallet/transactions', [WalletController::class, 'transactions']);
+
+            Route::prefix('taobao')->group(function () {
+                Route::get('cart', [TaobaoCartController::class, 'index']);
+                Route::post('cart/items', [TaobaoCartController::class, 'store']);
+                Route::patch('cart/items/{cartItem}', [TaobaoCartController::class, 'update']);
+                Route::delete('cart/items/{cartItem}', [TaobaoCartController::class, 'destroy']);
+                Route::delete('cart', [TaobaoCartController::class, 'clear']);
+                Route::post('cart/preview', [TaobaoCheckoutController::class, 'preview']);
+                Route::post('cart/checkout', [TaobaoCheckoutController::class, 'checkout']);
+                Route::get('orders', [TaobaoCheckoutController::class, 'orders']);
+                Route::get('orders/{order}', [TaobaoCheckoutController::class, 'show']);
+            });
+
+            Route::prefix('1688')->group(function () {
+                Route::get('cart', [Platform1688CartController::class, 'index']);
+                Route::post('cart/items', [Platform1688CartController::class, 'store']);
+                Route::patch('cart/items/{cartItem}', [Platform1688CartController::class, 'update']);
+                Route::delete('cart/items/{cartItem}', [Platform1688CartController::class, 'destroy']);
+                Route::delete('cart', [Platform1688CartController::class, 'clear']);
+                Route::post('cart/preview', [Platform1688CheckoutController::class, 'preview']);
+                Route::post('cart/checkout', [Platform1688CheckoutController::class, 'checkout']);
+                Route::get('orders', [Platform1688CheckoutController::class, 'orders']);
+                Route::get('orders/{order}', [Platform1688CheckoutController::class, 'show']);
+            });
         });
     });
 });

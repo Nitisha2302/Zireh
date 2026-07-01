@@ -1,0 +1,94 @@
+<div class="container-xxl flex-grow-1 container-p-y">
+    <div class="card">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <h4 class="mb-1">Customer Orders</h4>
+                    <p class="mb-0 text-body-secondary">View orders with product prices, commission, and Elim status.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body border-top border-bottom">
+            <div class="row align-items-center g-3">
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="icon-base ti tabler-search"></i></span>
+                        <input type="text" class="form-control" placeholder="Search order ID, customer..." wire:model.live.debounce.500ms="search">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" wire:model.live="platformFilter">
+                        <option value="">All platforms</option>
+                        <option value="taobao">Taobao</option>
+                        <option value="1688">1688</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" wire:model.live="statusFilter">
+                        <option value="">All statuses</option>
+                        <option value="creating">Creating</option>
+                        <option value="pending_payment">Pending Payment</option>
+                        <option value="paid">Paid</option>
+                        <option value="shipped">Shipped</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+                <div class="col-md-2 text-md-end">
+                    <span class="badge bg-label-primary fs-6">Total: {{ $orders->total() }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th width="80">ID</th>
+                        <th>Elim Order</th>
+                        <th>Customer</th>
+                        <th>Platform</th>
+                        <th>Status</th>
+                        <th>Payment</th>
+                        <th>Total (CNY)</th>
+                        <th>Commission</th>
+                        <th>Date</th>
+                        <th width="80"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse ($orders as $order)
+                        <tr>
+                            <td><span class="fw-semibold">#{{ $order->id }}</span></td>
+                            <td>{{ $order->elim_order_id ?? '—' }}</td>
+                            <td>
+                                <div class="fw-medium">{{ $order->user?->name ?? '—' }}</div>
+                                <small class="text-body-secondary">{{ $order->user?->phone }}</small>
+                            </td>
+                            <td><span class="badge bg-label-info text-uppercase">{{ $order->platform }}</span></td>
+                            <td><span class="badge bg-label-secondary">{{ $order->status }}</span></td>
+                            <td><span class="badge bg-label-warning">{{ $order->payment_status }}</span></td>
+                            <td class="fw-semibold">¥{{ number_format((float) $order->customer_total_cny, 2) }}</td>
+                            <td>¥{{ number_format((float) $order->commission_amount, 2) }} ({{ $order->commission_percentage }}%)</td>
+                            <td>{{ $order->created_at?->format('M d, Y H:i') }}</td>
+                            <td>
+                                <a href="{{ route('admin.orders.show', $order) }}" class="btn btn-sm btn-icon btn-text-secondary">
+                                    <i class="icon-base ti tabler-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="10" class="text-center py-5 text-body-secondary">No orders found.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        @if ($orders->hasPages())
+            <div class="card-footer">{{ $orders->links() }}</div>
+        @endif
+    </div>
+</div>
