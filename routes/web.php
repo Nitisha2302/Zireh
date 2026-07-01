@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\PublicController;
 use App\Livewire\Admin\Customer\{CustomerAddressCreatePage, CustomerAddressEditPage, CustomerAddressListPage, CustomerEditPage, CustomerListPage};
+use App\Livewire\Admin\Order\{OrderDetailPage, OrderListPage};
+use App\Livewire\Admin\Wallet\{CustomerWalletPage, WalletTransactionListPage};
 use App\Livewire\Admin\DashboardPage;
 use App\Livewire\Admin\Platform\{PlatformListPage, PlatformCreatePage, PlatformEditPage};
 use App\Livewire\Admin\PlatformSlider\{PlatformSliderListPage, PlatformSliderCreatePage, PlatformSliderEditPage};
@@ -9,6 +11,7 @@ use App\Livewire\Admin\PlatformCommissionSlab\{PlatformCommissionSlabListPage, P
 use App\Livewire\Admin\PlatformCategory\{PlatformCategoryListPage, PlatformCategoryCreatePage, PlatformCategoryEditPage};
 use App\Livewire\Admin\ProfilePage;
 use App\Livewire\Admin\Settings\DiditSettingsPage;
+use App\Livewire\Admin\Settings\ElimWarehouseSettingsPage;
 use App\Livewire\Admin\Settings\FileManagerSettingsPage;
 use App\Livewire\Admin\Settings\PrivacyTermsSettingsPage;
 use App\Livewire\Authenticate\LoginPage;
@@ -30,7 +33,14 @@ Route::prefix('admin')->name('admin.')->middleware(['is_auth:admin'])->group(fun
 
     Route::get('settings/didit', DiditSettingsPage::class)->name('settings.didit');
     Route::get('settings/file-manager', FileManagerSettingsPage::class)->name('settings.file-manager');
+    Route::get('settings/elim-warehouse', ElimWarehouseSettingsPage::class)->name('settings.elim-warehouse');
     Route::get('settings/privacy-terms', PrivacyTermsSettingsPage::class)->name('settings.privacy-terms');
+
+    Route::get('orders', OrderListPage::class)->name('orders.index');
+    Route::get('orders/{order}', OrderDetailPage::class)->name('orders.show');
+
+    Route::get('wallet-transactions', WalletTransactionListPage::class)->name('wallet-transactions.index');
+    Route::get('customers/{customer}/wallet', CustomerWalletPage::class)->name('customers.wallet');
 
     Route::get('customers', CustomerListPage::class)->name('customers.index');
     Route::get('customers/{customer}/edit', CustomerEditPage::class)->name('customers.edit');

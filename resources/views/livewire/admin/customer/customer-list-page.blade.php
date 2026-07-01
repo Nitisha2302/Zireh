@@ -95,6 +95,11 @@
                                             </a>
                                         </li>
                                         <li>
+                                            <a href="{{ route('admin.customers.wallet', $customer) }}" class="dropdown-item">
+                                                <i class="icon-base ti tabler-wallet me-2"></i>Manage Wallet
+                                            </a>
+                                        </li>
+                                        <li>
                                             <a href="{{ route('admin.customers.addresses.index', $customer) }}" class="dropdown-item">
                                                 <i class="icon-base ti tabler-map-pin me-2"></i>View Addresses
                                             </a>

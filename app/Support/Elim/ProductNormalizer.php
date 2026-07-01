@@ -82,6 +82,78 @@ class ProductNormalizer
         ];
     }
 
+    public function cartSnapshot(array $detail, ?array $sku = null): array
+    {
+        $snapshot = $this->wishlistSnapshot($detail);
+        $snapshot['marketplace_id'] = $detail['marketplace_id'] ?? null;
+        $snapshot['unit_price'] = $this->resolveUnitPrice($detail, $sku);
+
+        if ($sku) {
+            $snapshot['sku'] = [
+                'id' => (string) ($sku['mp_skuid'] ?? $sku['id'] ?? $sku['sku_id'] ?? $sku['skuId'] ?? $sku['spec_id'] ?? ''),
+                'properties' => $sku['properties'] ?? $sku['props'] ?? $sku['options'] ?? null,
+            ];
+        }
+
+        return $snapshot;
+    }
+
+    public function findSku(array $detail, string $skuId): ?array
+    {
+        foreach ($detail['skus'] ?? [] as $sku) {
+            if (! is_array($sku)) {
+                continue;
+            }
+
+            $candidates = array_filter([
+                (string) ($sku['id'] ?? ''),
+                (string) ($sku['sku_id'] ?? ''),
+                (string) ($sku['skuId'] ?? ''),
+                (string) ($sku['spec_id'] ?? ''),
+                (string) ($sku['mp_skuid'] ?? ''),
+            ], fn (string $value): bool => $value !== '');
+
+            if (in_array($skuId, $candidates, true)) {
+                return $sku;
+            }
+        }
+
+        return null;
+    }
+
+    public function resolveUnitPrice(array $detail, ?array $sku = null): float
+    {
+        if ($sku) {
+            $price = $this->money($sku['promotion_price'] ?? $sku['price'] ?? null);
+
+            if ($price !== null) {
+                return $price;
+            }
+        }
+
+        return $this->money($detail['promotion_price'] ?? $detail['price'] ?? null) ?? 0.0;
+    }
+
+    public function toElimLineItem(string $marketplaceId, string $productId, string $skuId, int $quantity, float $unitPrice): array
+    {
+        $lineItem = [
+            'mp_id' => (string) ($marketplaceId ?: $productId),
+            'id' => (string) ($skuId ?: $productId),
+            'quantity' => $quantity,
+        ];
+
+        if ($unitPrice > 0) {
+            $lineItem['price'] = round($unitPrice, 2);
+        }
+
+        return $lineItem;
+    }
+
+    public function hasSkus(array $detail): bool
+    {
+        return count($detail['skus'] ?? []) > 0;
+    }
+
     private function listItem(array $item, string $platform): array
     {
         return [

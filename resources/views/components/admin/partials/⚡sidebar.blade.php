@@ -70,6 +70,20 @@ new class extends Component {
                 </a>
             </li>
 
+            <li class="menu-item {{ request()->routeIs('admin.wallet-transactions.*') ? 'active' : '' }}">
+                <a href="{{ route('admin.wallet-transactions.index') }}" class="menu-link">
+                    <i class="menu-icon icon-base ti tabler-receipt"></i>
+                    <div>Wallet Transactions</div>
+                </a>
+            </li>
+
+            <li class="menu-item {{ request()->routeIs('admin.orders.*') ? 'active' : '' }}">
+                <a href="{{ route('admin.orders.index') }}" class="menu-link">
+                    <i class="menu-icon icon-base ti tabler-shopping-cart"></i>
+                    <div>Orders</div>
+                </a>
+            </li>
+
             <li class="menu-item {{ request()->routeIs('admin.customers.*') ? 'active' : '' }}">
                 <a href="{{ route('admin.customers.index') }}" class="menu-link">
                     <i class="menu-icon icon-base ti tabler-users"></i>
@@ -94,6 +108,11 @@ new class extends Component {
                     <li class="menu-item {{ request()->routeIs('admin.settings.privacy-terms') ? 'active' : '' }}">
                         <a href="{{ route('admin.settings.privacy-terms') }}" class="menu-link">
                             <div>{{ __('admin.privacy_terms') }}</div>
+                        </a>
+                    </li>
+                    <li class="menu-item {{ request()->routeIs('admin.settings.elim-warehouse') ? 'active' : '' }}">
+                        <a href="{{ route('admin.settings.elim-warehouse') }}" class="menu-link">
+                            <div>Elim Warehouse</div>
                         </a>
                     </li>
                     {{-- <li class="menu-item {{ request()->routeIs('admin.settings.file-manager') ? 'active' : '' }}">
