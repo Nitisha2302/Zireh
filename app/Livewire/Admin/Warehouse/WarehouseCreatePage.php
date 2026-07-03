@@ -3,16 +3,22 @@
 namespace App\Livewire\Admin\Warehouse;
 
 use App\Models\Warehouse;
+use App\Services\FileManager;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 #[Layout('layouts::admin', ['title' => 'Add Warehouse'])]
 class WarehouseCreatePage extends Component
 {
+    use WithFileUploads;
+
     public string $warehouse_name = '';
 
     public string $warehouse_code = '';
+
+    public mixed $image = null;
 
     public string $contact_person = '';
 
@@ -43,11 +49,16 @@ class WarehouseCreatePage extends Component
         return $this->warehouseRules();
     }
 
-    public function save(): void
+    public function save(FileManager $fileManager): void
     {
         $validated = $this->validate();
+        $data = $this->mapValidated($validated);
 
-        Warehouse::create($this->mapValidated($validated));
+        if ($this->image) {
+            $data['image'] = $fileManager->store($this->image, 'warehouses');
+        }
+
+        Warehouse::create($data);
 
         flash()->success(__('admin.warehouse_created'));
         $this->redirectRoute('admin.warehouses.index');
@@ -71,6 +82,7 @@ class WarehouseCreatePage extends Component
         return [
             'warehouse_name' => ['required', 'string', 'max:255'],
             'warehouse_code' => ['required', 'string', 'max:50', 'regex:/^[A-Za-z0-9\-_]+$/', $codeRule],
+            'image' => ['nullable', 'image', 'max:4096'],
             'contact_person' => ['required', 'string', 'max:255'],
             'contact_number' => ['required', 'string', 'max:30'],
             'email' => ['nullable', 'email', 'max:255'],

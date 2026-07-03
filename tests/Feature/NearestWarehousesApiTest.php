@@ -82,7 +82,15 @@ it('returns warehouses ordered by nearest distance to address', function () {
         ->assertJsonPath('data.origin.longitude', 68.787)
         ->assertJsonPath('data.warehouses.0.id', $nearest->id)
         ->assertJsonPath('data.warehouses.1.id', $farther->id)
-        ->assertJsonCount(2, 'data.warehouses');
+        ->assertJsonCount(2, 'data.warehouses')
+        ->assertJsonStructure([
+            'data' => [
+                'origin' => ['address_id', 'latitude', 'longitude'],
+                'warehouses' => [
+                    ['id', 'warehouse_name', 'warehouse_code', 'image', 'distance_km'],
+                ],
+            ],
+        ]);
 
     $firstDistance = $response->json('data.warehouses.0.distance_km');
     $secondDistance = $response->json('data.warehouses.1.distance_km');
@@ -120,4 +128,21 @@ it('rejects warehouse listing for another users address', function () {
 it('requires authentication for warehouse listing', function () {
     $this->getJson('/api/v1/auth/warehouses?address_id=1')
         ->assertUnauthorized();
+});
+
+it('returns warehouse image url in nearest warehouses api', function () {
+    $user = makeWarehouseUser();
+    $address = makeUserAddress($user);
+
+    makeActiveWarehouse([
+        'warehouse_name' => 'With Image',
+        'warehouse_code' => 'IMG-01',
+        'image' => 'warehouses/sample.jpg',
+    ]);
+
+    Sanctum::actingAs($user);
+
+    $this->getJson('/api/v1/auth/warehouses?address_id='.$address->id)
+        ->assertOk()
+        ->assertJsonPath('data.warehouses.0.image', fn ($url) => is_string($url) && str_contains($url, 'warehouses/sample.jpg'));
 });

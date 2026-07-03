@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Api\V1;
 
+use App\Services\FileManager;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -13,6 +14,7 @@ class WarehouseResource extends JsonResource
             'id' => $this->id,
             'warehouse_name' => $this->warehouse_name,
             'warehouse_code' => $this->warehouse_code,
+            'image' => app(FileManager::class)->url($this->image),
             'contact_person' => $this->contact_person,
             'contact_number' => $this->contact_number,
             'email' => $this->email,

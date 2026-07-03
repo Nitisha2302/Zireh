@@ -93,6 +93,27 @@
     </div>
 
     <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-header"><h5 class="mb-0">{{ __('admin.warehouse_image') }}</h5></div>
+            <div class="card-body">
+                <input type="file" accept="image/*" wire:model="image" class="form-control @error('image') is-invalid @enderror">
+                @error('image') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                <div wire:loading wire:target="image" class="small text-body-secondary mt-2">{{ __('admin.loading') }}...</div>
+                <div class="mt-3">
+                    @if ($image)
+                        <img src="{{ $image->temporaryUrl() }}" alt="Preview" class="img-fluid rounded border">
+                    @elseif (isset($warehouse) && $warehouse->image)
+                        <img src="{{ app(\App\Services\FileManager::class)->url($warehouse->image) }}" alt="{{ $warehouse->warehouse_name }}" class="img-fluid rounded border">
+                    @else
+                        <div class="border rounded d-flex align-items-center justify-content-center bg-label-secondary" style="height: 180px;">
+                            <i class="icon-base ti tabler-building-warehouse" style="font-size: 3rem;"></i>
+                        </div>
+                    @endif
+                </div>
+                <small class="text-body-secondary d-block mt-2">{{ __('admin.warehouse_image_hint') }}</small>
+            </div>
+        </div>
+
         <div class="card">
             <div class="card-header"><h5 class="mb-0">{{ __('admin.publish') }}</h5></div>
             <div class="card-body">
