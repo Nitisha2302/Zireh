@@ -78,6 +78,7 @@ class WalletTransactionListPage extends Component
             'customers' => $customers,
             'sources' => [
                 WalletTransaction::SOURCE_ADMIN_DEPOSIT => 'Admin Deposit',
+                WalletTransaction::SOURCE_ADMIN_DEDUCT => 'Admin Deduct',
                 WalletTransaction::SOURCE_ADMIN_REVERT => 'Admin Revert',
                 WalletTransaction::SOURCE_ORDER_PAYMENT => 'Order Payment',
                 WalletTransaction::SOURCE_ORDER_REFUND => 'Order Refund',

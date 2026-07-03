@@ -62,6 +62,47 @@ class WalletService
         });
     }
 
+    public function adminDeductFunds(User $user, float $amount, ?string $description, Admin $admin): WalletTransaction
+    {
+        $this->assertPositiveAmount($amount);
+
+        return DB::transaction(function () use ($user, $amount, $description, $admin): WalletTransaction {
+            $wallet = UserWallet::query()
+                ->where('user_id', $user->id)
+                ->lockForUpdate()
+                ->first();
+
+            if (! $wallet) {
+                $wallet = $this->getOrCreateWallet($user);
+                $wallet = UserWallet::query()->whereKey($wallet->id)->lockForUpdate()->firstOrFail();
+            }
+
+            $balanceBefore = (float) $wallet->balance;
+
+            if ($balanceBefore < $amount) {
+                throw ValidationException::withMessages([
+                    'amount' => ['Insufficient wallet balance for this deduction.'],
+                ]);
+            }
+
+            $balanceAfter = round($balanceBefore - $amount, 2);
+            $wallet->update(['balance' => $balanceAfter]);
+
+            return WalletTransaction::query()->create([
+                'user_id' => $user->id,
+                'admin_id' => $admin->id,
+                'type' => WalletTransaction::TYPE_DEBIT,
+                'source' => WalletTransaction::SOURCE_ADMIN_DEDUCT,
+                'amount' => $amount,
+                'balance_before' => $balanceBefore,
+                'balance_after' => $balanceAfter,
+                'currency' => $wallet->currency,
+                'status' => WalletTransaction::STATUS_COMPLETED,
+                'description' => $description ?: 'Admin wallet deduction',
+            ]);
+        });
+    }
+
     public function adminRevertTransaction(WalletTransaction $transaction, Admin $admin, ?string $description = null): WalletTransaction
     {
         if (! $transaction->isRevertable()) {

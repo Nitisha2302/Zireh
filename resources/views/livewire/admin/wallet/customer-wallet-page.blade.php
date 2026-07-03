@@ -21,23 +21,65 @@
         </div>
         <div class="col-lg-8">
             <div class="card h-100">
-                <div class="card-header"><h5 class="mb-0">Add Funds</h5></div>
+                <div class="card-header border-bottom">
+                    <ul class="nav nav-tabs card-header-tabs" role="tablist">
+                        <li class="nav-item">
+                            <button type="button" class="nav-link {{ $walletAction === 'add' ? 'active' : '' }}" wire:click="$set('walletAction', 'add')">
+                                <i class="icon-base ti tabler-plus me-1"></i>Add Funds
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button type="button" class="nav-link {{ $walletAction === 'deduct' ? 'active' : '' }}" wire:click="$set('walletAction', 'deduct')">
+                                <i class="icon-base ti tabler-minus me-1"></i>Deduct Balance
+                            </button>
+                        </li>
+                    </ul>
+                </div>
                 <div class="card-body">
-                    <form wire:submit="addFunds" class="row g-3">
-                        <div class="col-md-4">
-                            <label class="form-label">Amount (CNY)</label>
-                            <input type="number" step="0.01" min="0.01" class="form-control @error('amount') is-invalid @enderror" wire:model="amount">
-                            @error('amount') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                        </div>
-                        <div class="col-md-8">
-                            <label class="form-label">Description</label>
-                            <input type="text" class="form-control @error('description') is-invalid @enderror" wire:model="description" placeholder="Optional note for this deposit">
-                            @error('description') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                        </div>
-                        <div class="col-12">
-                            <button type="submit" class="btn btn-primary" wire:loading.attr="disabled">Add Funds</button>
-                        </div>
-                    </form>
+                    @if ($walletAction === 'add')
+                        <form wire:submit="addFunds" class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Amount (CNY)</label>
+                                <input type="number" step="0.01" min="0.01" class="form-control @error('amount') is-invalid @enderror" wire:model="amount">
+                                @error('amount') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col-md-8">
+                                <label class="form-label">Description</label>
+                                <input type="text" class="form-control @error('description') is-invalid @enderror" wire:model="description" placeholder="Optional note for this deposit">
+                                @error('description') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary" wire:loading.attr="disabled" wire:target="addFunds">
+                                    <i class="icon-base ti tabler-plus me-1"></i>Add Funds
+                                </button>
+                            </div>
+                        </form>
+                    @else
+                        <form wire:submit="confirmDeduct" class="row g-3">
+                            <div class="col-12">
+                                <div class="alert alert-warning mb-0">
+                                    <i class="icon-base ti tabler-alert-triangle me-1"></i>
+                                    This will reduce the customer wallet balance and create a debit transaction.
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Amount (CNY)</label>
+                                <input type="number" step="0.01" min="0.01" max="{{ (float) $wallet->balance }}" class="form-control @error('deductAmount') is-invalid @enderror" wire:model="deductAmount">
+                                @error('deductAmount') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                <small class="text-body-secondary">Available: ¥{{ number_format((float) $wallet->balance, 2) }}</small>
+                            </div>
+                            <div class="col-md-8">
+                                <label class="form-label">Description</label>
+                                <input type="text" class="form-control @error('deductDescription') is-invalid @enderror" wire:model="deductDescription" placeholder="Reason for deduction">
+                                @error('deductDescription') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-danger" wire:loading.attr="disabled" wire:target="confirmDeduct,deductFunds" @disabled((float) $wallet->balance <= 0)>
+                                    <i class="icon-base ti tabler-minus me-1"></i>Deduct Balance
+                                </button>
+                            </div>
+                        </form>
+                    @endif
                 </div>
             </div>
         </div>
@@ -70,7 +112,9 @@
                                 <span class="badge bg-label-{{ $transaction->type === 'credit' ? 'success' : 'danger' }}">{{ ucfirst($transaction->type) }}</span>
                             </td>
                             <td>{{ str_replace('_', ' ', $transaction->source) }}</td>
-                            <td class="fw-semibold">{{ $transaction->type === 'credit' ? '+' : '-' }}¥{{ number_format((float) $transaction->amount, 2) }}</td>
+                            <td class="fw-semibold {{ $transaction->type === 'credit' ? 'text-success' : 'text-danger' }}">
+                                {{ $transaction->type === 'credit' ? '+' : '-' }}¥{{ number_format((float) $transaction->amount, 2) }}
+                            </td>
                             <td>¥{{ number_format((float) $transaction->balance_after, 2) }}</td>
                             <td><span class="badge bg-label-secondary">{{ $transaction->status }}</span></td>
                             <td>{{ $transaction->description ?: '—' }}</td>
