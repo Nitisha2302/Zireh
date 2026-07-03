@@ -1752,7 +1752,52 @@
       ]
     },
     {
-      "name": "08 - Taobao Cart & Checkout",
+      "name": "08 - Warehouses",
+      "item": [
+        {
+          "name": "List Nearest Warehouses",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customer_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{locale}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/auth/warehouses?address_id={{address_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "auth", "warehouses"],
+              "query": [
+                {
+                  "key": "address_id",
+                  "value": "{{address_id}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "09 - Taobao Cart & Checkout",
       "item": [
         {
           "name": "Get Cart",
@@ -2075,7 +2120,7 @@
       }
     },
     {
-      "name": "09 - 1688 Cart & Checkout",
+      "name": "10 - 1688 Cart & Checkout",
       "item": [
         {
           "name": "Get Cart",

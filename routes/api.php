@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\V1\Cart\Taobao\TaobaoCheckoutController;
 use App\Http\Controllers\Api\V1\Elim\Alibaba1688CatalogController;
 use App\Http\Controllers\Api\V1\Elim\TaobaoCatalogController;
 use App\Http\Controllers\Api\V1\PlatformCatalogController;
+use App\Http\Controllers\Api\V1\WarehouseController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
@@ -61,6 +62,8 @@ Route::prefix('v1')->group(function () {
             Route::match(['put', 'patch'], 'addresses/{address}', [UserAddressController::class, 'update']);
             Route::delete('addresses/{address}', [UserAddressController::class, 'destroy']);
             Route::post('addresses/{address}/default', [UserAddressController::class, 'setDefault']);
+
+            Route::get('warehouses', [WarehouseController::class, 'index']);
 
             Route::get('wishlist', [WishlistController::class, 'index']);
             Route::post('wishlist', [WishlistController::class, 'store']);
