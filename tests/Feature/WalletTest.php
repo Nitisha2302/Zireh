@@ -52,6 +52,33 @@ it('allows admin to add funds and revert deposit', function () {
         ->and($deposit->fresh()->isRevertable())->toBeFalse();
 });
 
+it('allows admin to deduct funds and create debit transaction', function () {
+    $user = User::factory()->create();
+    $admin = makeWalletAdmin();
+    $service = app(WalletService::class);
+
+    $service->adminAddFunds($user, 100, 'Initial', $admin);
+
+    $deduct = $service->adminDeductFunds($user, 30, 'Manual adjustment', $admin);
+
+    expect((float) $service->getBalance($user))->toBe(70.0)
+        ->and($deduct->type)->toBe(WalletTransaction::TYPE_DEBIT)
+        ->and($deduct->source)->toBe(WalletTransaction::SOURCE_ADMIN_DEDUCT)
+        ->and((float) $deduct->balance_before)->toBe(100.0)
+        ->and((float) $deduct->balance_after)->toBe(70.0);
+});
+
+it('rejects deduct when balance is insufficient', function () {
+    $user = User::factory()->create();
+    $admin = makeWalletAdmin();
+    $service = app(WalletService::class);
+
+    $service->adminAddFunds($user, 20, null, $admin);
+
+    expect(fn () => $service->adminDeductFunds($user, 50, null, $admin))
+        ->toThrow(Illuminate\Validation\ValidationException::class);
+});
+
 it('rejects revert when balance is insufficient', function () {
     $user = User::factory()->create();
     $admin = makeWalletAdmin();

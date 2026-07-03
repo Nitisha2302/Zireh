@@ -22,7 +22,15 @@ class CustomerWalletPage extends Component
 
     public string $description = '';
 
+    public string $deductAmount = '';
+
+    public string $deductDescription = '';
+
+    public string $walletAction = 'add';
+
     public ?int $revertTransactionId = null;
+
+    public bool $deductPending = false;
 
     public function mount(User $customer): void
     {
@@ -51,6 +59,44 @@ class CustomerWalletPage extends Component
 
         $this->reset(['amount', 'description']);
         flash()->success('Funds added to customer wallet successfully.');
+    }
+
+    public function confirmDeduct(): void
+    {
+        $this->validate([
+            'deductAmount' => ['required', 'numeric', 'min:0.01'],
+            'deductDescription' => ['nullable', 'string', 'max:500'],
+        ], [], [
+            'deductAmount' => 'amount',
+            'deductDescription' => 'description',
+        ]);
+
+        $this->deductPending = true;
+        sweetalert()->showDenyButton()->warning('Deduct this amount from the customer wallet?');
+    }
+
+    public function deductFunds(WalletService $walletService): void
+    {
+        if (! $this->deductPending) {
+            return;
+        }
+
+        try {
+            $walletService->adminDeductFunds(
+                $this->customer,
+                (float) $this->deductAmount,
+                $this->deductDescription !== '' ? $this->deductDescription : null,
+                Auth::guard('admin')->user()
+            );
+        } catch (ValidationException $exception) {
+            $this->deductPending = false;
+            $this->setErrorBag($exception->validator->getMessageBag());
+
+            return;
+        }
+
+        $this->reset(['deductAmount', 'deductDescription', 'deductPending']);
+        flash()->success('Amount deducted from customer wallet successfully.');
     }
 
     public function confirmRevert(int $transactionId): void
@@ -88,6 +134,12 @@ class CustomerWalletPage extends Component
     #[\Livewire\Attributes\On('sweetalert:confirmed')]
     public function onRevertConfirmed(): void
     {
+        if ($this->deductPending) {
+            $this->deductFunds(app(WalletService::class));
+
+            return;
+        }
+
         $this->revert(app(WalletService::class));
     }
 
@@ -95,6 +147,7 @@ class CustomerWalletPage extends Component
     public function onRevertDenied(): void
     {
         $this->revertTransactionId = null;
+        $this->deductPending = false;
     }
 
     public function render(WalletService $walletService)

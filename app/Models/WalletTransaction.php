@@ -16,6 +16,8 @@ class WalletTransaction extends Model
 
     public const SOURCE_ADMIN_REVERT = 'admin_revert';
 
+    public const SOURCE_ADMIN_DEDUCT = 'admin_deduct';
+
     public const SOURCE_ORDER_PAYMENT = 'order_payment';
 
     public const SOURCE_ORDER_REFUND = 'order_refund';
