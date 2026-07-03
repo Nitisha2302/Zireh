@@ -91,6 +91,25 @@ new class extends Component {
                 </a>
             </li>
 
+            <li class="menu-item {{ request()->routeIs('admin.warehouses.*') ? 'open active' : '' }}">
+                <a href="javascript:void(0);" class="menu-link menu-toggle">
+                    <i class="menu-icon icon-base ti tabler-building-warehouse"></i>
+                    <div>{{ __('admin.warehouse_management') }}</div>
+                </a>
+                <ul class="menu-sub">
+                    <li class="menu-item {{ request()->routeIs('admin.warehouses.index') || request()->routeIs('admin.warehouses.show') || request()->routeIs('admin.warehouses.edit') ? 'active' : '' }}">
+                        <a href="{{ route('admin.warehouses.index') }}" class="menu-link">
+                            <div>{{ __('admin.warehouse_list') }}</div>
+                        </a>
+                    </li>
+                    <li class="menu-item {{ request()->routeIs('admin.warehouses.create') ? 'active' : '' }}">
+                        <a href="{{ route('admin.warehouses.create') }}" class="menu-link">
+                            <div>{{ __('admin.add_warehouse') }}</div>
+                        </a>
+                    </li>
+                </ul>
+            </li>
+
             <li class="menu-item {{ request()->routeIs('admin.profile') ? 'active' : '' }}">
                 <a href="{{ route('admin.profile') }}" class="menu-link">
                     <i class="menu-icon icon-base ti tabler-user"></i>

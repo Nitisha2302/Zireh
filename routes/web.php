@@ -4,6 +4,7 @@ use App\Http\Controllers\PublicController;
 use App\Livewire\Admin\Customer\{CustomerAddressCreatePage, CustomerAddressEditPage, CustomerAddressListPage, CustomerEditPage, CustomerListPage};
 use App\Livewire\Admin\Order\{OrderDetailPage, OrderListPage};
 use App\Livewire\Admin\Wallet\{CustomerWalletPage, WalletTransactionListPage};
+use App\Livewire\Admin\Warehouse\{WarehouseCreatePage, WarehouseEditPage, WarehouseListPage, WarehouseShowPage};
 use App\Livewire\Admin\DashboardPage;
 use App\Livewire\Admin\Platform\{PlatformListPage, PlatformCreatePage, PlatformEditPage};
 use App\Livewire\Admin\PlatformSlider\{PlatformSliderListPage, PlatformSliderCreatePage, PlatformSliderEditPage};
@@ -49,6 +50,11 @@ Route::prefix('admin')->name('admin.')->middleware(['is_auth:admin'])->group(fun
     Route::get('customers/{customer}/addresses', CustomerAddressListPage::class)->name('customers.addresses.index');
     Route::get('customers/{customer}/addresses/create', CustomerAddressCreatePage::class)->name('customers.addresses.create');
     Route::get('customers/{customer}/addresses/{userAddress}/edit', CustomerAddressEditPage::class)->name('customers.addresses.edit');
+
+    Route::get('warehouses', WarehouseListPage::class)->name('warehouses.index');
+    Route::get('warehouses/create', WarehouseCreatePage::class)->name('warehouses.create');
+    Route::get('warehouses/{warehouse}', WarehouseShowPage::class)->name('warehouses.show');
+    Route::get('warehouses/{warehouse}/edit', WarehouseEditPage::class)->name('warehouses.edit');
 
     Route::get('platforms', PlatformListPage::class)->name('platforms.index');
     Route::get('platforms/create', PlatformCreatePage::class)->name('platforms.create');

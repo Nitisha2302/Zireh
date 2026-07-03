@@ -111,6 +111,8 @@ return [
     'elim_warehouse_address_missing' => 'Warehouse address is not configured. Please contact support.',
     'wallet_fetched' => 'Wallet balance fetched successfully.',
     'wallet_transactions_listed' => 'Wallet transactions fetched successfully.',
+    'warehouses_listed' => 'Warehouses fetched successfully.',
+    'address_coordinates_missing' => 'This address does not have latitude and longitude. Please update the address with map coordinates.',
     'commission_slab_not_found' => 'No active commission slab matches this transaction amount for the selected platform.',
     'commission_slabs_listed' => 'Commission slabs fetched successfully.',
     'platform_not_available' => 'The selected platform is not available.',
