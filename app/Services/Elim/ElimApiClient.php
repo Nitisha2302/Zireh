@@ -3,6 +3,7 @@
 namespace App\Services\Elim;
 
 use App\Exceptions\Elim\ElimRequestException;
+use App\Support\Elim\ElimApiConfig;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
@@ -10,8 +11,10 @@ use Illuminate\Support\Facades\Log;
 
 class ElimApiClient
 {
-    public function __construct(private readonly ElimAuthService $authService)
-    {
+    public function __construct(
+        private readonly ElimAuthService $authService,
+        private readonly ElimApiConfig $config,
+    ) {
     }
 
     public function get(string $uri, array $query = [], bool $authenticated = true): array
@@ -75,8 +78,8 @@ class ElimApiClient
     {
         $request = Http::baseUrl($this->baseUrl())
             ->acceptJson()
-            ->timeout((int) config('services.elim.timeout', 20))
-            ->retry((int) config('services.elim.retries', 2), (int) config('services.elim.retry_sleep', 300), throw: false);
+            ->timeout($this->config->timeout())
+            ->retry($this->config->retries(), $this->config->retrySleep(), throw: false);
 
         if ($authenticated) {
             $request = $request->withToken($this->authService->accessToken());
@@ -104,6 +107,6 @@ class ElimApiClient
 
     private function baseUrl(): string
     {
-        return rtrim((string) config('services.elim.base_url', 'https://openapi.elim.asia'), '/');
+        return $this->config->baseUrl();
     }
 }

@@ -5,6 +5,7 @@ namespace App\Services\Elim;
 use App\Exceptions\Elim\ElimException;
 use App\Services\Elim\Contracts\MarketplaceProductService;
 use App\Services\PlatformCategoryService;
+use App\Support\Elim\ElimApiConfig;
 use App\Support\Elim\ProductNormalizer;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
@@ -13,7 +14,8 @@ abstract class AbstractElimProductService implements MarketplaceProductService
 {
     public function __construct(
         protected readonly ElimApiClient $client,
-        protected readonly ProductNormalizer $normalizer
+        protected readonly ProductNormalizer $normalizer,
+        protected readonly ElimApiConfig $config,
     ) {}
 
     abstract public function platform(): string;
@@ -37,7 +39,7 @@ abstract class AbstractElimProductService implements MarketplaceProductService
 
         return $this->search([
             ...$filters,
-            'q' => $filters['q'] ?? config('services.elim.default_query', 'bag'),
+            'q' => $filters['q'] ?? $this->config->defaultQuery(),
         ]);
     }
 
@@ -121,7 +123,7 @@ abstract class AbstractElimProductService implements MarketplaceProductService
 
     protected function lang(string|null $lang): string
     {
-        return in_array($lang, ['vi', 'en'], true) ? $lang : (string) config('services.elim.default_lang', 'en');
+        return in_array($lang, ['vi', 'en'], true) ? $lang : $this->config->defaultLang();
     }
 
     protected function elimPlatform(): string
@@ -133,7 +135,7 @@ abstract class AbstractElimProductService implements MarketplaceProductService
     {
         ksort($payload);
 
-        return 'elim:' . $this->platform() . ':' . $scope . ':' . md5(json_encode($payload));
+        return 'elim:'.$this->config->credentialsFingerprint().':'.$this->platform().':'.$scope.':'.md5(json_encode($payload));
     }
 
     protected function productTtl(): int
