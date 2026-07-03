@@ -90,6 +90,19 @@
         </div>
 
         <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-header"><h5 class="mb-0">{{ __('admin.warehouse_image') }}</h5></div>
+                <div class="card-body">
+                    @if ($warehouse->image)
+                        <img src="{{ app(\App\Services\FileManager::class)->url($warehouse->image) }}" alt="{{ $warehouse->warehouse_name }}" class="img-fluid rounded border w-100">
+                    @else
+                        <div class="border rounded d-flex align-items-center justify-content-center bg-label-secondary" style="height: 220px;">
+                            <i class="icon-base ti tabler-building-warehouse" style="font-size: 3rem;"></i>
+                        </div>
+                    @endif
+                </div>
+            </div>
+
             <div class="card">
                 <div class="card-header"><h5 class="mb-0">{{ __('admin.status') }}</h5></div>
                 <div class="card-body">

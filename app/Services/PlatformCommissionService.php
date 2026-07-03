@@ -111,7 +111,7 @@ class PlatformCommissionService
     ): void {
         if ($maxAmount !== null && $minAmount >= $maxAmount) {
             throw ValidationException::withMessages([
-                'max_amount' => ['Maximum amount must be greater than minimum amount.'],
+                'maxAmount' => ['Maximum amount must be greater than minimum amount.'],
             ]);
         }
 
@@ -124,7 +124,7 @@ class PlatformCommissionService
 
             if ($unlimitedExists) {
                 throw ValidationException::withMessages([
-                    'is_unlimited' => ['Only one unlimited commission slab is allowed per platform.'],
+                    'isUnlimited' => ['Only one unlimited commission slab is allowed per platform.'],
                 ]);
             }
         }
@@ -142,7 +142,7 @@ class PlatformCommissionService
 
         if ($duplicateExists) {
             throw ValidationException::withMessages([
-                'min_amount' => ['A commission slab with this amount range already exists.'],
+                'minAmount' => ['A commission slab with this amount range already exists.'],
             ]);
         }
 
@@ -158,7 +158,7 @@ class PlatformCommissionService
 
             if ($minAmount <= $existingMax && (float) $slab->min_amount <= $newMax) {
                 throw ValidationException::withMessages([
-                    'min_amount' => ['This amount range overlaps with an existing commission slab.'],
+                    'minAmount' => ['This amount range overlaps with an existing commission slab.'],
                 ]);
             }
         }

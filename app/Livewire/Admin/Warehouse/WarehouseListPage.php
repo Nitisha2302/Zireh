@@ -3,6 +3,7 @@
 namespace App\Livewire\Admin\Warehouse;
 
 use App\Models\Warehouse;
+use App\Services\FileManager;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -87,7 +88,9 @@ class WarehouseListPage extends Component
             return;
         }
 
-        Warehouse::findOrFail($this->deleteId)->delete();
+        $warehouse = Warehouse::findOrFail($this->deleteId);
+        app(FileManager::class)->delete($warehouse->image);
+        $warehouse->delete();
         $this->deleteId = null;
         flash()->success(__('admin.warehouse_deleted'));
     }

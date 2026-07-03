@@ -258,4 +258,6 @@ return [
     'no_warehouses_filtered_hint' => 'No warehouses match your current search or filters. Try adjusting them or add a new warehouse.',
     'pagination_summary' => 'Showing :from–:to of :total',
     'search' => 'Search',
+    'warehouse_image' => 'Warehouse Image',
+    'warehouse_image_hint' => 'Upload a photo of the warehouse (JPG, PNG, max 4MB).',
 ];

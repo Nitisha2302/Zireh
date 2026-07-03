@@ -152,11 +152,15 @@
                         <tr>
                             <td>
                                 <div class="d-flex align-items-center gap-3">
-                                    <div class="avatar avatar-sm flex-shrink-0">
-                                        <span class="avatar-initial rounded {{ $warehouse->isActive() ? 'bg-label-primary' : 'bg-label-secondary' }}">
-                                            <i class="icon-base ti tabler-building-warehouse"></i>
-                                        </span>
-                                    </div>
+                                    @if ($warehouse->image)
+                                        <img src="{{ app(\App\Services\FileManager::class)->url($warehouse->image) }}" alt="{{ $warehouse->warehouse_name }}" class="rounded border object-fit-cover flex-shrink-0" style="width: 48px; height: 48px;">
+                                    @else
+                                        <div class="avatar avatar-sm flex-shrink-0">
+                                            <span class="avatar-initial rounded {{ $warehouse->isActive() ? 'bg-label-primary' : 'bg-label-secondary' }}">
+                                                <i class="icon-base ti tabler-building-warehouse"></i>
+                                            </span>
+                                        </div>
+                                    @endif
                                     <div class="min-w-0">
                                         <a href="{{ route('admin.warehouses.show', $warehouse) }}" class="fw-semibold text-body text-decoration-none d-block text-truncate">
                                             {{ $warehouse->warehouse_name }}

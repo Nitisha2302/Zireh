@@ -39,6 +39,41 @@ class PlatformCommissionSlabCreatePage extends Component
         ];
     }
 
+    protected function validationAttributes(): array
+    {
+        return [
+            'minAmount' => 'minimum amount',
+            'maxAmount' => 'maximum amount',
+            'commissionPercentage' => 'commission percentage',
+            'isUnlimited' => 'unlimited maximum',
+            'isActive' => 'status',
+        ];
+    }
+
+    protected function messages(): array
+    {
+        return [
+            'minAmount.required' => 'Minimum amount is required.',
+            'minAmount.numeric' => 'Minimum amount must be a valid number.',
+            'minAmount.min' => 'Minimum amount must be at least 0.',
+            'maxAmount.required_unless' => 'Maximum amount is required unless unlimited is enabled.',
+            'maxAmount.numeric' => 'Maximum amount must be a valid number.',
+            'maxAmount.gt' => 'Maximum amount must be greater than minimum amount.',
+            'commissionPercentage.required' => 'Commission percentage is required.',
+            'commissionPercentage.numeric' => 'Commission percentage must be a valid number.',
+            'commissionPercentage.min' => 'Commission percentage cannot be negative.',
+            'commissionPercentage.max' => 'Commission percentage cannot exceed 100.',
+        ];
+    }
+
+    public function updatedIsUnlimited(bool $value): void
+    {
+        if ($value) {
+            $this->maxAmount = '';
+            $this->resetErrorBag('maxAmount');
+        }
+    }
+
     public function save(PlatformCommissionService $commissionService): void
     {
         $validated = $this->validate();
