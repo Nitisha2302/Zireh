@@ -3,6 +3,7 @@
 namespace App\Services\Elim;
 
 use App\Exceptions\Elim\ElimAuthenticationException;
+use App\Support\Elim\ElimApiConfig;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -13,6 +14,10 @@ class ElimAuthService
     private const ACCESS_TOKEN_KEY = 'elim:auth:access_token';
 
     private const REFRESH_TOKEN_KEY = 'elim:auth:refresh_token';
+
+    public function __construct(private readonly ElimApiConfig $config)
+    {
+    }
 
     public function accessToken(): string
     {
@@ -67,8 +72,8 @@ class ElimAuthService
 
     public function login(): array
     {
-        $email = config('services.elim.email');
-        $password = config('services.elim.password');
+        $email = $this->config->email();
+        $password = $this->config->password();
 
         if (! $email || ! $password) {
             throw new ElimAuthenticationException('ELIM credentials are not configured.');
@@ -91,6 +96,48 @@ class ElimAuthService
         }
 
         return $this->storeTokens($response->json());
+    }
+
+    public function testCredentials(string $baseUrl, string $email, string $password): void
+    {
+        if ($email === '' || $password === '') {
+            throw new ElimAuthenticationException(__('admin.elim_api_password_required_for_test'));
+        }
+
+        try {
+            $response = Http::baseUrl(rtrim($baseUrl, '/'))
+                ->acceptJson()
+                ->timeout($this->timeout())
+                ->post('/v1/auth/login', [
+                    'email' => $email,
+                    'password' => $password,
+                ]);
+        } catch (\Throwable $exception) {
+            throw new ElimAuthenticationException(
+                __('admin.elim_api_test_unreachable', ['message' => $exception->getMessage()]),
+                context: ['message' => $exception->getMessage()]
+            );
+        }
+
+        if (! $response->successful()) {
+            $body = $response->json();
+            $message = is_array($body) ? ($body['message'] ?? $body['error'] ?? null) : null;
+
+            throw new ElimAuthenticationException(
+                is_string($message) && $message !== '' ? $message : __('admin.elim_api_test_invalid_credentials'),
+                $response->status(),
+                context: [
+                    'status' => $response->status(),
+                    'body' => $body,
+                ]
+            );
+        }
+
+        $accessToken = $response->json('access_token');
+
+        if (! is_string($accessToken) || $accessToken === '') {
+            throw new ElimAuthenticationException(__('admin.elim_api_test_invalid_response'));
+        }
     }
 
     private function storeTokens(array $payload): array
@@ -127,26 +174,26 @@ class ElimAuthService
             return max($seconds, 60);
         }
 
-        return (int) config('services.elim.token_ttl', 3300);
+        return $this->config->tokenTtl();
     }
 
     private function baseUrl(): string
     {
-        return rtrim((string) config('services.elim.base_url', 'https://openapi.elim.asia'), '/');
+        return $this->config->baseUrl();
     }
 
     private function timeout(): int
     {
-        return (int) config('services.elim.timeout', 20);
+        return $this->config->timeout();
     }
 
     private function retries(): int
     {
-        return (int) config('services.elim.retries', 2);
+        return $this->config->retries();
     }
 
     private function retrySleep(): int
     {
-        return (int) config('services.elim.retry_sleep', 300);
+        return $this->config->retrySleep();
     }
 }
