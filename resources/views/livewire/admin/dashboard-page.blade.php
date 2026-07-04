@@ -30,7 +30,8 @@
 <div class="container-xxl flex-grow-1 container-p-y">
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
         <div>
-            <h4 class="mb-1">{{ __('admin.dashboard_welcome', ['name' => $admin?->name ?? __('admin.dashboard')]) }}</h4>
+            <h4 class="mb-1">{{ __('admin.dashboard_welcome', ['name' => $admin?->name ?? __('admin.dashboard')]) }}
+            </h4>
             <p class="mb-0 text-body-secondary">{{ __('admin.dashboard_subtitle') }}</p>
         </div>
         <div class="text-body-secondary small">
@@ -47,8 +48,10 @@
                         <div>
                             <p class="mb-1 text-body-secondary">{{ __('admin.dashboard_customers') }}</p>
                             <h3 class="mb-0">{{ number_format($stats['customers_total']) }}</h3>
-                            <small class="text-success">{{ number_format($stats['customers_active']) }} {{ __('admin.active') }}</small>
-                            <div class="text-body-secondary small mt-1">+{{ number_format($stats['customers_new_month']) }} {{ __('admin.this_month') }}</div>
+                            <small class="text-success">{{ number_format($stats['customers_active']) }}
+                                {{ __('admin.active') }}</small>
+                            <div class="text-body-secondary small mt-1">
+                                +{{ number_format($stats['customers_new_month']) }} {{ __('admin.this_month') }}</div>
                         </div>
                         <span class="badge bg-label-primary p-2">
                             <i class="icon-base ti tabler-users"></i>
@@ -65,8 +68,10 @@
                         <div>
                             <p class="mb-1 text-body-secondary">{{ __('admin.dashboard_orders') }}</p>
                             <h3 class="mb-0">{{ number_format($stats['orders_total']) }}</h3>
-                            <small class="text-body-secondary">{{ number_format($stats['orders_completed']) }} {{ __('admin.completed') }}</small>
-                            <div class="text-body-secondary small mt-1">+{{ number_format($stats['orders_month']) }} {{ __('admin.this_month') }}</div>
+                            <small class="text-body-secondary">{{ number_format($stats['orders_completed']) }}
+                                {{ __('admin.completed') }}</small>
+                            <div class="text-body-secondary small mt-1">+{{ number_format($stats['orders_month']) }}
+                                {{ __('admin.this_month') }}</div>
                         </div>
                         <span class="badge bg-label-info p-2">
                             <i class="icon-base ti tabler-receipt"></i>
@@ -83,8 +88,10 @@
                         <div>
                             <p class="mb-1 text-body-secondary">{{ __('admin.dashboard_revenue_tjs') }}</p>
                             <h3 class="mb-0">{{ number_format($stats['revenue_tjs_total'], 2) }} TJS</h3>
-                            <small class="text-body-secondary">{{ number_format($stats['revenue_tjs_month'], 2) }} TJS {{ __('admin.this_month') }}</small>
-                            <div class="text-body-secondary small mt-1">¥{{ number_format($stats['revenue_cny_total'], 2) }} {{ __('admin.total') }}</div>
+                            <small class="text-body-secondary">{{ number_format($stats['revenue_tjs_month'], 2) }} TJS
+                                {{ __('admin.this_month') }}</small>
+                            <div class="text-body-secondary small mt-1">
+                                ¥{{ number_format($stats['revenue_cny_total'], 2) }} {{ __('admin.total') }}</div>
                         </div>
                         <span class="badge bg-label-success p-2">
                             <i class="icon-base ti tabler-currency-dollar"></i>
@@ -101,7 +108,8 @@
                         <div>
                             <p class="mb-1 text-body-secondary">{{ __('admin.dashboard_commission') }}</p>
                             <h3 class="mb-0">¥{{ number_format($stats['commission_total'], 2) }}</h3>
-                            <small class="text-body-secondary">¥{{ number_format($stats['commission_month'], 2) }} {{ __('admin.this_month') }}</small>
+                            <small class="text-body-secondary">¥{{ number_format($stats['commission_month'], 2) }}
+                                {{ __('admin.this_month') }}</small>
                         </div>
                         <span class="badge bg-label-warning p-2">
                             <i class="icon-base ti tabler-percentage"></i>
@@ -141,7 +149,8 @@
                     <div>
                         <p class="mb-0 text-body-secondary small">{{ __('admin.dashboard_wallet_balance') }}</p>
                         <h4 class="mb-0">¥{{ number_format($stats['wallet_balance_total'], 2) }}</h4>
-                        <small class="text-body-secondary">{{ number_format($stats['wallet_transactions_month']) }} {{ __('admin.dashboard_txn_this_month') }}</small>
+                        <small class="text-body-secondary">{{ number_format($stats['wallet_transactions_month']) }}
+                            {{ __('admin.dashboard_txn_this_month') }}</small>
                     </div>
                 </div>
             </div>
@@ -157,7 +166,8 @@
                     </div>
                     <div>
                         <p class="mb-0 text-body-secondary small">{{ __('admin.warehouse_stats_active') }}</p>
-                        <h4 class="mb-0">{{ number_format($stats['warehouses_active']) }} / {{ number_format($stats['warehouses_total']) }}</h4>
+                        <h4 class="mb-0">{{ number_format($stats['warehouses_active']) }} /
+                            {{ number_format($stats['warehouses_total']) }}</h4>
                     </div>
                 </div>
             </div>
@@ -202,7 +212,8 @@
             <div class="card h-100">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">{{ __('admin.dashboard_orders_by_status') }}</h5>
-                    <a href="{{ route('admin.orders.index') }}" class="btn btn-sm btn-label-primary">{{ __('admin.view_all') }}</a>
+                    <a href="{{ route('admin.orders.index') }}"
+                        class="btn btn-sm btn-label-primary">{{ __('admin.view_all') }}</a>
                 </div>
                 <div class="card-body">
                     @forelse ($ordersByStatus as $status => $count)
@@ -214,10 +225,12 @@
                         <div class="mb-3">
                             <div class="d-flex justify-content-between align-items-center mb-1">
                                 <span class="small">{{ $label }}</span>
-                                <span class="small fw-semibold">{{ number_format($count) }} ({{ $percent }}%)</span>
+                                <span class="small fw-semibold">{{ number_format($count) }}
+                                    ({{ $percent }}%)</span>
                             </div>
                             <div class="progress" style="height: 8px;">
-                                <div class="progress-bar {{ $barColor }}" style="width: {{ $percent }}%"></div>
+                                <div class="progress-bar {{ $barColor }}" style="width: {{ $percent }}%">
+                                </div>
                             </div>
                         </div>
                     @empty
@@ -237,7 +250,8 @@
                         <div class="col-sm-6">
                             <div class="border rounded p-3 h-100">
                                 <p class="mb-1 text-body-secondary small">{{ __('admin.platforms') }}</p>
-                                <h5 class="mb-0">{{ number_format($stats['platforms_available']) }} / {{ number_format($stats['platforms_total']) }}</h5>
+                                <h5 class="mb-0">{{ number_format($stats['platforms_available']) }} /
+                                    {{ number_format($stats['platforms_total']) }}</h5>
                                 <small class="text-body-secondary">{{ __('admin.available') }}</small>
                             </div>
                         </div>
@@ -250,21 +264,24 @@
                         </div>
                         <div class="col-sm-6">
                             <div class="border rounded p-3 h-100">
-                                <p class="mb-1 text-body-secondary small">{{ __('admin.dashboard_wishlist_items') }}</p>
+                                <p class="mb-1 text-body-secondary small">{{ __('admin.dashboard_wishlist_items') }}
+                                </p>
                                 <h5 class="mb-0">{{ number_format($stats['wishlist_items']) }}</h5>
                                 <small class="text-body-secondary">{{ __('admin.dashboard_engagement') }}</small>
                             </div>
                         </div>
                         <div class="col-sm-6">
                             <div class="border rounded p-3 h-100">
-                                <p class="mb-1 text-body-secondary small">{{ __('admin.dashboard_orders_by_platform') }}</p>
+                                <p class="mb-1 text-body-secondary small">
+                                    {{ __('admin.dashboard_orders_by_platform') }}</p>
                                 @forelse ($ordersByPlatform as $platform => $count)
                                     <div class="d-flex justify-content-between align-items-center">
                                         <span class="badge bg-label-info text-uppercase">{{ $platform }}</span>
                                         <span class="fw-semibold">{{ number_format($count) }}</span>
                                     </div>
                                 @empty
-                                    <span class="text-body-secondary small">{{ __('admin.dashboard_no_orders') }}</span>
+                                    <span
+                                        class="text-body-secondary small">{{ __('admin.dashboard_no_orders') }}</span>
                                 @endforelse
                             </div>
                         </div>
@@ -289,10 +306,12 @@
                         <i class="icon-base ti tabler-wallet me-1"></i>{{ __('admin.dashboard_wallet_transactions') }}
                     </a>
                     <a href="{{ route('admin.warehouses.index') }}" class="btn btn-label-secondary">
-                        <i class="icon-base ti tabler-building-warehouse me-1"></i>{{ __('admin.warehouse_management') }}
+                        <i
+                            class="icon-base ti tabler-building-warehouse me-1"></i>{{ __('admin.warehouse_management') }}
                     </a>
                     <a href="{{ route('admin.settings.currency-exchange') }}" class="btn btn-label-secondary">
-                        <i class="icon-base ti tabler-arrows-exchange me-1"></i>{{ __('admin.currency_exchange_settings') }}
+                        <i
+                            class="icon-base ti tabler-arrows-exchange me-1"></i>{{ __('admin.currency_exchange_settings') }}
                     </a>
                 </div>
             </div>
@@ -305,7 +324,8 @@
             <div class="card h-100">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">{{ __('admin.dashboard_recent_orders') }}</h5>
-                    <a href="{{ route('admin.orders.index') }}" class="btn btn-sm btn-label-primary">{{ __('admin.view_all') }}</a>
+                    <a href="{{ route('admin.orders.index') }}"
+                        class="btn btn-sm btn-label-primary">{{ __('admin.view_all') }}</a>
                 </div>
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
@@ -326,16 +346,19 @@
                                 <tr>
                                     <td><span class="fw-semibold">#{{ $order->id }}</span></td>
                                     <td>
-                                        <div class="fw-medium">{{ $order->user?->name ?? '—' }}</div>
+                                        <div class="fw-medium">{{ $order->user?->name ?? 'Unnamed customer' }}</div>
                                         <small class="text-body-secondary">{{ $order->user?->phone }}</small>
                                     </td>
-                                    <td><span class="badge bg-label-info text-uppercase">{{ $order->platform }}</span></td>
+                                    <td><span class="badge bg-label-info text-uppercase">{{ $order->platform }}</span>
+                                    </td>
                                     <td>
-                                        <span class="badge {{ $orderStatusColors[$order->status] ?? 'bg-label-secondary' }}">
+                                        <span
+                                            class="badge {{ $orderStatusColors[$order->status] ?? 'bg-label-secondary' }}">
                                             {{ $orderStatusLabels[$order->status] ?? $order->status }}
                                         </span>
                                     </td>
-                                    <td class="fw-semibold">¥{{ number_format((float) $order->customer_total_cny, 2) }}</td>
+                                    <td class="fw-semibold">
+                                        ¥{{ number_format((float) $order->customer_total_cny, 2) }}</td>
                                     <td>
                                         @if ($order->customer_total_tjs)
                                             {{ number_format((float) $order->customer_total_tjs, 2) }}
@@ -345,14 +368,16 @@
                                     </td>
                                     <td class="text-nowrap">{{ $order->created_at?->format('M d, Y') }}</td>
                                     <td>
-                                        <a href="{{ route('admin.orders.show', $order) }}" class="btn btn-sm btn-icon btn-text-secondary">
+                                        <a href="{{ route('admin.orders.show', $order) }}"
+                                            class="btn btn-sm btn-icon btn-text-secondary">
                                             <i class="icon-base ti tabler-eye"></i>
                                         </a>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="8" class="text-center py-5 text-body-secondary">{{ __('admin.dashboard_no_orders') }}</td>
+                                    <td colspan="8" class="text-center py-5 text-body-secondary">
+                                        {{ __('admin.dashboard_no_orders') }}</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -365,21 +390,25 @@
             <div class="card mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">{{ __('admin.dashboard_recent_customers') }}</h5>
-                    <a href="{{ route('admin.customers.index') }}" class="btn btn-sm btn-label-primary">{{ __('admin.view_all') }}</a>
+                    <a href="{{ route('admin.customers.index') }}"
+                        class="btn btn-sm btn-label-primary">{{ __('admin.view_all') }}</a>
                 </div>
                 <ul class="list-group list-group-flush">
                     @forelse ($recentCustomers as $customer)
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <div>
-                                <div class="fw-medium">{{ $customer->name ?: '—' }}</div>
-                                <small class="text-body-secondary">{{ $customer->phone ?: $customer->email ?: __('admin.not_added') }}</small>
+                                <div class="fw-medium">{{ $customer->name ?: 'Unnamed customer' }}</div>
+                                <small
+                                    class="text-body-secondary">{{ $customer->phone ?: $customer->email ?: __('admin.not_added') }}</small>
                             </div>
-                            <span class="badge {{ $customer->status === 'active' ? 'bg-label-success' : 'bg-label-secondary' }}">
+                            <span
+                                class="badge {{ $customer->status === 'active' ? 'bg-label-success' : 'bg-label-secondary' }}">
                                 {{ $customer->status }}
                             </span>
                         </li>
                     @empty
-                        <li class="list-group-item text-center text-body-secondary py-4">{{ __('admin.dashboard_no_customers') }}</li>
+                        <li class="list-group-item text-center text-body-secondary py-4">
+                            {{ __('admin.dashboard_no_customers') }}</li>
                     @endforelse
                 </ul>
             </div>
@@ -387,23 +416,27 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">{{ __('admin.dashboard_wallet_transactions') }}</h5>
-                    <a href="{{ route('admin.wallet-transactions.index') }}" class="btn btn-sm btn-label-primary">{{ __('admin.view_all') }}</a>
+                    <a href="{{ route('admin.wallet-transactions.index') }}"
+                        class="btn btn-sm btn-label-primary">{{ __('admin.view_all') }}</a>
                 </div>
                 <ul class="list-group list-group-flush">
                     @forelse ($recentWalletTransactions as $transaction)
                         <li class="list-group-item">
                             <div class="d-flex justify-content-between align-items-start">
                                 <div>
-                                    <div class="fw-medium">{{ $transaction->user?->name ?? '—' }}</div>
-                                    <small class="text-body-secondary">{{ str($transaction->source)->replace('_', ' ')->title() }}</small>
+                                    <div class="fw-medium">{{ $transaction->user?->name ?? 'Unnamed customer' }}</div>
+                                    <small
+                                        class="text-body-secondary">{{ str($transaction->source)->replace('_', ' ')->title() }}</small>
                                 </div>
-                                <span class="fw-semibold {{ $transaction->type === 'credit' ? 'text-success' : 'text-danger' }}">
+                                <span
+                                    class="fw-semibold {{ $transaction->type === 'credit' ? 'text-success' : 'text-danger' }}">
                                     {{ $transaction->type === 'credit' ? '+' : '-' }}¥{{ number_format((float) $transaction->amount, 2) }}
                                 </span>
                             </div>
                         </li>
                     @empty
-                        <li class="list-group-item text-center text-body-secondary py-4">{{ __('admin.dashboard_no_transactions') }}</li>
+                        <li class="list-group-item text-center text-body-secondary py-4">
+                            {{ __('admin.dashboard_no_transactions') }}</li>
                     @endforelse
                 </ul>
             </div>
