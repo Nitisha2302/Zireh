@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\UserCartItem;
 use App\Services\Elim\TaobaoService;
 use App\Services\PlatformCommissionService;
+use App\Support\Currency\CurrencyPriceConverter;
 use App\Support\Elim\ProductNormalizer;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
@@ -18,6 +19,7 @@ class TaobaoCartService
         protected TaobaoService $taobaoService,
         protected ProductNormalizer $normalizer,
         protected PlatformCommissionService $commissionService,
+        protected CurrencyPriceConverter $currencyPriceConverter,
     ) {}
 
     public function getCart(User $user): array
@@ -215,13 +217,13 @@ class TaobaoCartService
         return [
             'platform' => UserCartItem::PLATFORM_TAOBAO,
             'items' => $items->values()->all(),
-            'summary' => [
+            'summary' => $this->currencyPriceConverter->applyToCartSummary([
                 'item_count' => $items->count(),
                 'total_quantity' => (int) $items->sum('quantity'),
                 'subtotal' => $subtotal,
                 'commission' => $commission,
                 'total' => round($subtotal + ($commission['commission_amount'] ?? 0), 2),
-            ],
+            ]),
         ];
     }
 

@@ -9,7 +9,9 @@ use App\Models\Platform;
 use App\Models\User;
 use App\Models\UserCartItem;
 use App\Services\Elim\ElimApiClient;
+use App\Services\Currency\CurrencyExchangeService;
 use App\Services\PlatformCommissionService;
+use App\Support\Currency\CurrencyPriceConverter;
 use App\Support\Elim\ElimWarehouseAddress;
 use App\Support\Elim\ProductNormalizer;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -23,6 +25,8 @@ class TaobaoOrderService
         protected ElimApiClient $elimClient,
         protected ProductNormalizer $normalizer,
         protected PlatformCommissionService $commissionService,
+        protected CurrencyPriceConverter $currencyPriceConverter,
+        protected CurrencyExchangeService $currencyExchangeService,
     ) {}
 
     public function preview(User $user, array $options = []): array
@@ -47,7 +51,7 @@ class TaobaoOrderService
 
         $commission = $this->resolveCommission($parsed['goods_subtotal_cny']);
 
-        return [
+        return $this->currencyPriceConverter->applyToCheckout([
             'platform' => UserCartItem::PLATFORM_TAOBAO,
             'items' => $items->values()->all(),
             'elim_preview' => $parsed,
@@ -56,7 +60,7 @@ class TaobaoOrderService
                 $parsed['goods_subtotal_cny'] + $parsed['shipping_fee_cny'] + ($commission['commission_amount'] ?? 0),
                 2
             ),
-        ];
+        ]);
     }
 
     public function checkout(User $user, array $options = []): CustomerOrder
@@ -113,6 +117,12 @@ class TaobaoOrderService
             $status,
             $options
         ): CustomerOrder {
+            $customerTotalCny = round(
+                $parsed['goods_subtotal_cny'] + $parsed['shipping_fee_cny'] + ($commission['commission_amount'] ?? 0),
+                2
+            );
+            $exchangeRate = $this->currencyExchangeService->getRate();
+
             $order = CustomerOrder::query()->create([
                 'user_id' => $user->id,
                 'platform_id' => $platform->id,
@@ -126,10 +136,9 @@ class TaobaoOrderService
                 'commission_slab_id' => $commission['slab_id'] ?? null,
                 'commission_percentage' => $commission['commission_percentage'] ?? 0,
                 'commission_amount' => $commission['commission_amount'] ?? 0,
-                'customer_total_cny' => round(
-                    $parsed['goods_subtotal_cny'] + $parsed['shipping_fee_cny'] + ($commission['commission_amount'] ?? 0),
-                    2
-                ),
+                'customer_total_cny' => $customerTotalCny,
+                'exchange_rate' => $exchangeRate,
+                'customer_total_tjs' => $this->currencyExchangeService->convertCnyToTjs($customerTotalCny),
                 'receiver_address' => $receiverAddress,
                 'remark' => $options['remark'] ?? null,
                 'elim_preview_snapshot' => $previewResponse,

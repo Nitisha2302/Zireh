@@ -33,6 +33,7 @@ class ProductDetailResource extends JsonResource
             'attributes' => $this->resource['attributes'] ?? [],
             'shipping_info' => $this->resource['shipping_info'] ?? [],
             'extra_info' => $this->resource['extra_info'] ?? [],
+            'currency' => $this->resource['currency'] ?? null,
         ];
     }
 }

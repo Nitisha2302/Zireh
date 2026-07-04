@@ -129,6 +129,11 @@ new class extends Component {
                             <div>{{ __('admin.privacy_terms') }}</div>
                         </a>
                     </li>
+                    <li class="menu-item {{ request()->routeIs('admin.settings.currency-exchange') ? 'active' : '' }}">
+                        <a href="{{ route('admin.settings.currency-exchange') }}" class="menu-link">
+                            <div>{{ __('admin.currency_exchange_settings') }}</div>
+                        </a>
+                    </li>
                     <li class="menu-item {{ request()->routeIs('admin.settings.elim-api') ? 'active' : '' }}">
                         <a href="{{ route('admin.settings.elim-api') }}" class="menu-link">
                             <div>{{ __('admin.elim_api_settings') }}</div>

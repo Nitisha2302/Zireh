@@ -12,6 +12,7 @@ use App\Livewire\Admin\PlatformCommissionSlab\{PlatformCommissionSlabListPage, P
 use App\Livewire\Admin\PlatformCategory\{PlatformCategoryListPage, PlatformCategoryCreatePage, PlatformCategoryEditPage};
 use App\Livewire\Admin\ProfilePage;
 use App\Livewire\Admin\Settings\DiditSettingsPage;
+use App\Livewire\Admin\Settings\CurrencyExchangeSettingsPage;
 use App\Livewire\Admin\Settings\ElimApiSettingsPage;
 use App\Livewire\Admin\Settings\ElimWarehouseSettingsPage;
 use App\Livewire\Admin\Settings\FileManagerSettingsPage;
@@ -35,6 +36,7 @@ Route::prefix('admin')->name('admin.')->middleware(['is_auth:admin'])->group(fun
 
     Route::get('settings/didit', DiditSettingsPage::class)->name('settings.didit');
     Route::get('settings/file-manager', FileManagerSettingsPage::class)->name('settings.file-manager');
+    Route::get('settings/currency-exchange', CurrencyExchangeSettingsPage::class)->name('settings.currency-exchange');
     Route::get('settings/elim-api', ElimApiSettingsPage::class)->name('settings.elim-api');
     Route::get('settings/elim-warehouse', ElimWarehouseSettingsPage::class)->name('settings.elim-warehouse');
     Route::get('settings/privacy-terms', PrivacyTermsSettingsPage::class)->name('settings.privacy-terms');

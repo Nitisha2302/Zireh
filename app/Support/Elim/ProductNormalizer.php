@@ -2,8 +2,13 @@
 
 namespace App\Support\Elim;
 
+use App\Support\Currency\CurrencyPriceConverter;
+
 class ProductNormalizer
 {
+    public function __construct(
+        protected CurrencyPriceConverter $currencyPriceConverter,
+    ) {}
     public function listResponse(array $response, string $platform): array
     {
         return [
@@ -15,16 +20,19 @@ class ProductNormalizer
                 'size' => $response['paginate']['size'] ?? null,
             ],
             'items' => collect($response['items'] ?? [])
-                ->map(fn (array $item): array => $this->listItem($item, $platform))
+                ->map(fn (array $item): array => $this->currencyPriceConverter->applyToProductListItem(
+                    $this->listItem($item, $platform)
+                ))
                 ->values()
                 ->all(),
             'raw' => $response,
+            'currency' => $this->currencyPriceConverter->meta(),
         ];
     }
 
     public function detailResponse(array $response, string $platform): array
     {
-        return [
+        return $this->currencyPriceConverter->applyToProductDetail([
             'platform' => $platform,
             'id' => (string) ($response['id'] ?? ''),
             'marketplace_id' => $response['mp_id'] ?? null,
@@ -57,7 +65,7 @@ class ProductNormalizer
             'shipping_info' => $response['shipping_info'] ?? [],
             'extra_info' => $response['extra_info'] ?? [],
             'raw' => $response,
-        ];
+        ]);
     }
 
     public function wishlistSnapshot(array $detail): array
