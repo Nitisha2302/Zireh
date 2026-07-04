@@ -13,6 +13,7 @@ class ProductListResource extends JsonResource
             'platform' => $this->resource['platform'] ?? null,
             'pagination' => $this->resource['pagination'] ?? [],
             'items' => $this->resource['items'] ?? [],
+            'currency' => $this->resource['currency'] ?? null,
         ];
     }
 }

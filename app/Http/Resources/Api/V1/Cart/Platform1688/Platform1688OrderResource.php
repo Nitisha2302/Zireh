@@ -24,6 +24,8 @@ class Platform1688OrderResource extends JsonResource
                 'commission_amount' => (float) $this->commission_amount,
             ],
             'customer_total_cny' => (float) $this->customer_total_cny,
+            'exchange_rate' => $this->exchange_rate !== null ? (float) $this->exchange_rate : null,
+            'customer_total_tjs' => $this->customer_total_tjs !== null ? (float) $this->customer_total_tjs : null,
             'remark' => $this->remark,
             'items' => Platform1688OrderItemResource::collection($this->whenLoaded('items'))->resolve(),
             'created_at' => $this->created_at,

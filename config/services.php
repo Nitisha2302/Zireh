@@ -83,4 +83,13 @@ return [
         ],
     ],
 
+    'exchange_rate' => [
+        'api_url' => env('EXCHANGE_RATE_API_URL', 'https://open.er-api.com/v6/latest/{from}'),
+        'api_key' => env('EXCHANGE_RATE_API_KEY'),
+        'timeout' => env('EXCHANGE_RATE_TIMEOUT', 15),
+        'retries' => env('EXCHANGE_RATE_RETRIES', 2),
+        'retry_sleep' => env('EXCHANGE_RATE_RETRY_SLEEP', 500),
+        'default_rate' => env('EXCHANGE_RATE_DEFAULT', 1.5),
+    ],
+
 ];
