@@ -11,7 +11,10 @@ use Illuminate\Validation\ValidationException;
 
 class CurrencyExchangeService
 {
+    /** @deprecated Legacy key; kept only so clearCache() can purge stale serialized models. */
     public const CACHE_KEY = 'currency.exchange_rate.active';
+
+    public const CACHE_RATE_KEY = 'currency.exchange_rate.value';
 
     public const LOCK_KEY = 'currency.exchange_rate.refresh';
 
@@ -21,24 +24,24 @@ class CurrencyExchangeService
 
     public function getActive(): CurrencyExchangeRate
     {
-        return Cache::rememberForever(self::CACHE_KEY, function (): CurrencyExchangeRate {
-            return CurrencyExchangeRate::query()->firstOrCreate(
-                [
-                    'from_currency' => CurrencyExchangeRate::FROM_CURRENCY,
-                    'to_currency' => CurrencyExchangeRate::TO_CURRENCY,
-                ],
-                [
-                    'exchange_rate' => (float) config('services.exchange_rate.default_rate', 1.5),
-                    'auto_refresh_enabled' => false,
-                    'refresh_interval_hours' => 1,
-                ]
-            );
-        });
+        return CurrencyExchangeRate::query()->firstOrCreate(
+            [
+                'from_currency' => CurrencyExchangeRate::FROM_CURRENCY,
+                'to_currency' => CurrencyExchangeRate::TO_CURRENCY,
+            ],
+            [
+                'exchange_rate' => (float) config('services.exchange_rate.default_rate', 1.5),
+                'auto_refresh_enabled' => false,
+                'refresh_interval_hours' => 1,
+            ]
+        );
     }
 
     public function getRate(): float
     {
-        return (float) $this->getActive()->exchange_rate;
+        return Cache::rememberForever(self::CACHE_RATE_KEY, function (): float {
+            return (float) $this->getActive()->exchange_rate;
+        });
     }
 
     public function convertCnyToTjs(?float $amount): ?float
@@ -154,6 +157,7 @@ class CurrencyExchangeService
     public function clearCache(): void
     {
         Cache::forget(self::CACHE_KEY);
+        Cache::forget(self::CACHE_RATE_KEY);
     }
 
     protected function persistRate(float $rate, string $trigger): CurrencyExchangeRate

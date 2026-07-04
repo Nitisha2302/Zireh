@@ -8,6 +8,7 @@ use App\Services\Currency\ExchangeRateService;
 use App\Support\Currency\CurrencyPriceConverter;
 use App\Support\Elim\ProductNormalizer;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Livewire\Livewire;
@@ -95,6 +96,23 @@ it('saves exchange rate settings from admin page', function () {
     expect((float) $config->exchange_rate)->toBe(1.85)
         ->and($config->auto_refresh_enabled)->toBeTrue()
         ->and($config->refresh_interval_hours)->toBe(3);
+});
+
+it('loads active config even when legacy cache contains a serialized model', function () {
+    CurrencyExchangeRate::create([
+        'from_currency' => 'CNY',
+        'to_currency' => 'TJS',
+        'exchange_rate' => 2,
+        'auto_refresh_enabled' => false,
+        'refresh_interval_hours' => 1,
+    ]);
+
+    Cache::forever(CurrencyExchangeService::CACHE_KEY, unserialize('O:8:"stdClass":0:{}'));
+
+    $config = app(CurrencyExchangeService::class)->getActive();
+
+    expect($config)->toBeInstanceOf(CurrencyExchangeRate::class)
+        ->and((float) $config->exchange_rate)->toBe(2.0);
 });
 
 it('adds tjs prices to product normalizer output', function () {
