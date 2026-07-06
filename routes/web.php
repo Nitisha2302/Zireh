@@ -3,6 +3,7 @@
 use App\Http\Controllers\PublicController;
 use App\Livewire\Admin\Customer\{CustomerAddressCreatePage, CustomerAddressEditPage, CustomerAddressListPage, CustomerEditPage, CustomerListPage};
 use App\Livewire\Admin\Order\{OrderDetailPage, OrderListPage};
+use App\Livewire\Admin\OrderStatus\{OrderStatusCreatePage, OrderStatusEditPage, OrderStatusListPage};
 use App\Livewire\Admin\Wallet\{CustomerWalletPage, WalletTransactionListPage};
 use App\Livewire\Admin\ShippingMethod\{ShippingMethodCreatePage, ShippingMethodEditPage, ShippingMethodListPage};
 use App\Livewire\Admin\ShippingRate\{ShippingRateCreatePage, ShippingRateEditPage, ShippingRateListPage};
@@ -45,6 +46,10 @@ Route::prefix('admin')->name('admin.')->middleware(['is_auth:admin'])->group(fun
 
     Route::get('orders', OrderListPage::class)->name('orders.index');
     Route::get('orders/{order}', OrderDetailPage::class)->name('orders.show');
+
+    Route::get('order-statuses', OrderStatusListPage::class)->name('order-statuses.index');
+    Route::get('order-statuses/create', OrderStatusCreatePage::class)->name('order-statuses.create');
+    Route::get('order-statuses/{orderStatus}/edit', OrderStatusEditPage::class)->name('order-statuses.edit');
 
     Route::get('wallet-transactions', WalletTransactionListPage::class)->name('wallet-transactions.index');
     Route::get('customers/{customer}/wallet', CustomerWalletPage::class)->name('customers.wallet');

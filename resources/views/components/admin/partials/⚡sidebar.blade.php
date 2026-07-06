@@ -77,11 +77,23 @@ new class extends Component {
                 </a>
             </li>
 
-            <li class="menu-item {{ request()->routeIs('admin.orders.*') ? 'active' : '' }}">
-                <a href="{{ route('admin.orders.index') }}" class="menu-link">
+            <li class="menu-item {{ request()->routeIs('admin.orders.*') || request()->routeIs('admin.order-statuses.*') ? 'open active' : '' }}">
+                <a href="javascript:void(0);" class="menu-link menu-toggle">
                     <i class="menu-icon icon-base ti tabler-shopping-cart"></i>
-                    <div>Orders</div>
+                    <div>{{ __('admin.orders') }}</div>
                 </a>
+                <ul class="menu-sub">
+                    <li class="menu-item {{ request()->routeIs('admin.orders.*') ? 'active' : '' }}">
+                        <a href="{{ route('admin.orders.index') }}" class="menu-link">
+                            <div>{{ __('admin.order_list') }}</div>
+                        </a>
+                    </li>
+                    <li class="menu-item {{ request()->routeIs('admin.order-statuses.*') ? 'active' : '' }}">
+                        <a href="{{ route('admin.order-statuses.index') }}" class="menu-link">
+                            <div>{{ __('admin.order_statuses') }}</div>
+                        </a>
+                    </li>
+                </ul>
             </li>
 
             <li class="menu-item {{ request()->routeIs('admin.customers.*') ? 'active' : '' }}">

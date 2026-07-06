@@ -22,12 +22,33 @@
         </div>
         <div class="col-lg-4">
             <div class="card h-100">
-                <div class="card-header"><h5 class="mb-0">Order Status</h5></div>
+                <div class="card-header"><h5 class="mb-0">{{ __('admin.order_status') }}</h5></div>
                 <div class="card-body">
-                    <p class="mb-2"><strong>Platform:</strong> <span class="text-uppercase">{{ $order->platform }}</span></p>
-                    <p class="mb-2"><strong>Status:</strong> {{ $order->status }}</p>
-                    <p class="mb-2"><strong>Payment:</strong> {{ $order->payment_status }}</p>
-                    <p class="mb-0"><strong>Placed:</strong> {{ $order->created_at?->format('M d, Y H:i') }}</p>
+                    <p class="mb-2"><strong>{{ __('admin.platforms') }}:</strong> <span class="text-uppercase">{{ $order->platform }}</span></p>
+                    <p class="mb-2">
+                        <strong>{{ __('admin.status') }}:</strong>
+                        @if ($order->orderStatus)
+                            <span class="badge {{ $order->orderStatus->badgeClass() }}">{{ $order->orderStatus->name }}</span>
+                        @else
+                            {{ $order->status }}
+                        @endif
+                    </p>
+                    <p class="mb-2"><strong>{{ __('admin.payment') }}:</strong> {{ $order->payment_status }}</p>
+                    <p class="mb-3"><strong>{{ __('admin.created_date') }}:</strong> {{ $order->created_at?->format('M d, Y H:i') }}</p>
+
+                    <form wire:submit="updateStatus" class="border-top pt-3">
+                        <label class="form-label">{{ __('admin.change_order_status') }}</label>
+                        <select class="form-select mb-2 @error('statusCode') is-invalid @enderror" wire:model="statusCode">
+                            @foreach ($statusOptions as $status)
+                                <option value="{{ $status->code }}">{{ $status->name }}</option>
+                            @endforeach
+                        </select>
+                        @error('statusCode') <div class="invalid-feedback d-block mb-2">{{ $message }}</div> @enderror
+                        <button type="submit" class="btn btn-sm btn-primary" wire:loading.attr="disabled">
+                            <span wire:loading.remove wire:target="updateStatus">{{ __('admin.update_order_status') }}</span>
+                            <span wire:loading wire:target="updateStatus">{{ __('admin.saving') }}...</span>
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>

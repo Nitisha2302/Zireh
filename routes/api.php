@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\V1\Cart\Taobao\TaobaoCartController;
 use App\Http\Controllers\Api\V1\Cart\Taobao\TaobaoCheckoutController;
 use App\Http\Controllers\Api\V1\Elim\Alibaba1688CatalogController;
 use App\Http\Controllers\Api\V1\Elim\TaobaoCatalogController;
+use App\Http\Controllers\Api\V1\OrderStatusController;
 use App\Http\Controllers\Api\V1\PlatformCatalogController;
 use App\Http\Controllers\Api\V1\ShippingController;
 use App\Http\Controllers\Api\V1\WarehouseController;
@@ -22,6 +23,8 @@ Route::prefix('v1')->group(function () {
 
     Route::get('shipping/methods', [ShippingController::class, 'methods']);
     Route::post('shipping/calculate', [ShippingController::class, 'calculate']);
+
+    Route::get('order-statuses', [OrderStatusController::class, 'index']);
 
     Route::prefix('taobao')->name('api.taobao.')->group(function () {
         Route::get('products', [TaobaoCatalogController::class, 'products'])->name('products.index');

@@ -121,4 +121,5 @@ return [
     'shipping_cost_calculated' => 'Shipping cost calculated successfully.',
     'shipping_method_not_found' => 'The selected shipping method is not available.',
     'shipping_rate_not_found_for_weight' => 'No active shipping rate matches the provided weight.',
+    'order_statuses_listed' => 'Order statuses fetched successfully.',
 ];
