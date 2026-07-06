@@ -110,6 +110,25 @@ new class extends Component {
                 </ul>
             </li>
 
+            <li class="menu-item {{ request()->routeIs('admin.shipping-methods.*') || request()->routeIs('admin.shipping-rates.*') ? 'open active' : '' }}">
+                <a href="javascript:void(0);" class="menu-link menu-toggle">
+                    <i class="menu-icon icon-base ti tabler-truck-delivery"></i>
+                    <div>{{ __('admin.shipping_management') }}</div>
+                </a>
+                <ul class="menu-sub">
+                    <li class="menu-item {{ request()->routeIs('admin.shipping-methods.*') ? 'active' : '' }}">
+                        <a href="{{ route('admin.shipping-methods.index') }}" class="menu-link">
+                            <div>{{ __('admin.shipping_methods') }}</div>
+                        </a>
+                    </li>
+                    <li class="menu-item {{ request()->routeIs('admin.shipping-rates.*') ? 'active' : '' }}">
+                        <a href="{{ route('admin.shipping-rates.index') }}" class="menu-link">
+                            <div>{{ __('admin.shipping_rates') }}</div>
+                        </a>
+                    </li>
+                </ul>
+            </li>
+
             <li class="menu-item {{ request()->routeIs('admin.profile') ? 'active' : '' }}">
                 <a href="{{ route('admin.profile') }}" class="menu-link">
                     <i class="menu-icon icon-base ti tabler-user"></i>
