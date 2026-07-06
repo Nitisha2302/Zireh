@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\UserCartItem;
 use App\Services\Elim\ElimApiClient;
 use App\Services\Currency\CurrencyExchangeService;
+use App\Services\Order\CustomerOrderLifecycleService;
 use App\Services\PlatformCommissionService;
 use App\Support\Currency\CurrencyPriceConverter;
 use App\Support\Elim\ElimWarehouseAddress;
@@ -27,6 +28,7 @@ class TaobaoOrderService
         protected PlatformCommissionService $commissionService,
         protected CurrencyPriceConverter $currencyPriceConverter,
         protected CurrencyExchangeService $currencyExchangeService,
+        protected CustomerOrderLifecycleService $lifecycleService,
     ) {}
 
     public function preview(User $user, array $options = []): array
@@ -42,7 +44,7 @@ class TaobaoOrderService
         $payload = $this->buildOrderPayload($items, $options);
         $previewResponse = $this->callPreview($payload);
         $parsed = $this->parsePreviewResponse($previewResponse);
-
+    
         if (! empty($parsed['unavailable_items'])) {
             throw ValidationException::withMessages([
                 'cart' => [__('api.cart_unavailable_items')],
@@ -56,9 +58,11 @@ class TaobaoOrderService
             'items' => $items->values()->all(),
             'elim_preview' => $parsed,
             'commission' => $commission,
-            'customer_total' => round(
-                $parsed['goods_subtotal_cny'] + $parsed['shipping_fee_cny'] + ($commission['commission_amount'] ?? 0),
-                2
+            'customer_total' => $this->calculateCustomerTotal(
+                $parsed['goods_subtotal_cny'],
+                $parsed['shipping_fee_cny'],
+                $parsed['service_fee_cny'],
+                $commission['commission_amount'] ?? 0
             ),
         ]);
     }
@@ -117,9 +121,11 @@ class TaobaoOrderService
             $status,
             $options
         ): CustomerOrder {
-            $customerTotalCny = round(
-                $parsed['goods_subtotal_cny'] + $parsed['shipping_fee_cny'] + ($commission['commission_amount'] ?? 0),
-                2
+            $customerTotalCny = $this->calculateCustomerTotal(
+                $parsed['goods_subtotal_cny'],
+                $parsed['shipping_fee_cny'],
+                $parsed['service_fee_cny'],
+                $commission['commission_amount'] ?? 0
             );
             $exchangeRate = $this->currencyExchangeService->getRate();
 
@@ -175,11 +181,27 @@ class TaobaoOrderService
             ->paginate($perPage);
     }
 
-    public function show(User $user, CustomerOrder $order): CustomerOrder
+    public function show(User $user, CustomerOrder $order, bool $syncFromElim = false): CustomerOrder
     {
         $this->ensureOwnership($user, $order);
 
+        if ($syncFromElim && $order->elim_order_id) {
+            return $this->lifecycleService->syncFromElim($user, $order);
+        }
+
         return $order->load(['items', 'orderStatus']);
+    }
+
+    protected function calculateCustomerTotal(
+        float $goodsSubtotal,
+        float $shippingFee,
+        ?float $serviceFee,
+        float $commissionAmount,
+    ): float {
+        return round(
+            $goodsSubtotal + $shippingFee + ($serviceFee ?? 0) + $commissionAmount,
+            2
+        );
     }
 
     protected function buildOrderPayload($items, array $options): array
