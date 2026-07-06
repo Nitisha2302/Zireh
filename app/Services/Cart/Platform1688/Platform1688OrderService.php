@@ -161,7 +161,7 @@ class Platform1688OrderService
 
             $this->cartService->clearCartItems($user);
 
-            return $order->load('items');
+            return $order->load(['items', 'orderStatus']);
         });
     }
 
@@ -170,7 +170,7 @@ class Platform1688OrderService
         return CustomerOrder::query()
             ->where('user_id', $user->id)
             ->where('platform', UserCartItem::PLATFORM_1688)
-            ->with('items')
+            ->with(['items', 'orderStatus'])
             ->latest()
             ->paginate($perPage);
     }
@@ -179,7 +179,7 @@ class Platform1688OrderService
     {
         $this->ensureOwnership($user, $order);
 
-        return $order->load('items');
+        return $order->load(['items', 'orderStatus']);
     }
 
     protected function buildOrderPayload($items, array $options): array

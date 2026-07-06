@@ -14,6 +14,8 @@ class TaobaoOrderResource extends JsonResource
             'platform' => $this->platform,
             'elim_order_id' => $this->elim_order_id,
             'status' => $this->status,
+            'status_label' => $this->orderStatus?->name ?? str($this->status)->replace('_', ' ')->title(),
+            'status_color' => $this->orderStatus?->color,
             'payment_status' => $this->payment_status,
             'goods_subtotal_cny' => (float) $this->goods_subtotal_cny,
             'shipping_fee_cny' => (float) $this->shipping_fee_cny,

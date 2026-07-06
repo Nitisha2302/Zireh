@@ -70,4 +70,9 @@ class CustomerOrder extends Model
     {
         return $this->hasMany(CustomerOrderItem::class);
     }
+
+    public function orderStatus(): BelongsTo
+    {
+        return $this->belongsTo(OrderStatus::class, 'status', 'code');
+    }
 }

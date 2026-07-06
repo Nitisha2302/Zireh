@@ -3,6 +3,7 @@
 namespace App\Livewire\Admin\Order;
 
 use App\Models\CustomerOrder;
+use App\Services\Order\OrderStatusService;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -33,10 +34,10 @@ class OrderListPage extends Component
         $this->resetPage();
     }
 
-    public function render()
+    public function render(OrderStatusService $orderStatusService)
     {
         $orders = CustomerOrder::query()
-            ->with(['user', 'items'])
+            ->with(['user', 'items', 'orderStatus'])
             ->when($this->search !== '', function ($query) {
                 $query->where(function ($q) {
                     $q->where('elim_order_id', 'like', '%'.$this->search.'%')
@@ -52,6 +53,7 @@ class OrderListPage extends Component
 
         return view('livewire.admin.order.order-list-page', [
             'orders' => $orders,
-        ])->title('Orders');
+            'statusOptions' => $orderStatusService->listActive(),
+        ])->title(__('admin.orders'));
     }
 }

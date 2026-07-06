@@ -26,13 +26,10 @@
                 </div>
                 <div class="col-md-3">
                     <select class="form-select" wire:model.live="statusFilter">
-                        <option value="">All statuses</option>
-                        <option value="creating">Creating</option>
-                        <option value="pending_payment">Pending Payment</option>
-                        <option value="paid">Paid</option>
-                        <option value="shipped">Shipped</option>
-                        <option value="completed">Completed</option>
-                        <option value="cancelled">Cancelled</option>
+                        <option value="">{{ __('admin.all_statuses') }}</option>
+                        @foreach ($statusOptions as $status)
+                            <option value="{{ $status->code }}">{{ $status->name }}</option>
+                        @endforeach
                     </select>
                 </div>
                 <div class="col-md-2 text-md-end">
@@ -67,7 +64,13 @@
                                 <small class="text-body-secondary">{{ $order->user?->phone }}</small>
                             </td>
                             <td><span class="badge bg-label-info text-uppercase">{{ $order->platform }}</span></td>
-                            <td><span class="badge bg-label-secondary">{{ $order->status }}</span></td>
+                            <td>
+                                @if ($order->orderStatus)
+                                    <span class="badge {{ $order->orderStatus->badgeClass() }}">{{ $order->orderStatus->name }}</span>
+                                @else
+                                    <span class="badge bg-label-secondary">{{ $order->status }}</span>
+                                @endif
+                            </td>
                             <td><span class="badge bg-label-warning">{{ $order->payment_status }}</span></td>
                             <td class="fw-semibold">¥{{ number_format((float) $order->customer_total_cny, 2) }}</td>
                             <td>¥{{ number_format((float) $order->commission_amount, 2) }} ({{ $order->commission_percentage }}%)</td>
