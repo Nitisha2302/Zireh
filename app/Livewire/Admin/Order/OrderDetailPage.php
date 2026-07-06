@@ -16,7 +16,7 @@ class OrderDetailPage extends Component
 
     public function mount(CustomerOrder $order): void
     {
-        $this->order = $order->load(['user', 'items', 'commissionSlab', 'orderStatus']);
+        $this->order = $order->load(['user', 'items', 'commissionSlab', 'orderStatus', 'warehouse', 'userAddress', 'shippingMethod']);
         $this->statusCode = $order->status;
     }
 
@@ -28,7 +28,7 @@ class OrderDetailPage extends Component
 
         try {
             $this->order = $orderStatusService->updateOrderStatus($this->order, $this->statusCode)
-                ->load(['user', 'items', 'commissionSlab', 'orderStatus']);
+                ->load(['user', 'items', 'commissionSlab', 'orderStatus', 'warehouse', 'userAddress', 'shippingMethod']);
         } catch (\Illuminate\Validation\ValidationException $exception) {
             $this->setErrorBag($exception->validator->getMessageBag());
 

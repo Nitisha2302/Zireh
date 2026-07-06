@@ -7,6 +7,7 @@ use App\Models\CustomerOrder;
 use App\Models\User;
 use App\Models\UserCartItem;
 use App\Services\Elim\ElimOrderApiService;
+use App\Services\Order\OrderCheckoutService;
 use App\Services\Wallet\WalletService;
 use Illuminate\Validation\ValidationException;
 
@@ -15,11 +16,19 @@ class CustomerOrderLifecycleService
     public function __construct(
         private readonly ElimOrderApiService $elimOrders,
         private readonly WalletService $walletService,
+        private readonly OrderCheckoutService $checkoutService,
     ) {}
 
     public function syncFromElim(User $user, CustomerOrder $order): CustomerOrder
     {
         $this->ensureOwnership($user, $order);
+
+        if ($order->is_demo_order) {
+            throw ValidationException::withMessages([
+                'sync' => [__('api.order_demo_sync_unavailable')],
+            ]);
+        }
+
         $this->assertHasElimOrderId($order);
 
         try {
@@ -36,13 +45,20 @@ class CustomerOrderLifecycleService
     public function cancel(User $user, CustomerOrder $order): CustomerOrder
     {
         $this->ensureOwnership($user, $order);
-        $this->assertHasElimOrderId($order);
 
         if (! $order->isCancellable()) {
             throw ValidationException::withMessages([
                 'order' => [__('api.order_not_cancellable')],
             ]);
         }
+
+        if ($order->is_demo_order) {
+            $order->update(['status' => 'cancelled']);
+
+            return $order->fresh()->load(['items', 'orderStatus', 'warehouse', 'userAddress', 'shippingMethod']);
+        }
+
+        $this->assertHasElimOrderId($order);
 
         try {
             $this->elimOrders->cancel($order->elim_order_id);
@@ -59,7 +75,7 @@ class CustomerOrderLifecycleService
     {
         $this->ensureOwnership($user, $order);
 
-        $amountDue = $order->paymentAmountCny();
+        $amountDue = $order->paymentAmountTjs();
         $walletBalance = $this->walletService->getBalance($user);
 
         return [
@@ -74,12 +90,19 @@ class CustomerOrderLifecycleService
                     ? (float) $order->elim_service_fee_cny
                     : 0.0,
                 'commission_amount' => (float) $order->commission_amount,
-                'total_cny' => $amountDue,
+                'cargo_shipping_fee_cny' => (float) $order->cargo_shipping_fee_cny,
+                'cargo_shipping_fee_tjs' => (float) $order->cargo_shipping_fee_tjs,
+                'total_cny' => $order->paymentAmountCny(),
+                'total_tjs' => $amountDue,
             ],
+            'payment_amount_tjs' => $amountDue,
+            'payment_method' => $order->payment_method,
             'wallet' => [
-                'balance_cny' => $walletBalance,
-                'available_cny' => $walletBalance,
-                'deficit_cny' => max(0, round($amountDue - $walletBalance, 2)),
+                'balance' => $walletBalance,
+                'balance_tjs' => $walletBalance,
+                'currency' => \App\Models\UserWallet::CURRENCY_TJS,
+                'available_tjs' => $walletBalance,
+                'deficit_tjs' => max(0, round($amountDue - $walletBalance, 2)),
             ],
             'can_pay' => $order->payment_status === 'unpaid' && $walletBalance >= $amountDue,
         ];
@@ -88,7 +111,6 @@ class CustomerOrderLifecycleService
     public function pay(User $user, CustomerOrder $order): CustomerOrder
     {
         $this->ensureOwnership($user, $order);
-        $this->assertHasElimOrderId($order);
 
         if ($order->payment_status === 'paid') {
             throw ValidationException::withMessages([
@@ -108,64 +130,20 @@ class CustomerOrderLifecycleService
             ]);
         }
 
-        $amountDue = $order->paymentAmountCny();
-        $walletBalance = $this->walletService->getBalance($user);
+        $order = $this->checkoutService->processWalletPayment($user, $order, onlyIfWalletMethod: false);
 
-        if ($walletBalance < $amountDue) {
-            throw ValidationException::withMessages([
-                'wallet' => [__('api.wallet_insufficient_balance')],
-                'deficit' => [(string) max(0, round($amountDue - $walletBalance, 2))],
-            ]);
-        }
-
-        $lockedOrder = CustomerOrder::query()->whereKey($order->id)->lockForUpdate()->firstOrFail();
-
-        if ($lockedOrder->payment_status === 'paid') {
-            throw ValidationException::withMessages([
-                'payment' => [__('api.order_already_paid')],
-            ]);
-        }
-
-        $transaction = $this->walletService->payForOrder(
-            $user,
-            $lockedOrder,
-            $amountDue,
-            'Payment for order '.$lockedOrder->elim_order_id
-        );
-
-        try {
-            $confirmResponse = $this->elimOrders->confirmPayment($lockedOrder->elim_order_id);
-        } catch (ElimRequestException $exception) {
-            $this->walletService->refundOrderPayment($transaction, 'Refund: Elim payment failed for '.$lockedOrder->elim_order_id);
-
-            if ($this->elimOrders->isInsufficientBalanceError($exception)) {
-                $payload = $this->elimOrders->insufficientBalancePayload($exception);
-
-                throw ValidationException::withMessages([
-                    'elim_wallet' => [__('api.elim_purchasing_wallet_insufficient')],
-                    'deficit' => [(string) $payload['deficit']],
-                    'required' => [(string) $payload['required']],
-                ]);
+        if (! $order->is_demo_order && $order->elim_order_id) {
+            try {
+                return $this->applyElimDetail(
+                    $order,
+                    $this->elimOrders->detail($order->elim_order_id)
+                )->load(['items', 'orderStatus', 'warehouse', 'userAddress', 'shippingMethod', 'walletTransaction']);
+            } catch (ElimRequestException) {
+                // Payment succeeded locally; return order without live sync.
             }
-
-            throw ValidationException::withMessages([
-                'payment' => [$exception->getMessage()],
-            ]);
         }
 
-        $paidAt = $confirmResponse['paid_at'] ?? now()->toIso8601String();
-
-        $lockedOrder->update([
-            'payment_status' => 'paid',
-            'paid_at' => $paidAt,
-            'wallet_transaction_id' => $transaction->id,
-            'elim_service_fee_cny' => $confirmResponse['service_fee_cny'] ?? $lockedOrder->elim_service_fee_cny,
-        ]);
-
-        return $this->applyElimDetail(
-            $lockedOrder->fresh(),
-            $this->elimOrders->detail($lockedOrder->elim_order_id)
-        )->load(['items', 'orderStatus', 'walletTransaction']);
+        return $order->load(['items', 'orderStatus', 'warehouse', 'userAddress', 'shippingMethod', 'walletTransaction']);
     }
 
     public function logistics(User $user, CustomerOrder $order, ?int $packageId = null): array

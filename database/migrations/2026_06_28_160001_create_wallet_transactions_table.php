@@ -17,7 +17,7 @@ return new class extends Migration
             $table->decimal('amount', 14, 2);
             $table->decimal('balance_before', 14, 2);
             $table->decimal('balance_after', 14, 2);
-            $table->string('currency', 10)->default('CNY');
+            $table->string('currency', 10)->default('TJS');
             $table->string('status', 20)->default('completed');
             $table->text('description')->nullable();
             $table->nullableMorphs('reference');

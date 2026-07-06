@@ -77,6 +77,7 @@ return [
         'token_ttl' => env('ELIM_TOKEN_TTL', 3300),
         'default_lang' => env('ELIM_DEFAULT_LANG', 'en'),
         'default_query' => env('ELIM_DEFAULT_QUERY', 'bag'),
+        'demo_mode' => env('DEMO', false),
         'cache' => [
             'products_ttl' => env('ELIM_PRODUCTS_CACHE_TTL', 900),
             'categories_ttl' => env('ELIM_CATEGORIES_CACHE_TTL', 86400),

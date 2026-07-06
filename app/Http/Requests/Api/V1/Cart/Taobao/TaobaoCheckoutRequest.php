@@ -2,15 +2,8 @@
 
 namespace App\Http\Requests\Api\V1\Cart\Taobao;
 
-use App\Http\Requests\Api\ApiRequest;
+use App\Http\Requests\Api\V1\Cart\CheckoutRequest;
 
-class TaobaoCheckoutRequest extends ApiRequest
+class TaobaoCheckoutRequest extends CheckoutRequest
 {
-    public function rules(): array
-    {
-        return [
-            'remark' => ['nullable', 'string', 'max:500'],
-            'promotion_id' => ['nullable', 'string', 'max:255'],
-        ];
-    }
 }

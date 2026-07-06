@@ -16,13 +16,11 @@ class OrderStatusService
 
     public function listActive(): Collection
     {
-        return Cache::rememberForever(self::CACHE_KEY, function (): Collection {
-            return OrderStatus::query()
-                ->where('is_active', true)
-                ->orderBy('sort_order')
-                ->orderBy('name')
-                ->get();
-        });
+        return OrderStatus::query()
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
     }
 
     public function optionsForSelect(): array

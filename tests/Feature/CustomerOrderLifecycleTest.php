@@ -12,7 +12,11 @@ use Laravel\Sanctum\Sanctum;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    config(['services.elim.base_url' => 'https://openapi.elim.asia']);
+    config([
+        'services.elim.base_url' => 'https://openapi.elim.asia',
+        'services.elim.demo_mode' => false,
+    ]);
+    Cache::forget(\App\Support\Elim\ElimApiConfig::CACHE_KEY);
     Cache::put('elim:auth:access_token', 'test-elim-token', 3600);
 });
 
@@ -29,6 +33,7 @@ function makeCustomerOrder(User $user, array $overrides = []): CustomerOrder
         'elim_service_fee_cny' => 5,
         'commission_amount' => 3,
         'customer_total_cny' => 118,
+        'customer_total_tjs' => 118,
         'receiver_address' => [
             'name' => 'Warehouse',
             'phone' => '02812345678',
@@ -49,8 +54,8 @@ it('returns payment preview with wallet deficit', function () {
     $response = $this->getJson("/api/v1/auth/orders/{$order->id}/payment-preview");
 
     $response->assertOk()
-        ->assertJsonPath('data.breakdown.total_cny', 118)
-        ->assertJsonPath('data.wallet.deficit_cny', 118)
+        ->assertJsonPath('data.breakdown.total_tjs', 118)
+        ->assertJsonPath('data.wallet.deficit_tjs', 118)
         ->assertJsonPath('data.can_pay', false);
 });
 

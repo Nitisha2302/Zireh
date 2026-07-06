@@ -15,7 +15,7 @@
             <div class="card h-100">
                 <div class="card-body">
                     <p class="text-body-secondary mb-1">Current Balance</p>
-                    <h3 class="mb-0">¥{{ number_format((float) $wallet->balance, 2) }} <small class="text-body-secondary fs-6">{{ $wallet->currency }}</small></h3>
+                    <h3 class="mb-0">сом. {{ number_format((float) $wallet->balance, 2) }} <small class="text-body-secondary fs-6">{{ $wallet->currency }}</small></h3>
                 </div>
             </div>
         </div>
@@ -39,7 +39,7 @@
                     @if ($walletAction === 'add')
                         <form wire:submit="addFunds" class="row g-3">
                             <div class="col-md-4">
-                                <label class="form-label">Amount (CNY)</label>
+                                <label class="form-label">Amount (TJS)</label>
                                 <input type="number" step="0.01" min="0.01" class="form-control @error('amount') is-invalid @enderror" wire:model="amount">
                                 @error('amount') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
@@ -63,10 +63,10 @@
                                 </div>
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label">Amount (CNY)</label>
+                                <label class="form-label">Amount (TJS)</label>
                                 <input type="number" step="0.01" min="0.01" max="{{ (float) $wallet->balance }}" class="form-control @error('deductAmount') is-invalid @enderror" wire:model="deductAmount">
                                 @error('deductAmount') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                <small class="text-body-secondary">Available: ¥{{ number_format((float) $wallet->balance, 2) }}</small>
+                                <small class="text-body-secondary">Available: сом. {{ number_format((float) $wallet->balance, 2) }}</small>
                             </div>
                             <div class="col-md-8">
                                 <label class="form-label">Description</label>
@@ -113,9 +113,9 @@
                             </td>
                             <td>{{ str_replace('_', ' ', $transaction->source) }}</td>
                             <td class="fw-semibold {{ $transaction->type === 'credit' ? 'text-success' : 'text-danger' }}">
-                                {{ $transaction->type === 'credit' ? '+' : '-' }}¥{{ number_format((float) $transaction->amount, 2) }}
+                                {{ $transaction->type === 'credit' ? '+' : '-' }}сом. {{ number_format((float) $transaction->amount, 2) }}
                             </td>
-                            <td>¥{{ number_format((float) $transaction->balance_after, 2) }}</td>
+                            <td>сом. {{ number_format((float) $transaction->balance_after, 2) }}</td>
                             <td><span class="badge bg-label-secondary">{{ $transaction->status }}</span></td>
                             <td>{{ $transaction->description ?: '—' }}</td>
                             <td>{{ $transaction->admin?->name ?: '—' }}</td>

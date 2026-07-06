@@ -88,8 +88,8 @@
                                 <span class="badge bg-label-{{ $transaction->type === 'credit' ? 'success' : 'danger' }}">{{ ucfirst($transaction->type) }}</span>
                             </td>
                             <td>{{ str_replace('_', ' ', $transaction->source) }}</td>
-                            <td class="fw-semibold">{{ $transaction->type === 'credit' ? '+' : '-' }}¥{{ number_format((float) $transaction->amount, 2) }}</td>
-                            <td>¥{{ number_format((float) $transaction->balance_after, 2) }}</td>
+                            <td class="fw-semibold">{{ $transaction->type === 'credit' ? '+' : '-' }}сом. {{ number_format((float) $transaction->amount, 2) }}</td>
+                            <td>сом. {{ number_format((float) $transaction->balance_after, 2) }}</td>
                             <td>{{ $transaction->status }}</td>
                             <td>{{ \Illuminate\Support\Str::limit($transaction->description ?: '—', 40) }}</td>
                             <td>{{ $transaction->admin?->name ?: '—' }}</td>

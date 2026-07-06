@@ -2,14 +2,17 @@
 
 namespace App\Http\Resources\Api\V1\Cart\Taobao;
 
+use App\Http\Resources\Api\V1\Order\MapsCustomerOrderDetails;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class TaobaoOrderResource extends JsonResource
 {
+    use MapsCustomerOrderDetails;
+
     public function toArray(Request $request): array
     {
-        return [
+        return array_merge([
             'id' => $this->id,
             'platform' => $this->platform,
             'elim_order_id' => $this->elim_order_id,
@@ -27,15 +30,15 @@ class TaobaoOrderResource extends JsonResource
                 'commission_amount' => (float) $this->commission_amount,
             ],
             'payment_amount_cny' => $this->paymentAmountCny(),
+            'payment_amount_tjs' => $this->paymentAmountTjs(),
             'customer_total_cny' => (float) $this->customer_total_cny,
             'exchange_rate' => $this->exchange_rate !== null ? (float) $this->exchange_rate : null,
             'customer_total_tjs' => $this->customer_total_tjs !== null ? (float) $this->customer_total_tjs : null,
-            'receiver_address' => $this->receiver_address,
             'remark' => $this->remark,
             'is_cancellable' => $this->isCancellable(),
             'items' => TaobaoOrderItemResource::collection($this->whenLoaded('items'))->resolve(),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
-        ];
+        ], $this->customerOrderDetailFields());
     }
 }
