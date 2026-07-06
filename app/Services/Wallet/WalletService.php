@@ -160,10 +160,56 @@ class WalletService
         });
     }
 
-    public function listForUser(User $user, int $perPage = 15): LengthAwarePaginator
+    public function listForUser(User $user, array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
-        return $this->transactionQuery(['user_id' => $user->id])
-            ->paginate($perPage);
+        return $this->applyFilters(
+            $this->transactionQuery(['user_id' => $user->id]),
+            array_merge($filters, ['user_id' => $user->id])
+        )->paginate($perPage);
+    }
+
+    public function depositFunds(
+        User $user,
+        float $amount,
+        ?string $description = null,
+        ?string $paymentReference = null,
+    ): WalletTransaction {
+        $this->assertPositiveAmount($amount);
+
+        $finalDescription = $description ?: 'Wallet deposit';
+
+        if ($paymentReference) {
+            $finalDescription .= ' | Ref: '.$paymentReference;
+        }
+
+        return DB::transaction(function () use ($user, $amount, $finalDescription): WalletTransaction {
+            $wallet = UserWallet::query()
+                ->where('user_id', $user->id)
+                ->lockForUpdate()
+                ->first();
+
+            if (! $wallet) {
+                $wallet = $this->getOrCreateWallet($user);
+                $wallet = UserWallet::query()->whereKey($wallet->id)->lockForUpdate()->firstOrFail();
+            }
+
+            $balanceBefore = (float) $wallet->balance;
+            $balanceAfter = round($balanceBefore + $amount, 2);
+
+            $wallet->update(['balance' => $balanceAfter]);
+
+            return WalletTransaction::query()->create([
+                'user_id' => $user->id,
+                'type' => WalletTransaction::TYPE_CREDIT,
+                'source' => WalletTransaction::SOURCE_WALLET_DEPOSIT,
+                'amount' => $amount,
+                'balance_before' => $balanceBefore,
+                'balance_after' => $balanceAfter,
+                'currency' => $wallet->currency,
+                'status' => WalletTransaction::STATUS_COMPLETED,
+                'description' => $finalDescription,
+            ]);
+        });
     }
 
     public function listForAdmin(array $filters = [], int $perPage = 15): LengthAwarePaginator

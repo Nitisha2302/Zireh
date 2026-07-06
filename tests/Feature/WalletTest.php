@@ -91,6 +91,41 @@ it('rejects revert when balance is insufficient', function () {
         ->toThrow(Illuminate\Validation\ValidationException::class);
 });
 
+it('allows customer to deposit funds via api', function () {
+    $user = User::factory()->create();
+
+    Sanctum::actingAs($user);
+
+    $this->postJson('/api/v1/auth/wallet/deposit', [
+        'amount' => 50.25,
+        'description' => 'Mobile top-up',
+        'payment_reference' => 'PAY-12345',
+    ])
+        ->assertCreated()
+        ->assertJsonPath('data.wallet.balance', 50.25)
+        ->assertJsonPath('data.transaction.type', WalletTransaction::TYPE_CREDIT)
+        ->assertJsonPath('data.transaction.source', WalletTransaction::SOURCE_WALLET_DEPOSIT)
+        ->assertJsonPath('data.transaction.amount', 50.25);
+
+    expect(app(WalletService::class)->getBalance($user))->toBe(50.25);
+});
+
+it('filters wallet transactions via api query parameters', function () {
+    $user = User::factory()->create();
+    $admin = makeWalletAdmin();
+    $service = app(WalletService::class);
+
+    $service->adminAddFunds($user, 100, 'Admin deposit', $admin);
+    $service->depositFunds($user, 25, 'Customer deposit', 'REF-1');
+
+    Sanctum::actingAs($user);
+
+    $this->getJson('/api/v1/auth/wallet/transactions?type=credit&source=wallet_deposit')
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.source', WalletTransaction::SOURCE_WALLET_DEPOSIT);
+});
+
 it('returns wallet balance and transactions for authenticated customer', function () {
     $user = User::factory()->create();
     $admin = makeWalletAdmin();

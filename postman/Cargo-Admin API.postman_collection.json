@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "97afdbf4-7a3f-4ce5-be6e-5368dd98958c",
+    "_postman_id": "6cb07bb2-aa25-43bd-8416-9b7bc36e1e92",
     "name": "Cargo-Admin API",
     "description": "Laravel public API collection generated from routes/api.php. Set collection variables before running requests.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
@@ -1676,18 +1676,8 @@
       "name": "07 - Wallet",
       "item": [
         {
-          "name": "Get Balance",
+          "name": "Get Wallet Balance",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{customer_token}}",
-                  "type": "string"
-                }
-              ]
-            },
             "method": "GET",
             "header": [
               {
@@ -1703,8 +1693,73 @@
             ],
             "url": {
               "raw": "{{base_url}}/v1/auth/wallet",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "auth", "wallet"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "auth",
+                "wallet"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Deposit Funds",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json?.data?.wallet?.balance !== undefined) {",
+                  "  pm.collectionVariables.set('wallet_balance', json.data.wallet.balance);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{locale}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": {{wallet_deposit_amount}},\n  \"description\": \"Mobile wallet top-up\",\n  \"payment_reference\": \"{{wallet_payment_reference}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/auth/wallet/deposit",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "auth",
+                "wallet",
+                "deposit"
+              ]
             }
           },
           "response": []
@@ -1712,16 +1767,6 @@
         {
           "name": "List Transactions",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{customer_token}}",
-                  "type": "string"
-                }
-              ]
-            },
             "method": "GET",
             "header": [
               {
@@ -1736,68 +1781,66 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/v1/auth/wallet/transactions?per_page=15",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "auth", "wallet", "transactions"],
+              "raw": "{{base_url}}/v1/auth/wallet/transactions?per_page=15&type=&source=&status=&date_from=&date_to=",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "auth",
+                "wallet",
+                "transactions"
+              ],
               "query": [
                 {
                   "key": "per_page",
-                  "value": "15"
+                  "value": "15",
+                  "description": "1-50, default 15"
+                },
+                {
+                  "key": "type",
+                  "value": "",
+                  "description": "credit or debit"
+                },
+                {
+                  "key": "source",
+                  "value": "",
+                  "description": "wallet_deposit, admin_deposit, order_payment, etc."
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "description": "completed or reverted"
+                },
+                {
+                  "key": "date_from",
+                  "value": "",
+                  "description": "YYYY-MM-DD"
+                },
+                {
+                  "key": "date_to",
+                  "value": "",
+                  "description": "YYYY-MM-DD"
                 }
               ]
             }
           },
           "response": []
         }
-      ]
+      ],
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{customer_token}}",
+            "type": "string"
+          }
+        ]
+      }
     },
     {
-      "name": "08 - Warehouses",
-      "item": [
-        {
-          "name": "List Nearest Warehouses",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{customer_token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "GET",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json",
-                "type": "text"
-              },
-              {
-                "key": "Accept-Language",
-                "value": "{{locale}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/v1/auth/warehouses?address_id={{address_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "auth", "warehouses"],
-              "query": [
-                {
-                  "key": "address_id",
-                  "value": "{{address_id}}"
-                }
-              ]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "09 - Taobao Cart & Checkout",
+      "name": "08 - Taobao Cart & Checkout",
       "item": [
         {
           "name": "Get Cart",
@@ -1817,8 +1860,15 @@
             ],
             "url": {
               "raw": "{{base_url}}/v1/auth/taobao/cart",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "auth", "taobao", "cart"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "auth",
+                "taobao",
+                "cart"
+              ]
             }
           },
           "response": []
@@ -1868,8 +1918,16 @@
             },
             "url": {
               "raw": "{{base_url}}/v1/auth/taobao/cart/items",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "auth", "taobao", "cart", "items"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "auth",
+                "taobao",
+                "cart",
+                "items"
+              ]
             }
           },
           "response": []
@@ -1906,8 +1964,17 @@
             },
             "url": {
               "raw": "{{base_url}}/v1/auth/taobao/cart/items/{{cart_item_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "auth", "taobao", "cart", "items", "{{cart_item_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "auth",
+                "taobao",
+                "cart",
+                "items",
+                "{{cart_item_id}}"
+              ]
             }
           },
           "response": []
@@ -1930,8 +1997,17 @@
             ],
             "url": {
               "raw": "{{base_url}}/v1/auth/taobao/cart/items/{{cart_item_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "auth", "taobao", "cart", "items", "{{cart_item_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "auth",
+                "taobao",
+                "cart",
+                "items",
+                "{{cart_item_id}}"
+              ]
             }
           },
           "response": []
@@ -1954,8 +2030,15 @@
             ],
             "url": {
               "raw": "{{base_url}}/v1/auth/taobao/cart",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "auth", "taobao", "cart"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "auth",
+                "taobao",
+                "cart"
+              ]
             }
           },
           "response": []
@@ -1992,8 +2075,16 @@
             },
             "url": {
               "raw": "{{base_url}}/v1/auth/taobao/cart/preview",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "auth", "taobao", "cart", "preview"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "auth",
+                "taobao",
+                "cart",
+                "preview"
+              ]
             }
           },
           "response": []
@@ -2043,8 +2134,16 @@
             },
             "url": {
               "raw": "{{base_url}}/v1/auth/taobao/cart/checkout",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "auth", "taobao", "cart", "checkout"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "auth",
+                "taobao",
+                "cart",
+                "checkout"
+              ]
             }
           },
           "response": []
@@ -2067,8 +2166,15 @@
             ],
             "url": {
               "raw": "{{base_url}}/v1/auth/taobao/orders?page={{page}}&per_page={{size}}",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "auth", "taobao", "orders"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "auth",
+                "taobao",
+                "orders"
+              ],
               "query": [
                 {
                   "key": "page",
@@ -2101,8 +2207,16 @@
             ],
             "url": {
               "raw": "{{base_url}}/v1/auth/taobao/orders/{{order_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "auth", "taobao", "orders", "{{order_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "auth",
+                "taobao",
+                "orders",
+                "{{order_id}}"
+              ]
             }
           },
           "response": []
@@ -2120,11 +2234,21 @@
       }
     },
     {
-      "name": "10 - 1688 Cart & Checkout",
+      "name": "09 - 1688 Cart & Checkout",
       "item": [
         {
           "name": "Get Cart",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customer_token}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [
               {
@@ -2140,8 +2264,15 @@
             ],
             "url": {
               "raw": "{{base_url}}/v1/auth/1688/cart",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "auth", "1688", "cart"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "auth",
+                "1688",
+                "cart"
+              ]
             }
           },
           "response": []
@@ -2191,8 +2322,16 @@
             },
             "url": {
               "raw": "{{base_url}}/v1/auth/1688/cart/items",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "auth", "1688", "cart", "items"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "auth",
+                "1688",
+                "cart",
+                "items"
+              ]
             }
           },
           "response": []
@@ -2229,8 +2368,17 @@
             },
             "url": {
               "raw": "{{base_url}}/v1/auth/1688/cart/items/{{cart_item_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "auth", "1688", "cart", "items", "{{cart_item_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "auth",
+                "1688",
+                "cart",
+                "items",
+                "{{cart_item_id}}"
+              ]
             }
           },
           "response": []
@@ -2253,8 +2401,17 @@
             ],
             "url": {
               "raw": "{{base_url}}/v1/auth/1688/cart/items/{{cart_item_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "auth", "1688", "cart", "items", "{{cart_item_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "auth",
+                "1688",
+                "cart",
+                "items",
+                "{{cart_item_id}}"
+              ]
             }
           },
           "response": []
@@ -2277,8 +2434,15 @@
             ],
             "url": {
               "raw": "{{base_url}}/v1/auth/1688/cart",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "auth", "1688", "cart"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "auth",
+                "1688",
+                "cart"
+              ]
             }
           },
           "response": []
@@ -2315,8 +2479,16 @@
             },
             "url": {
               "raw": "{{base_url}}/v1/auth/1688/cart/preview",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "auth", "1688", "cart", "preview"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "auth",
+                "1688",
+                "cart",
+                "preview"
+              ]
             }
           },
           "response": []
@@ -2366,8 +2538,16 @@
             },
             "url": {
               "raw": "{{base_url}}/v1/auth/1688/cart/checkout",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "auth", "1688", "cart", "checkout"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "auth",
+                "1688",
+                "cart",
+                "checkout"
+              ]
             }
           },
           "response": []
@@ -2390,8 +2570,15 @@
             ],
             "url": {
               "raw": "{{base_url}}/v1/auth/1688/orders?page={{page}}&per_page={{size}}",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "auth", "1688", "orders"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "auth",
+                "1688",
+                "orders"
+              ],
               "query": [
                 {
                   "key": "page",
@@ -2424,8 +2611,16 @@
             ],
             "url": {
               "raw": "{{base_url}}/v1/auth/1688/orders/{{order_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "auth", "1688", "orders", "{{order_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "auth",
+                "1688",
+                "orders",
+                "{{order_id}}"
+              ]
             }
           },
           "response": []
@@ -2441,6 +2636,141 @@
           }
         ]
       }
+    },
+    {
+      "name": "10 - Warehouse",
+      "item": [
+        {
+          "name": "listing",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customer_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{locale}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/auth/warehouses?address_id=2",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "auth",
+                "warehouses"
+              ],
+              "query": [
+                {
+                  "key": "address_id",
+                  "value": "2"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "11 - Shipping Calculator",
+      "item": [
+        {
+          "name": "List Shipping Methods",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{locale}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/shipping/methods",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "shipping",
+                "methods"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Calculate Shipping Cost",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{locale}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"method\": \"{{shipping_method}}\",\n  \"weight_kg\": {{shipping_weight_kg}},\n  \"length_cm\": {{shipping_length_cm}},\n  \"width_cm\": {{shipping_width_cm}},\n  \"height_cm\": {{shipping_height_cm}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/shipping/calculate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "shipping",
+                "calculate"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
     }
   ],
   "variable": [
@@ -2559,6 +2889,38 @@
     {
       "key": "elim_order_id",
       "value": ""
+    },
+    {
+      "key": "wallet_deposit_amount",
+      "value": "100"
+    },
+    {
+      "key": "wallet_payment_reference",
+      "value": "PAY-12345"
+    },
+    {
+      "key": "wallet_balance",
+      "value": ""
+    },
+    {
+      "key": "shipping_method",
+      "value": "cargo"
+    },
+    {
+      "key": "shipping_weight_kg",
+      "value": "5"
+    },
+    {
+      "key": "shipping_length_cm",
+      "value": "10"
+    },
+    {
+      "key": "shipping_width_cm",
+      "value": "55"
+    },
+    {
+      "key": "shipping_height_cm",
+      "value": "20"
     }
   ]
 }

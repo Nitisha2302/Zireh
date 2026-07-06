@@ -74,6 +74,7 @@ Route::prefix('v1')->group(function () {
             Route::delete('wishlist/{wishlist}', [WishlistController::class, 'destroy']);
 
             Route::get('wallet', [WalletController::class, 'show']);
+            Route::post('wallet/deposit', [WalletController::class, 'deposit']);
             Route::get('wallet/transactions', [WalletController::class, 'transactions']);
 
             Route::prefix('taobao')->group(function () {

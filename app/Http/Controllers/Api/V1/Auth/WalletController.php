@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api\V1\Auth;
 
 use App\Http\Controllers\Api\ApiController;
+use App\Http\Requests\Api\V1\Auth\DepositWalletFundsRequest;
+use App\Http\Requests\Api\V1\Auth\ListWalletTransactionsRequest;
 use App\Http\Resources\Api\V1\Auth\WalletResource;
 use App\Http\Resources\Api\V1\Auth\WalletTransactionResource;
 use App\Services\Wallet\WalletService;
@@ -17,8 +19,7 @@ class WalletController extends ApiController
 
     public function show(Request $request): JsonResponse
     {
-        $user = $request->user();
-        $wallet = $this->walletService->getOrCreateWallet($user);
+        $wallet = $this->walletService->getOrCreateWallet($request->user());
 
         return $this->successResponse(
             (new WalletResource($wallet))->resolve(),
@@ -26,10 +27,38 @@ class WalletController extends ApiController
         );
     }
 
-    public function transactions(Request $request): JsonResponse
+    public function deposit(DepositWalletFundsRequest $request): JsonResponse
     {
-        $perPage = min((int) $request->query('per_page', 15), 50);
-        $transactions = $this->walletService->listForUser($request->user(), max($perPage, 1));
+        $validated = $request->validated();
+        $user = $request->user();
+
+        $transaction = $this->walletService->depositFunds(
+            $user,
+            (float) $validated['amount'],
+            $validated['description'] ?? null,
+            $validated['payment_reference'] ?? null,
+        );
+
+        $wallet = $this->walletService->getOrCreateWallet($user);
+
+        return $this->successResponse(
+            [
+                'wallet' => (new WalletResource($wallet))->resolve(),
+                'transaction' => (new WalletTransactionResource($transaction))->resolve(),
+            ],
+            __('api.wallet_deposit_successful'),
+            201
+        );
+    }
+
+    public function transactions(ListWalletTransactionsRequest $request): JsonResponse
+    {
+        $perPage = min((int) $request->input('per_page', 15), 50);
+        $transactions = $this->walletService->listForUser(
+            $request->user(),
+            $request->filters(),
+            max($perPage, 1)
+        );
 
         return $this->successResponse(
             WalletTransactionResource::collection($transactions)->resolve(),
