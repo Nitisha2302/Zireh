@@ -4,6 +4,8 @@ use App\Http\Controllers\PublicController;
 use App\Livewire\Admin\Customer\{CustomerAddressCreatePage, CustomerAddressEditPage, CustomerAddressListPage, CustomerEditPage, CustomerListPage};
 use App\Livewire\Admin\Order\{OrderDetailPage, OrderListPage};
 use App\Livewire\Admin\Wallet\{CustomerWalletPage, WalletTransactionListPage};
+use App\Livewire\Admin\ShippingMethod\{ShippingMethodCreatePage, ShippingMethodEditPage, ShippingMethodListPage};
+use App\Livewire\Admin\ShippingRate\{ShippingRateCreatePage, ShippingRateEditPage, ShippingRateListPage};
 use App\Livewire\Admin\Warehouse\{WarehouseCreatePage, WarehouseEditPage, WarehouseListPage, WarehouseShowPage};
 use App\Livewire\Admin\DashboardPage;
 use App\Livewire\Admin\Platform\{PlatformListPage, PlatformCreatePage, PlatformEditPage};
@@ -57,6 +59,14 @@ Route::prefix('admin')->name('admin.')->middleware(['is_auth:admin'])->group(fun
     Route::get('warehouses/create', WarehouseCreatePage::class)->name('warehouses.create');
     Route::get('warehouses/{warehouse}', WarehouseShowPage::class)->name('warehouses.show');
     Route::get('warehouses/{warehouse}/edit', WarehouseEditPage::class)->name('warehouses.edit');
+
+    Route::get('shipping-methods', ShippingMethodListPage::class)->name('shipping-methods.index');
+    Route::get('shipping-methods/create', ShippingMethodCreatePage::class)->name('shipping-methods.create');
+    Route::get('shipping-methods/{shippingMethod}/edit', ShippingMethodEditPage::class)->name('shipping-methods.edit');
+
+    Route::get('shipping-rates', ShippingRateListPage::class)->name('shipping-rates.index');
+    Route::get('shipping-rates/create', ShippingRateCreatePage::class)->name('shipping-rates.create');
+    Route::get('shipping-rates/{shippingRate}/edit', ShippingRateEditPage::class)->name('shipping-rates.edit');
 
     Route::get('platforms', PlatformListPage::class)->name('platforms.index');
     Route::get('platforms/create', PlatformCreatePage::class)->name('platforms.create');

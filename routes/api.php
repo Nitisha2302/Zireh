@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\V1\Cart\Taobao\TaobaoCheckoutController;
 use App\Http\Controllers\Api\V1\Elim\Alibaba1688CatalogController;
 use App\Http\Controllers\Api\V1\Elim\TaobaoCatalogController;
 use App\Http\Controllers\Api\V1\PlatformCatalogController;
+use App\Http\Controllers\Api\V1\ShippingController;
 use App\Http\Controllers\Api\V1\WarehouseController;
 use Illuminate\Support\Facades\Route;
 
@@ -18,6 +19,9 @@ Route::prefix('v1')->group(function () {
     Route::get('platforms', [PlatformCatalogController::class, 'platforms']);
     Route::get('platforms/{platform}/commission-slabs', [PlatformCatalogController::class, 'commissionSlabs']);
     Route::get('platform-sliders', [PlatformCatalogController::class, 'sliders']);
+
+    Route::get('shipping/methods', [ShippingController::class, 'methods']);
+    Route::post('shipping/calculate', [ShippingController::class, 'calculate']);
 
     Route::prefix('taobao')->name('api.taobao.')->group(function () {
         Route::get('products', [TaobaoCatalogController::class, 'products'])->name('products.index');
