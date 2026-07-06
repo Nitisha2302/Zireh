@@ -2066,7 +2066,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"remark\": \"Test order preview\",\n  \"promotion_id\": \"\"\n}",
+              "raw": "{\n  \"warehouse_id\": {{warehouse_id}},\n  \"address_id\": {{address_id}},\n  \"shipping_method_id\": {{shipping_method_id}},\n  \"payment_method\": \"online\",\n  \"weight_kg\": 2.5,\n  \"remark\": \"Test order preview\",\n  \"promotion_id\": \"\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2125,7 +2125,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"remark\": \"Test order checkout\",\n  \"promotion_id\": \"\"\n}",
+              "raw": "{\n  \"warehouse_id\": {{warehouse_id}},\n  \"address_id\": {{address_id}},\n  \"shipping_method_id\": {{shipping_method_id}},\n  \"payment_method\": \"wallet\",\n  \"weight_kg\": 2.5,\n  \"remark\": \"Test order checkout\",\n  \"promotion_id\": \"\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2477,7 +2477,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"remark\": \"Test order preview\",\n  \"promotion_id\": \"\"\n}",
+              "raw": "{\n  \"warehouse_id\": {{warehouse_id}},\n  \"address_id\": {{address_id}},\n  \"shipping_method_id\": {{shipping_method_id}},\n  \"payment_method\": \"online\",\n  \"weight_kg\": 2.5,\n  \"remark\": \"Test order preview\",\n  \"promotion_id\": \"\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2536,7 +2536,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"remark\": \"Test order checkout\",\n  \"promotion_id\": \"\"\n}",
+              "raw": "{\n  \"warehouse_id\": {{warehouse_id}},\n  \"address_id\": {{address_id}},\n  \"shipping_method_id\": {{shipping_method_id}},\n  \"payment_method\": \"wallet\",\n  \"weight_kg\": 2.5,\n  \"remark\": \"Test order checkout\",\n  \"promotion_id\": \"\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -3185,6 +3185,18 @@
     {
       "key": "package_id",
       "value": "12345"
+    },
+    {
+      "key": "warehouse_id",
+      "value": "1"
+    },
+    {
+      "key": "address_id",
+      "value": "1"
+    },
+    {
+      "key": "shipping_method_id",
+      "value": "1"
     },
     {
       "key": "wallet_deposit_amount",

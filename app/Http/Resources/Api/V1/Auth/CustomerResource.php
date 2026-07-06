@@ -26,7 +26,7 @@ class CustomerResource extends JsonResource
             'last_login_at' => $this->last_login_at,
             'wallet' => [
                 'balance' => app(WalletService::class)->getBalance($this->resource),
-                'currency' => UserWallet::CURRENCY_CNY,
+                'currency' => $this->resource->wallet?->currency ?? UserWallet::defaultCurrency(),
             ],
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,

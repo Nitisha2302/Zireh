@@ -102,6 +102,16 @@ it('prevents permanent delete when orders use the status', function () {
         ->toThrow(Illuminate\Validation\ValidationException::class);
 });
 
+it('listActive always returns order status models from database', function () {
+    Cache::forever('order_statuses.active', serialize(new \stdClass()));
+
+    $statuses = app(OrderStatusService::class)->listActive();
+
+    expect($statuses)->toBeInstanceOf(\Illuminate\Support\Collection::class)
+        ->and($statuses)->not->toBeEmpty()
+        ->and($statuses->first())->toBeInstanceOf(OrderStatus::class);
+});
+
 it('shows order status management page to admins', function () {
     $admin = makeOrderStatusAdmin();
 

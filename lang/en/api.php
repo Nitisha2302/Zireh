@@ -136,4 +136,7 @@ return [
     'elim_purchasing_wallet_insufficient' => 'Elim purchasing wallet has insufficient balance. Please contact support.',
     'elim_purchasing_wallet_fetched' => 'Elim purchasing wallet fetched successfully.',
     'elim_exchange_rates_fetched' => 'Elim exchange rates fetched successfully.',
+    'warehouse_not_available' => 'The selected warehouse is not available.',
+    'payment_method_invalid' => 'The selected payment method is invalid.',
+    'order_demo_sync_unavailable' => 'Demo orders cannot be synced with Elim.',
 ];

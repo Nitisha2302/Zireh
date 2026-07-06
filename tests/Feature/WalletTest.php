@@ -28,7 +28,7 @@ it('creates wallet on first balance lookup', function () {
 
     expect($balance)->toBe(0.0)
         ->and($user->fresh()->wallet)->not->toBeNull()
-        ->and($user->wallet->currency)->toBe('CNY');
+        ->and($user->wallet->currency)->toBe('TJS');
 });
 
 it('allows admin to add funds and revert deposit', function () {
@@ -137,7 +137,7 @@ it('returns wallet balance and transactions for authenticated customer', functio
     $this->getJson('/api/v1/auth/wallet')
         ->assertOk()
         ->assertJsonPath('data.balance', 25)
-        ->assertJsonPath('data.currency', 'CNY');
+        ->assertJsonPath('data.currency', 'TJS');
 
     $this->getJson('/api/v1/auth/wallet/transactions')
         ->assertOk()
@@ -165,5 +165,5 @@ it('allows admin to view wallet transaction list page', function () {
         ->get(route('admin.customers.wallet', $user))
         ->assertOk()
         ->assertSee('Customer Wallet')
-        ->assertSee('¥10.00');
+        ->assertSee('сом. 10.00');
 });

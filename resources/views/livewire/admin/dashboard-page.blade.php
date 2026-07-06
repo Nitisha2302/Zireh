@@ -148,7 +148,7 @@
                     </div>
                     <div>
                         <p class="mb-0 text-body-secondary small">{{ __('admin.dashboard_wallet_balance') }}</p>
-                        <h4 class="mb-0">¥{{ number_format($stats['wallet_balance_total'], 2) }}</h4>
+                        <h4 class="mb-0">сом. {{ number_format($stats['wallet_balance_total'], 2) }}</h4>
                         <small class="text-body-secondary">{{ number_format($stats['wallet_transactions_month']) }}
                             {{ __('admin.dashboard_txn_this_month') }}</small>
                     </div>
@@ -430,7 +430,7 @@
                                 </div>
                                 <span
                                     class="fw-semibold {{ $transaction->type === 'credit' ? 'text-success' : 'text-danger' }}">
-                                    {{ $transaction->type === 'credit' ? '+' : '-' }}¥{{ number_format((float) $transaction->amount, 2) }}
+                                    {{ $transaction->type === 'credit' ? '+' : '-' }}сом. {{ number_format((float) $transaction->amount, 2) }}
                                 </span>
                             </div>
                         </li>

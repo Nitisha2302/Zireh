@@ -19,7 +19,7 @@ class WalletService
     {
         return UserWallet::query()->firstOrCreate(
             ['user_id' => $user->id],
-            ['balance' => 0, 'currency' => UserWallet::CURRENCY_CNY]
+            ['balance' => 0, 'currency' => UserWallet::defaultCurrency()]
         );
     }
 

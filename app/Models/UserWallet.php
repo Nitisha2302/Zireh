@@ -9,7 +9,15 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class UserWallet extends Model
 {
+    public const CURRENCY_TJS = 'TJS';
+
+    /** @deprecated Wallet balances are stored in TJS. */
     public const CURRENCY_CNY = 'CNY';
+
+    public static function defaultCurrency(): string
+    {
+        return self::CURRENCY_TJS;
+    }
 
     protected $fillable = [
         'user_id',

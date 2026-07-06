@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->unique()->constrained()->cascadeOnDelete();
             $table->decimal('balance', 14, 2)->default(0);
-            $table->string('currency', 10)->default('CNY');
+            $table->string('currency', 10)->default('TJS');
             $table->timestamps();
         });
     }
