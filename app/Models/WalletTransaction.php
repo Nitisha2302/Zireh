@@ -22,6 +22,8 @@ class WalletTransaction extends Model
 
     public const SOURCE_ORDER_REFUND = 'order_refund';
 
+    public const SOURCE_WALLET_DEPOSIT = 'wallet_deposit';
+
     public const STATUS_COMPLETED = 'completed';
 
     public const STATUS_REVERTED = 'reverted';
