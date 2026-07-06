@@ -3,7 +3,9 @@
 namespace App\Services\Elim;
 
 use App\Exceptions\Elim\ElimAuthenticationException;
+use App\Models\ElimApiLog;
 use App\Support\Elim\ElimApiConfig;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -15,8 +17,10 @@ class ElimAuthService
 
     private const REFRESH_TOKEN_KEY = 'elim:auth:refresh_token';
 
-    public function __construct(private readonly ElimApiConfig $config)
-    {
+    public function __construct(
+        private readonly ElimApiConfig $config,
+        private readonly ElimApiLogger $logger,
+    ) {
     }
 
     public function accessToken(): string
@@ -39,11 +43,14 @@ class ElimAuthService
         }
 
         try {
+            $startedAt = microtime(true);
             $response = Http::baseUrl($this->baseUrl())
                 ->acceptJson()
                 ->withToken($refreshToken)
                 ->timeout($this->timeout())
                 ->post('/v1/auth/refresh');
+
+            $this->recordAuthResponse('post', '/v1/auth/refresh', null, $response, $startedAt);
         } catch (\Throwable $exception) {
             Log::warning('ELIM token refresh failed; falling back to login.', [
                 'message' => $exception->getMessage(),
@@ -79,14 +86,19 @@ class ElimAuthService
             throw new ElimAuthenticationException('ELIM credentials are not configured.');
         }
 
+        $startedAt = microtime(true);
+        $payload = [
+            'email' => $email,
+            'password' => $password,
+        ];
+
         $response = Http::baseUrl($this->baseUrl())
             ->acceptJson()
             ->timeout($this->timeout())
             ->retry($this->retries(), $this->retrySleep())
-            ->post('/v1/auth/login', [
-                'email' => $email,
-                'password' => $password,
-            ]);
+            ->post('/v1/auth/login', $payload);
+
+        $this->recordAuthResponse('post', '/v1/auth/login', $payload, $response, $startedAt);
 
         if (! $response->successful()) {
             throw new ElimAuthenticationException('Unable to authenticate with ELIM.', $response->status(), context: [
@@ -105,13 +117,25 @@ class ElimAuthService
         }
 
         try {
+            $startedAt = microtime(true);
+            $payload = [
+                'email' => $email,
+                'password' => $password,
+            ];
+
             $response = Http::baseUrl(rtrim($baseUrl, '/'))
                 ->acceptJson()
                 ->timeout($this->timeout())
-                ->post('/v1/auth/login', [
-                    'email' => $email,
-                    'password' => $password,
-                ]);
+                ->post('/v1/auth/login', $payload);
+
+            $this->recordAuthResponse(
+                'post',
+                '/v1/auth/login',
+                $payload,
+                $response,
+                $startedAt,
+                ElimApiLog::SOURCE_AUTH_TEST
+            );
         } catch (\Throwable $exception) {
             throw new ElimAuthenticationException(
                 __('admin.elim_api_test_unreachable', ['message' => $exception->getMessage()]),
@@ -195,5 +219,45 @@ class ElimAuthService
     private function retrySleep(): int
     {
         return $this->config->retrySleep();
+    }
+
+    private function recordAuthResponse(
+        string $method,
+        string $endpoint,
+        ?array $requestPayload,
+        Response $response,
+        float $startedAt,
+        string $source = ElimApiLog::SOURCE_AUTH,
+    ): void {
+        $durationMs = (int) round((microtime(true) - $startedAt) * 1000);
+
+        try {
+            $body = $response->json() ?? $response->body();
+            $sanitizedBody = is_array($body) ? $body : ['_raw' => $body];
+
+            if (is_array($sanitizedBody) && $response->successful()) {
+                $sanitizedBody = array_merge($sanitizedBody, [
+                    'access_token' => isset($sanitizedBody['access_token']) ? '[REDACTED]' : null,
+                    'refresh_token' => isset($sanitizedBody['refresh_token']) ? '[REDACTED]' : null,
+                ]);
+            }
+
+            $this->logger->log(
+                method: $method,
+                endpoint: $endpoint,
+                requestPayload: $requestPayload,
+                responseBody: $sanitizedBody,
+                statusCode: $response->status(),
+                isSuccessful: $response->successful(),
+                durationMs: $durationMs,
+                source: $source,
+                errorMessage: $response->successful() ? null : (is_array($body) ? ($body['message'] ?? $body['error'] ?? null) : null),
+            );
+        } catch (\Throwable $exception) {
+            Log::warning('Failed to persist Elim auth API log.', [
+                'endpoint' => $endpoint,
+                'message' => $exception->getMessage(),
+            ]);
+        }
     }
 }

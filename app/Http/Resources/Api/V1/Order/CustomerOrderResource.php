@@ -1,14 +1,21 @@
 <?php
 
-namespace App\Http\Resources\Api\V1\Cart\Taobao;
+namespace App\Http\Resources\Api\V1\Order;
 
+use App\Http\Resources\Api\V1\Cart\Platform1688\Platform1688OrderItemResource;
+use App\Http\Resources\Api\V1\Cart\Taobao\TaobaoOrderItemResource;
+use App\Models\UserCartItem;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class TaobaoOrderResource extends JsonResource
+class CustomerOrderResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
+        $itemResource = $this->platform === UserCartItem::PLATFORM_1688
+            ? Platform1688OrderItemResource::class
+            : TaobaoOrderItemResource::class;
+
         return [
             'id' => $this->id,
             'platform' => $this->platform,
@@ -33,7 +40,11 @@ class TaobaoOrderResource extends JsonResource
             'receiver_address' => $this->receiver_address,
             'remark' => $this->remark,
             'is_cancellable' => $this->isCancellable(),
-            'items' => TaobaoOrderItemResource::collection($this->whenLoaded('items'))->resolve(),
+            'elim_detail' => $this->when(
+                $this->elim_detail_snapshot !== null,
+                fn () => $this->elim_detail_snapshot['data'] ?? $this->elim_detail_snapshot
+            ),
+            'items' => $itemResource::collection($this->whenLoaded('items'))->resolve(),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

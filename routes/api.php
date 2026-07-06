@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\V1\Cart\Taobao\TaobaoCartController;
 use App\Http\Controllers\Api\V1\Cart\Taobao\TaobaoCheckoutController;
 use App\Http\Controllers\Api\V1\Elim\Alibaba1688CatalogController;
 use App\Http\Controllers\Api\V1\Elim\TaobaoCatalogController;
+use App\Http\Controllers\Api\V1\Order\CustomerOrderController;
 use App\Http\Controllers\Api\V1\OrderStatusController;
 use App\Http\Controllers\Api\V1\PlatformCatalogController;
 use App\Http\Controllers\Api\V1\ShippingController;
@@ -79,6 +80,14 @@ Route::prefix('v1')->group(function () {
             Route::get('wallet', [WalletController::class, 'show']);
             Route::post('wallet/deposit', [WalletController::class, 'deposit']);
             Route::get('wallet/transactions', [WalletController::class, 'transactions']);
+
+            Route::get('orders/elim/purchasing-wallet', [CustomerOrderController::class, 'elimPurchasingWallet']);
+            Route::get('orders/elim/exchange-rates', [CustomerOrderController::class, 'elimExchangeRates']);
+            Route::get('orders/{order}/payment-preview', [CustomerOrderController::class, 'paymentPreview']);
+            Route::post('orders/{order}/pay', [CustomerOrderController::class, 'pay']);
+            Route::post('orders/{order}/sync', [CustomerOrderController::class, 'sync']);
+            Route::post('orders/{order}/cancel', [CustomerOrderController::class, 'cancel']);
+            Route::get('orders/{order}/logistics', [CustomerOrderController::class, 'logistics']);
 
             Route::prefix('taobao')->group(function () {
                 Route::get('cart', [TaobaoCartController::class, 'index']);

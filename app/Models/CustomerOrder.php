@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/** @property-read float $payment_amount_cny */
+
 class CustomerOrder extends Model
 {
     public const PLATFORM_TAOBAO = 'taobao';
@@ -32,6 +34,9 @@ class CustomerOrder extends Model
         'remark',
         'elim_preview_snapshot',
         'elim_create_snapshot',
+        'elim_detail_snapshot',
+        'paid_at',
+        'wallet_transaction_id',
     ];
 
     protected function casts(): array
@@ -48,7 +53,25 @@ class CustomerOrder extends Model
             'receiver_address' => 'array',
             'elim_preview_snapshot' => 'array',
             'elim_create_snapshot' => 'array',
+            'elim_detail_snapshot' => 'array',
+            'paid_at' => 'datetime',
         ];
+    }
+
+    public function paymentAmountCny(): float
+    {
+        return round(
+            (float) $this->goods_subtotal_cny
+            + (float) $this->shipping_fee_cny
+            + (float) ($this->elim_service_fee_cny ?? 0)
+            + (float) $this->commission_amount,
+            2
+        );
+    }
+
+    public function isCancellable(): bool
+    {
+        return in_array($this->status, ['creating', 'pending_payment'], true);
     }
 
     public function user(): BelongsTo
@@ -74,5 +97,10 @@ class CustomerOrder extends Model
     public function orderStatus(): BelongsTo
     {
         return $this->belongsTo(OrderStatus::class, 'status', 'code');
+    }
+
+    public function walletTransaction(): BelongsTo
+    {
+        return $this->belongsTo(WalletTransaction::class);
     }
 }

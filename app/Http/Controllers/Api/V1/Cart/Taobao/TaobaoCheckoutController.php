@@ -60,7 +60,8 @@ class TaobaoCheckoutController extends ApiController
 
     public function show(Request $request, CustomerOrder $order): JsonResponse
     {
-        $order = $this->orderService->show($request->user(), $order);
+        $sync = filter_var($request->query('sync', false), FILTER_VALIDATE_BOOLEAN);
+        $order = $this->orderService->show($request->user(), $order, $sync);
 
         return $this->successResponse(
             (new TaobaoOrderResource($order))->resolve(),

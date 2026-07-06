@@ -3,6 +3,7 @@
 namespace App\Services\Wallet;
 
 use App\Models\Admin;
+use App\Models\CustomerOrder;
 use App\Models\User;
 use App\Models\UserWallet;
 use App\Models\WalletTransaction;
@@ -166,6 +167,86 @@ class WalletService
             $this->transactionQuery(['user_id' => $user->id]),
             array_merge($filters, ['user_id' => $user->id])
         )->paginate($perPage);
+    }
+
+    public function payForOrder(User $user, CustomerOrder $order, float $amount, string $description): WalletTransaction
+    {
+        $this->assertPositiveAmount($amount);
+
+        return DB::transaction(function () use ($user, $order, $amount, $description): WalletTransaction {
+            $wallet = UserWallet::query()
+                ->where('user_id', $user->id)
+                ->lockForUpdate()
+                ->first();
+
+            if (! $wallet) {
+                $wallet = $this->getOrCreateWallet($user);
+                $wallet = UserWallet::query()->whereKey($wallet->id)->lockForUpdate()->firstOrFail();
+            }
+
+            $balanceBefore = (float) $wallet->balance;
+
+            if ($balanceBefore < $amount) {
+                throw ValidationException::withMessages([
+                    'wallet' => [__('api.wallet_insufficient_balance')],
+                ]);
+            }
+
+            $balanceAfter = round($balanceBefore - $amount, 2);
+            $wallet->update(['balance' => $balanceAfter]);
+
+            return WalletTransaction::query()->create([
+                'user_id' => $user->id,
+                'type' => WalletTransaction::TYPE_DEBIT,
+                'source' => WalletTransaction::SOURCE_ORDER_PAYMENT,
+                'amount' => $amount,
+                'balance_before' => $balanceBefore,
+                'balance_after' => $balanceAfter,
+                'currency' => $wallet->currency,
+                'status' => WalletTransaction::STATUS_COMPLETED,
+                'description' => $description,
+                'reference_type' => CustomerOrder::class,
+                'reference_id' => $order->id,
+            ]);
+        });
+    }
+
+    public function refundOrderPayment(WalletTransaction $transaction, string $description): WalletTransaction
+    {
+        if ($transaction->source !== WalletTransaction::SOURCE_ORDER_PAYMENT
+            || $transaction->type !== WalletTransaction::TYPE_DEBIT
+            || $transaction->status !== WalletTransaction::STATUS_COMPLETED) {
+            throw ValidationException::withMessages([
+                'transaction' => ['This transaction cannot be refunded.'],
+            ]);
+        }
+
+        return DB::transaction(function () use ($transaction, $description): WalletTransaction {
+            $wallet = UserWallet::query()
+                ->where('user_id', $transaction->user_id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $amount = (float) $transaction->amount;
+            $balanceBefore = (float) $wallet->balance;
+            $balanceAfter = round($balanceBefore + $amount, 2);
+
+            $wallet->update(['balance' => $balanceAfter]);
+
+            return WalletTransaction::query()->create([
+                'user_id' => $transaction->user_id,
+                'type' => WalletTransaction::TYPE_CREDIT,
+                'source' => WalletTransaction::SOURCE_ORDER_REFUND,
+                'amount' => $amount,
+                'balance_before' => $balanceBefore,
+                'balance_after' => $balanceAfter,
+                'currency' => $wallet->currency,
+                'status' => WalletTransaction::STATUS_COMPLETED,
+                'description' => $description,
+                'reference_type' => $transaction->reference_type,
+                'reference_id' => $transaction->reference_id,
+            ]);
+        });
     }
 
     public function depositFunds(

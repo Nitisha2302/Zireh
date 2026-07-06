@@ -2206,7 +2206,7 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/v1/auth/taobao/orders/{{order_id}}",
+              "raw": "{{base_url}}/v1/auth/taobao/orders/{{order_id}}?sync=1",
               "host": [
                 "{{base_url}}"
               ],
@@ -2216,6 +2216,13 @@
                 "taobao",
                 "orders",
                 "{{order_id}}"
+              ],
+              "query": [
+                {
+                  "key": "sync",
+                  "value": "1",
+                  "description": "Set to 1 to refresh status from Elim API before returning."
+                }
               ]
             }
           },
@@ -2610,7 +2617,7 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/v1/auth/1688/orders/{{order_id}}",
+              "raw": "{{base_url}}/v1/auth/1688/orders/{{order_id}}?sync=1",
               "host": [
                 "{{base_url}}"
               ],
@@ -2620,6 +2627,13 @@
                 "1688",
                 "orders",
                 "{{order_id}}"
+              ],
+              "query": [
+                {
+                  "key": "sync",
+                  "value": "1",
+                  "description": "Set to 1 to refresh status from Elim API before returning."
+                }
               ]
             }
           },
@@ -2771,6 +2785,284 @@
           "response": []
         }
       ]
+    },
+    {
+      "name": "12 - Order Lifecycle",
+      "item": [
+        {
+          "name": "Payment Preview",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{locale}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/auth/orders/{{order_id}}/payment-preview",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "auth",
+                "orders",
+                "{{order_id}}",
+                "payment-preview"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Pay Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{locale}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/auth/orders/{{order_id}}/pay",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "auth",
+                "orders",
+                "{{order_id}}",
+                "pay"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sync Order from Elim",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{locale}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/auth/orders/{{order_id}}/sync",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "auth",
+                "orders",
+                "{{order_id}}",
+                "sync"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{locale}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/auth/orders/{{order_id}}/cancel",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "auth",
+                "orders",
+                "{{order_id}}",
+                "cancel"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Order Logistics (Taobao package_id)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{locale}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/auth/orders/{{order_id}}/logistics?package_id={{package_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "auth",
+                "orders",
+                "{{order_id}}",
+                "logistics"
+              ],
+              "query": [
+                {
+                  "key": "package_id",
+                  "value": "{{package_id}}",
+                  "description": "Required for Taobao. Integer package ID from Elim order detail."
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Order Logistics (1688 - from detail)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{locale}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/auth/orders/{{order_id}}/logistics",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "auth",
+                "orders",
+                "{{order_id}}",
+                "logistics"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Elim Purchasing Wallet",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{locale}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/auth/orders/elim/purchasing-wallet",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "auth",
+                "orders",
+                "elim",
+                "purchasing-wallet"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Elim Exchange Rates",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{locale}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/auth/orders/elim/exchange-rates",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "auth",
+                "orders",
+                "elim",
+                "exchange-rates"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{customer_token}}",
+            "type": "string"
+          }
+        ]
+      }
     }
   ],
   "variable": [
@@ -2889,6 +3181,10 @@
     {
       "key": "elim_order_id",
       "value": ""
+    },
+    {
+      "key": "package_id",
+      "value": "12345"
     },
     {
       "key": "wallet_deposit_amount",

@@ -1,8 +1,15 @@
 <div class="container-xxl flex-grow-1 container-p-y">
     <div class="card">
         <div class="card-header">
-            <h4 class="mb-1">{{ __('admin.elim_api_settings') }}</h4>
-            <p class="mb-0 text-body-secondary">{{ __('admin.elim_api_settings_description') }}</p>
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <h4 class="mb-1">{{ __('admin.elim_api_settings') }}</h4>
+                    <p class="mb-0 text-body-secondary">{{ __('admin.elim_api_settings_description') }}</p>
+                </div>
+                <a href="{{ route('admin.settings.elim-api-logs.index') }}" class="btn btn-label-primary">
+                    <i class="icon-base ti tabler-list-details me-1"></i>{{ __('admin.elim_api_view_logs') }}
+                </a>
+            </div>
         </div>
         <div class="card-body">
             <form wire:submit="save">
