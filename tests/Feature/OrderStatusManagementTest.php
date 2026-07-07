@@ -24,14 +24,16 @@ function makeOrderStatusAdmin(): Admin
         'name' => 'Order Status Admin',
         'username' => 'statusadmin',
         'email' => 'statusadmin@example.com',
+        'role' => Admin::ROLE_SUPER_ADMIN,
         'password' => Hash::make('secret-password'),
         'email_verified_at' => now(),
     ]);
 }
 
 it('seeds default system order statuses', function () {
-    expect(OrderStatus::query()->where('is_system', true)->count())->toBe(6)
-        ->and(OrderStatus::query()->where('code', OrderStatus::CODE_PENDING_PAYMENT)->exists())->toBeTrue();
+    expect(OrderStatus::query()->where('is_system', true)->where('is_active', true)->count())->toBe(10)
+        ->and(OrderStatus::query()->where('code', OrderStatus::CODE_PAID)->exists())->toBeTrue()
+        ->and(OrderStatus::query()->where('code', OrderStatus::CODE_DELIVERED_TO_CUSTOMER)->exists())->toBeTrue();
 });
 
 it('allows admin to create custom order status', function () {
@@ -119,5 +121,5 @@ it('shows order status management page to admins', function () {
         ->get(route('admin.order-statuses.index'))
         ->assertOk()
         ->assertSee('Order Statuses')
-        ->assertSee('Pending Payment');
+        ->assertSee('Paid');
 });

@@ -1,9 +1,11 @@
 <?php
 
 use App\Models\CustomerOrder;
+use App\Models\OrderStatus;
 use App\Models\User;
 use App\Models\WalletTransaction;
 use App\Services\Wallet\WalletService;
+use Database\Seeders\OrderStatusSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -12,6 +14,7 @@ use Laravel\Sanctum\Sanctum;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
+    $this->seed(OrderStatusSeeder::class);
     config([
         'services.elim.base_url' => 'https://openapi.elim.asia',
         'services.elim.demo_mode' => false,
@@ -26,7 +29,7 @@ function makeCustomerOrder(User $user, array $overrides = []): CustomerOrder
         'user_id' => $user->id,
         'platform' => 'taobao',
         'elim_order_id' => 'ORD0000000001',
-        'status' => 'pending_payment',
+        'status' => \App\Models\OrderStatus::CODE_PAID,
         'payment_status' => 'unpaid',
         'goods_subtotal_cny' => 100,
         'shipping_fee_cny' => 10,
@@ -109,7 +112,7 @@ it('pays order by deducting wallet and confirming with elim', function () {
 
 it('syncs order status from elim', function () {
     $user = User::factory()->create();
-    $order = makeCustomerOrder($user, ['status' => 'pending_payment']);
+    $order = makeCustomerOrder($user);
 
     Http::fake([
         'https://openapi.elim.asia/v1/orders/ORD0000000001' => Http::response([
@@ -126,15 +129,15 @@ it('syncs order status from elim', function () {
     $response = $this->postJson("/api/v1/auth/orders/{$order->id}/sync");
 
     $response->assertOk()
-        ->assertJsonPath('data.status', 'shipped')
+        ->assertJsonPath('data.status', OrderStatus::CODE_SHIPPED_TO_TAJIKISTAN)
         ->assertJsonPath('data.payment_status', 'paid');
 
-    expect($order->fresh()->status)->toBe('shipped');
+    expect($order->fresh()->status)->toBe(OrderStatus::CODE_SHIPPED_TO_TAJIKISTAN);
 });
 
 it('cancels order via elim when status allows', function () {
     $user = User::factory()->create();
-    $order = makeCustomerOrder($user, ['status' => 'pending_payment']);
+    $order = makeCustomerOrder($user);
 
     Http::fake([
         'https://openapi.elim.asia/v1/orders/ORD0000000001/cancel' => Http::response([
@@ -154,12 +157,12 @@ it('cancels order via elim when status allows', function () {
     $response = $this->postJson("/api/v1/auth/orders/{$order->id}/cancel");
 
     $response->assertOk()
-        ->assertJsonPath('data.status', 'cancelled');
+        ->assertJsonPath('data.status', OrderStatus::CODE_CANCELLED);
 });
 
 it('rejects cancel when order is not cancellable', function () {
     $user = User::factory()->create();
-    $order = makeCustomerOrder($user, ['status' => 'shipped']);
+    $order = makeCustomerOrder($user, ['status' => OrderStatus::CODE_SHIPPED_TO_TAJIKISTAN]);
     Sanctum::actingAs($user);
 
     $this->postJson("/api/v1/auth/orders/{$order->id}/cancel")

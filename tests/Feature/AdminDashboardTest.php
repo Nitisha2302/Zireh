@@ -17,6 +17,7 @@ function makeDashboardAdmin(): Admin
         'name' => 'Dashboard Admin',
         'username' => 'dashboardadmin',
         'email' => 'dashboard@example.com',
+        'role' => Admin::ROLE_SUPER_ADMIN,
         'password' => Hash::make('secret-password'),
         'email_verified_at' => now(),
     ]);
@@ -40,7 +41,7 @@ it('aggregates dashboard metrics from database records', function () {
     CustomerOrder::create([
         'user_id' => User::query()->first()->id,
         'platform' => 'taobao',
-        'status' => 'completed',
+        'status' => \App\Models\OrderStatus::CODE_DELIVERED_TO_CUSTOMER,
         'payment_status' => 'paid',
         'goods_subtotal_cny' => 100,
         'shipping_fee_cny' => 0,

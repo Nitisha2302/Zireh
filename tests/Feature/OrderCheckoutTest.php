@@ -163,6 +163,7 @@ it('places demo checkout with wallet payment and stores warehouse and address', 
         ->and($order->shipping_method_id)->toBe($fixtures['method']->id)
         ->and($order->payment_method)->toBe(CustomerOrder::PAYMENT_METHOD_WALLET)
         ->and($order->payment_status)->toBe('paid')
+        ->and($order->status)->toBe(\App\Models\OrderStatus::CODE_PAID)
         ->and($order->warehouse_snapshot)->toBeArray()
         ->and($order->address_snapshot)->toBeArray()
         ->and($order->cargo_shipping_fee_tjs)->toBeGreaterThan(0);
@@ -170,7 +171,7 @@ it('places demo checkout with wallet payment and stores warehouse and address', 
     Http::assertNothingSent();
 });
 
-it('skips wallet deduction for online payment method at checkout', function () {
+it('skips wallet deduction for online payment method at checkout in production elim mode', function () {
     config(['services.elim.demo_mode' => true]);
 
     $user = User::factory()->create();
@@ -192,7 +193,8 @@ it('skips wallet deduction for online payment method at checkout', function () {
     $order = $service->checkout($user, checkoutPayload($fixtures, CustomerOrder::PAYMENT_METHOD_ONLINE));
 
     expect($order->payment_method)->toBe(CustomerOrder::PAYMENT_METHOD_ONLINE)
-        ->and($order->payment_status)->toBe('unpaid')
+        ->and($order->payment_status)->toBe('paid')
+        ->and($order->status)->toBe(\App\Models\OrderStatus::CODE_PAID)
         ->and((float) app(WalletService::class)->getBalance($user))->toBe(0.0);
 });
 
@@ -240,6 +242,7 @@ it('allows checkout when elim preview returns empty unavailable item wrapper', f
     $order = $service->checkout($user, checkoutPayload($fixtures, CustomerOrder::PAYMENT_METHOD_ONLINE));
 
     expect($order->payment_status)->toBe('unpaid')
+        ->and($order->status)->toBe(\App\Models\OrderStatus::CODE_PAID)
         ->and($order->elim_order_id)->toBe('ORD0000000099');
 });
 

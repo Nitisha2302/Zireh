@@ -107,7 +107,7 @@ class CustomerOrder extends Model
 
     public function isCancellable(): bool
     {
-        return in_array($this->status, ['creating', 'pending_payment'], true);
+        return $this->status === OrderStatus::CODE_PAID;
     }
 
     public function user(): BelongsTo
@@ -157,6 +157,6 @@ class CustomerOrder extends Model
 
     public function isVisibleInChinaWarehousePanel(): bool
     {
-        return ! in_array($this->status, ['creating', 'pending_payment', 'cancelled'], true);
+        return $this->status !== OrderStatus::CODE_CANCELLED;
     }
 }
