@@ -16,6 +16,19 @@ class ElimApiConfig
 
     public const SETTING_PASSWORD = 'elim_password';
 
+    public const SETTING_DEMO_MODE = 'elim_demo_mode';
+
+    public function demoModeEnabled(): bool
+    {
+        $value = SettingHelper::get(self::SETTING_DEMO_MODE);
+
+        if ($value === null) {
+            $value = config('services.elim.demo_mode', false);
+        }
+
+        return $this->toBoolean($value);
+    }
+
     public function configuration(): array
     {
         return Cache::rememberForever(self::CACHE_KEY, fn (): array => $this->resolveConfiguration());
@@ -93,6 +106,20 @@ class ElimApiConfig
             'base_url' => SettingHelper::get(self::SETTING_BASE_URL, config('services.elim.base_url')),
             'email' => SettingHelper::get(self::SETTING_EMAIL, config('services.elim.email')),
             'password' => SettingHelper::get(self::SETTING_PASSWORD, config('services.elim.password')),
+            'demo_mode' => $this->demoModeEnabled(),
         ];
+    }
+
+    protected function toBoolean(mixed $value): bool
+    {
+        if (is_bool($value)) {
+            return $value;
+        }
+
+        if (is_int($value) || is_float($value)) {
+            return (int) $value === 1;
+        }
+
+        return in_array(strtolower(trim((string) $value)), ['1', 'true', 'yes', 'on'], true);
     }
 }

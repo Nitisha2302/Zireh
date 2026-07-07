@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\CustomerOrder;
+use App\Models\Setting;
 use App\Models\ShippingMethod;
 use App\Models\ShippingRate;
 use App\Models\User;
@@ -266,6 +267,41 @@ it('rejects checkout in demo mode even if unavailable items are present in parse
     $order = $service->checkout($user, checkoutPayload($fixtures, CustomerOrder::PAYMENT_METHOD_ONLINE));
 
     expect($order->is_demo_order)->toBeTrue();
+
+    Http::assertNothingSent();
+});
+
+it('places checkout locally when demo mode is enabled from admin settings', function () {
+    config(['services.elim.demo_mode' => false]);
+
+    Setting::create([
+        'key' => \App\Support\Elim\ElimApiConfig::SETTING_DEMO_MODE,
+        'value' => '1',
+    ]);
+    \App\Helpers\SettingHelper::clearCache();
+
+    $user = User::factory()->create();
+    $fixtures = makeCheckoutFixtures($user);
+
+    \App\Models\UserCartItem::create([
+        'user_id' => $user->id,
+        'platform' => 'taobao',
+        'product_id' => '123',
+        'marketplace_id' => '123',
+        'sku_id' => 'sku1',
+        'quantity' => 1,
+        'unit_price' => 20,
+        'product_snapshot' => ['title' => 'Test'],
+        'synced_at' => now(),
+    ]);
+
+    Http::fake();
+
+    $service = app(\App\Services\Cart\Taobao\TaobaoOrderService::class);
+    $order = $service->checkout($user, checkoutPayload($fixtures, CustomerOrder::PAYMENT_METHOD_ONLINE));
+
+    expect($order->is_demo_order)->toBeTrue()
+        ->and($order->elim_order_id)->toStartWith('ORD');
 
     Http::assertNothingSent();
 });

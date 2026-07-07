@@ -2,24 +2,17 @@
 
 namespace App\Services\Elim;
 
+use App\Support\Elim\ElimApiConfig;
+
 class ElimDemoCheckoutService
 {
+    public function __construct(
+        private readonly ElimApiConfig $elimApiConfig,
+    ) {}
+
     public function isEnabled(): bool
     {
-        return $this->toBoolean(config('services.elim.demo_mode', false));
-    }
-
-    private function toBoolean(mixed $value): bool
-    {
-        if (is_bool($value)) {
-            return $value;
-        }
-
-        if (is_int($value) || is_float($value)) {
-            return (int) $value === 1;
-        }
-
-        return in_array(strtolower(trim((string) $value)), ['1', 'true', 'yes', 'on'], true);
+        return $this->elimApiConfig->demoModeEnabled();
     }
 
     public function preview(array $payload): array

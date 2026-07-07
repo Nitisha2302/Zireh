@@ -84,6 +84,8 @@ return [
     'elim_api_logs_purge_confirm' => 'Delete Elim API logs older than 30 days?',
     'elim_api_logs_purged' => ':count old log(s) deleted.',
     'elim_api_view_logs' => 'View API Logs',
+    'elim_demo_mode' => 'Demo checkout mode',
+    'elim_demo_mode_description' => 'When enabled, checkout preview and order creation run locally without calling Elim. Orders are marked as demo orders and wallet payment skips Elim confirmation.',
     'summary' => 'Summary',
     'error' => 'Error',
     'note' => 'Note',
