@@ -22,7 +22,9 @@ class AdminAuthMiddleware
                 return response()->json(['error' => 'Unauthenticated.'], 401);
             }
             if ($guard === 'admin') {
-                return redirect()->guest(route('login'));
+                $loginRoute = $request->routeIs('warehouse.*') ? 'warehouse.login' : 'login';
+
+                return redirect()->guest(route($loginRoute));
             }
 
         }

@@ -45,6 +45,7 @@ class CustomerOrder extends Model
         'warehouse_snapshot',
         'address_snapshot',
         'remark',
+        'parcel_tracking_id',
         'elim_preview_snapshot',
         'elim_create_snapshot',
         'is_demo_order',
@@ -152,5 +153,10 @@ class CustomerOrder extends Model
     public function walletTransaction(): BelongsTo
     {
         return $this->belongsTo(WalletTransaction::class);
+    }
+
+    public function isVisibleInChinaWarehousePanel(): bool
+    {
+        return ! in_array($this->status, ['creating', 'pending_payment', 'cancelled'], true);
     }
 }
