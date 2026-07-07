@@ -42,7 +42,7 @@ class Platform1688OrderService
         $previewResponse = $this->checkoutService->callPreview($payload);
         $parsed = $this->checkoutService->parsePreviewResponse($previewResponse);
 
-        if (! empty($parsed['unavailable_items'])) {
+        if ($this->checkoutService->hasUnavailableCartItems($parsed)) {
             throw ValidationException::withMessages([
                 'cart' => [__('api.cart_unavailable_items')],
             ]);
@@ -82,7 +82,7 @@ class Platform1688OrderService
         $previewResponse = $this->checkoutService->callPreview($payload);
         $parsed = $this->checkoutService->parsePreviewResponse($previewResponse);
 
-        if (! empty($parsed['unavailable_items'])) {
+        if ($this->checkoutService->hasUnavailableCartItems($parsed)) {
             throw ValidationException::withMessages([
                 'unavailable_items' => [__('api.cart_unavailable_items')],
             ]);

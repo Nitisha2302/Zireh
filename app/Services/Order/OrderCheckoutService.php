@@ -142,9 +142,62 @@ class OrderCheckoutService
             'goods_subtotal_cny' => (float) ($data['goods_amount_cny'] ?? $data['goods_amount'] ?? $data['goods_subtotal'] ?? 0),
             'shipping_fee_cny' => (float) ($data['shipping_fee_cny'] ?? $data['shipping_fee'] ?? 0),
             'service_fee_cny' => isset($data['service_fee_cny']) ? (float) $data['service_fee_cny'] : null,
-            'unavailable_items' => $data['unavailable_items'] ?? [],
+            'unavailable_items' => $this->normalizeUnavailableItems($data['unavailable_items'] ?? []),
             'raw' => $response,
         ];
+    }
+
+    public function hasUnavailableCartItems(array $parsed): bool
+    {
+        if ($this->isDemoMode()) {
+            return false;
+        }
+
+        return $this->normalizeUnavailableItems($parsed['unavailable_items'] ?? []) !== [];
+    }
+
+    /**
+     * @return list<mixed>
+     */
+    public function normalizeUnavailableItems(mixed $value): array
+    {
+        if ($value === null || $value === false || $value === '') {
+            return [];
+        }
+
+        if (! is_array($value)) {
+            return [];
+        }
+
+        if (array_key_exists('items', $value) && is_array($value['items'])) {
+            return $this->filterUnavailableEntries($value['items']);
+        }
+
+        if (array_key_exists('line_items', $value) && is_array($value['line_items'])) {
+            return $this->filterUnavailableEntries($value['line_items']);
+        }
+
+        if (isset($value['count']) && (int) $value['count'] === 0) {
+            return [];
+        }
+
+        if (array_is_list($value)) {
+            return $this->filterUnavailableEntries($value);
+        }
+
+        return $this->filterUnavailableEntries(array_values($value));
+    }
+
+    /**
+     * @param  array<int, mixed>  $items
+     * @return list<mixed>
+     */
+    protected function filterUnavailableEntries(array $items): array
+    {
+        return array_values(array_filter(
+            $items,
+            fn (mixed $item): bool => $item !== null && $item !== false && $item !== ''
+        ));
     }
 
     public function calculateCustomerTotalCny(
