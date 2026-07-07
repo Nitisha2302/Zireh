@@ -5,6 +5,7 @@ namespace App\Services\Order;
 use App\Exceptions\Elim\ElimRequestException;
 use App\Models\CustomerOrder;
 use App\Models\CustomerOrderItem;
+use App\Models\OrderStatus;
 use App\Models\Platform;
 use App\Models\ShippingMethod;
 use App\Models\User;
@@ -228,7 +229,6 @@ class OrderCheckoutService
         array $options,
     ): CustomerOrder {
         $orderData = $createResponse['data'] ?? $createResponse;
-        $status = (string) ($createResponse['status'] ?? $orderData['status'] ?? 'creating');
         $platform = Platform::query()->where('code', $platformCode)->firstOrFail();
         $receiverAddress = ElimWarehouseAddress::get();
         $exchangeRate = $this->currencyExchangeService->getRate();
@@ -249,7 +249,7 @@ class OrderCheckoutService
             'platform_id' => $platform->id,
             'platform' => $platformCode,
             'elim_order_id' => (string) ($orderData['id'] ?? null),
-            'status' => $status,
+            'status' => OrderStatus::CODE_PAID,
             'payment_status' => (string) ($orderData['payment_status'] ?? 'unpaid'),
             'payment_method' => $context->paymentMethod,
             'goods_subtotal_cny' => $parsed['goods_subtotal_cny'],
@@ -328,6 +328,7 @@ class OrderCheckoutService
                 'payment_status' => 'paid',
                 'paid_at' => now(),
                 'wallet_transaction_id' => $transaction->id,
+                'status' => OrderStatus::CODE_PAID,
             ]);
 
             return $order->fresh();
@@ -367,6 +368,7 @@ class OrderCheckoutService
             'paid_at' => $confirmResponse['paid_at'] ?? now(),
             'wallet_transaction_id' => $transaction->id,
             'elim_service_fee_cny' => $confirmResponse['service_fee_cny'] ?? $order->elim_service_fee_cny,
+            'status' => OrderStatus::CODE_PAID,
         ]);
 
         return $order->fresh();
@@ -377,6 +379,21 @@ class OrderCheckoutService
         return DB::transaction(function () use ($user, $order): CustomerOrder {
             if ($order->payment_method === CustomerOrder::PAYMENT_METHOD_WALLET) {
                 $order = $this->processWalletPayment($user, $order);
+            } elseif (
+                $order->payment_method === CustomerOrder::PAYMENT_METHOD_ONLINE
+                && ($this->isDemoMode() || $order->is_demo_order)
+            ) {
+                $order->update([
+                    'payment_status' => 'paid',
+                    'paid_at' => now(),
+                    'status' => OrderStatus::CODE_PAID,
+                ]);
+                $order = $order->fresh();
+            }
+
+            if ($order->payment_status === 'paid' && $order->status !== OrderStatus::CODE_CANCELLED) {
+                $order->update(['status' => OrderStatus::CODE_PAID]);
+                $order = $order->fresh();
             }
 
             return $order->load([

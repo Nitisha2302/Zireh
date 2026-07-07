@@ -89,10 +89,8 @@ class Platform1688OrderService
         }
 
         $createResponse = $this->checkoutService->callCreate($payload, $parsed);
-        $orderData = $createResponse['data'] ?? $createResponse;
-        $status = (string) ($createResponse['status'] ?? $orderData['status'] ?? 'creating');
 
-        if ($status === 'unknown') {
+        if (($createResponse['status'] ?? null) === 'unknown') {
             throw ValidationException::withMessages([
                 'checkout' => [__('api.order_create_unknown')],
             ]);

@@ -4,6 +4,7 @@ namespace App\Services\Order;
 
 use App\Exceptions\Elim\ElimRequestException;
 use App\Models\CustomerOrder;
+use App\Models\OrderStatus;
 use App\Models\User;
 use App\Models\UserCartItem;
 use App\Services\Elim\ElimOrderApiService;
@@ -53,7 +54,7 @@ class CustomerOrderLifecycleService
         }
 
         if ($order->is_demo_order) {
-            $order->update(['status' => 'cancelled']);
+            $order->update(['status' => OrderStatus::CODE_CANCELLED]);
 
             return $order->fresh()->load(['items', 'orderStatus', 'warehouse', 'userAddress', 'shippingMethod']);
         }
@@ -124,7 +125,7 @@ class CustomerOrderLifecycleService
             ]);
         }
 
-        if ($order->status === 'cancelled') {
+        if ($order->status === OrderStatus::CODE_CANCELLED) {
             throw ValidationException::withMessages([
                 'payment' => [__('api.order_cancelled_cannot_pay')],
             ]);
@@ -232,7 +233,11 @@ class CustomerOrderLifecycleService
         ];
 
         if ($parsed['status'] !== null && $parsed['status'] !== '') {
-            $updates['status'] = $parsed['status'];
+            $mappedStatus = OrderStatus::mapFromElimStatus($parsed['status']);
+
+            if ($mappedStatus !== null) {
+                $updates['status'] = $mappedStatus;
+            }
         }
 
         if ($parsed['payment_status'] !== null && $parsed['payment_status'] !== '') {

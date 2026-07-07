@@ -10,26 +10,51 @@ class OrderStatus extends Model
 {
     use SoftDeletes;
 
-    public const CODE_CREATING = 'creating';
-
-    public const CODE_PENDING_PAYMENT = 'pending_payment';
-
     public const CODE_PAID = 'paid';
 
-    public const CODE_SHIPPED = 'shipped';
+    public const CODE_RECEIVED_AT_CHINA_WAREHOUSE = 'received_at_china_warehouse';
 
-    public const CODE_COMPLETED = 'completed';
+    public const CODE_PREPARING_FOR_SHIPMENT = 'preparing_for_shipment';
+
+    public const CODE_SHIPPED_TO_TAJIKISTAN = 'shipped_to_tajikistan';
+
+    public const CODE_ARRIVED_IN_TAJIKISTAN = 'arrived_in_tajikistan';
+
+    public const CODE_SORTING_CENTER = 'sorting_center';
+
+    public const CODE_SENT_TO_SELECTED_WAREHOUSE = 'sent_to_selected_warehouse';
+
+    public const CODE_READY_FOR_PICKUP = 'ready_for_pickup';
+
+    public const CODE_DELIVERED_TO_CUSTOMER = 'delivered_to_customer';
 
     public const CODE_CANCELLED = 'cancelled';
 
     /** @var list<string> */
     public const SYSTEM_CODES = [
-        self::CODE_CREATING,
-        self::CODE_PENDING_PAYMENT,
         self::CODE_PAID,
-        self::CODE_SHIPPED,
-        self::CODE_COMPLETED,
+        self::CODE_RECEIVED_AT_CHINA_WAREHOUSE,
+        self::CODE_PREPARING_FOR_SHIPMENT,
+        self::CODE_SHIPPED_TO_TAJIKISTAN,
+        self::CODE_ARRIVED_IN_TAJIKISTAN,
+        self::CODE_SORTING_CENTER,
+        self::CODE_SENT_TO_SELECTED_WAREHOUSE,
+        self::CODE_READY_FOR_PICKUP,
+        self::CODE_DELIVERED_TO_CUSTOMER,
         self::CODE_CANCELLED,
+    ];
+
+    /** @var list<string> */
+    public const FULFILLMENT_CODES = [
+        self::CODE_PAID,
+        self::CODE_RECEIVED_AT_CHINA_WAREHOUSE,
+        self::CODE_PREPARING_FOR_SHIPMENT,
+        self::CODE_SHIPPED_TO_TAJIKISTAN,
+        self::CODE_ARRIVED_IN_TAJIKISTAN,
+        self::CODE_SORTING_CENTER,
+        self::CODE_SENT_TO_SELECTED_WAREHOUSE,
+        self::CODE_READY_FOR_PICKUP,
+        self::CODE_DELIVERED_TO_CUSTOMER,
     ];
 
     /** @var list<string> */
@@ -74,5 +99,20 @@ class OrderStatus extends Model
     public function badgeClass(): string
     {
         return 'bg-label-'.($this->color ?: 'secondary');
+    }
+
+    public static function mapFromElimStatus(?string $elimStatus): ?string
+    {
+        if ($elimStatus === null || $elimStatus === '') {
+            return null;
+        }
+
+        return match ($elimStatus) {
+            'creating', 'pending_payment', 'paid' => self::CODE_PAID,
+            'shipped' => self::CODE_SHIPPED_TO_TAJIKISTAN,
+            'completed' => self::CODE_DELIVERED_TO_CUSTOMER,
+            'cancelled' => self::CODE_CANCELLED,
+            default => null,
+        };
     }
 }

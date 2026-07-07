@@ -4,6 +4,7 @@ namespace App\Services\Admin;
 
 use App\Models\CurrencyExchangeRate;
 use App\Models\CustomerOrder;
+use App\Models\OrderStatus;
 use App\Models\Platform;
 use App\Models\User;
 use App\Models\UserCartItem;
@@ -17,7 +18,7 @@ use Illuminate\Support\Collection;
 class DashboardService
 {
     /** @var list<string> */
-    public const REVENUE_STATUSES = ['paid', 'shipped', 'completed'];
+    public const REVENUE_STATUSES = OrderStatus::FULFILLMENT_CODES;
 
     public function overview(): array
     {
@@ -46,8 +47,8 @@ class DashboardService
             'customers_new_month' => User::query()->where('created_at', '>=', $monthStart)->count(),
             'orders_total' => CustomerOrder::query()->count(),
             'orders_month' => CustomerOrder::query()->where('created_at', '>=', $monthStart)->count(),
-            'orders_pending_payment' => CustomerOrder::query()->where('status', 'pending_payment')->count(),
-            'orders_completed' => CustomerOrder::query()->where('status', 'completed')->count(),
+            'orders_pending_payment' => CustomerOrder::query()->where('payment_status', 'unpaid')->count(),
+            'orders_completed' => CustomerOrder::query()->where('status', OrderStatus::CODE_DELIVERED_TO_CUSTOMER)->count(),
             'revenue_cny_total' => (float) (clone $revenueBaseQuery)->sum('customer_total_cny'),
             'revenue_cny_month' => (float) CustomerOrder::query()
                 ->whereIn('status', self::REVENUE_STATUSES)

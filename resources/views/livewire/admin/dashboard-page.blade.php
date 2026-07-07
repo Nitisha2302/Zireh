@@ -1,29 +1,37 @@
 @php
-    $orderStatusLabels = [
-        'creating' => __('admin.order_status_creating'),
-        'pending_payment' => __('admin.order_status_pending_payment'),
-        'paid' => __('admin.order_status_paid'),
-        'shipped' => __('admin.order_status_shipped'),
-        'completed' => __('admin.order_status_completed'),
-        'cancelled' => __('admin.order_status_cancelled'),
-    ];
+    use App\Models\OrderStatus;
+
+    $orderStatusLabels = collect(OrderStatus::FULFILLMENT_CODES)
+        ->merge([OrderStatus::CODE_CANCELLED])
+        ->mapWithKeys(fn (string $code): array => [
+            $code => OrderStatus::query()->where('code', $code)->value('name') ?? $code,
+        ])
+        ->all();
 
     $orderStatusColors = [
-        'creating' => 'bg-label-secondary',
-        'pending_payment' => 'bg-label-warning',
-        'paid' => 'bg-label-info',
-        'shipped' => 'bg-label-primary',
-        'completed' => 'bg-label-success',
-        'cancelled' => 'bg-label-danger',
+        OrderStatus::CODE_PAID => 'bg-label-info',
+        OrderStatus::CODE_RECEIVED_AT_CHINA_WAREHOUSE => 'bg-label-primary',
+        OrderStatus::CODE_PREPARING_FOR_SHIPMENT => 'bg-label-warning',
+        OrderStatus::CODE_SHIPPED_TO_TAJIKISTAN => 'bg-label-primary',
+        OrderStatus::CODE_ARRIVED_IN_TAJIKISTAN => 'bg-label-info',
+        OrderStatus::CODE_SORTING_CENTER => 'bg-label-secondary',
+        OrderStatus::CODE_SENT_TO_SELECTED_WAREHOUSE => 'bg-label-warning',
+        OrderStatus::CODE_READY_FOR_PICKUP => 'bg-label-success',
+        OrderStatus::CODE_DELIVERED_TO_CUSTOMER => 'bg-label-success',
+        OrderStatus::CODE_CANCELLED => 'bg-label-danger',
     ];
 
     $orderStatusBarColors = [
-        'creating' => 'bg-secondary',
-        'pending_payment' => 'bg-warning',
-        'paid' => 'bg-info',
-        'shipped' => 'bg-primary',
-        'completed' => 'bg-success',
-        'cancelled' => 'bg-danger',
+        OrderStatus::CODE_PAID => 'bg-info',
+        OrderStatus::CODE_RECEIVED_AT_CHINA_WAREHOUSE => 'bg-primary',
+        OrderStatus::CODE_PREPARING_FOR_SHIPMENT => 'bg-warning',
+        OrderStatus::CODE_SHIPPED_TO_TAJIKISTAN => 'bg-primary',
+        OrderStatus::CODE_ARRIVED_IN_TAJIKISTAN => 'bg-info',
+        OrderStatus::CODE_SORTING_CENTER => 'bg-secondary',
+        OrderStatus::CODE_SENT_TO_SELECTED_WAREHOUSE => 'bg-warning',
+        OrderStatus::CODE_READY_FOR_PICKUP => 'bg-success',
+        OrderStatus::CODE_DELIVERED_TO_CUSTOMER => 'bg-success',
+        OrderStatus::CODE_CANCELLED => 'bg-danger',
     ];
 @endphp
 

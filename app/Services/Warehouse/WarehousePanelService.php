@@ -4,6 +4,7 @@ namespace App\Services\Warehouse;
 
 use App\Models\Admin;
 use App\Models\CustomerOrder;
+use App\Models\OrderStatus;
 use App\Services\Order\OrderStatusService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
@@ -42,7 +43,7 @@ class WarehousePanelService
         ?string $platformFilter = null,
     ): Builder {
         return $this->baseOrderQuery($search, $statusFilter, $platformFilter)
-            ->whereNotIn('status', ['creating', 'pending_payment', 'cancelled']);
+            ->where('status', '!=', OrderStatus::CODE_CANCELLED);
     }
 
     public function tajikistanOrdersQuery(
@@ -67,7 +68,7 @@ class WarehousePanelService
             abort(403);
         }
 
-        if (in_array($order->status, ['creating', 'pending_payment', 'cancelled'], true)) {
+        if ($order->status === OrderStatus::CODE_CANCELLED) {
             abort(404);
         }
     }
