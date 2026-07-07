@@ -32,7 +32,7 @@ new class extends Component {
         $this->currentLocale = $locale;
         app()->setLocale($locale);
 
-        return $this->redirect(url()->previous() ?: route('warehouse.china.orders.index'), navigate: false);
+        return $this->redirect(url()->previous() ?: route('tajikistan.orders.index'), navigate: false);
     }
 
     public function logout()
@@ -40,11 +40,11 @@ new class extends Component {
         $admin = Auth::guard('admin')->user();
 
         if ($admin instanceof Admin) {
-            LoginLog::markCurrentSessionLoggedOut($admin, 'warehouse', request());
+            LoginLog::markCurrentSessionLoggedOut($admin, 'tajikistan_warehouse', request());
 
-            Log::info('Warehouse staff logged out.', [
+            Log::info('Tajikistan warehouse staff logged out.', [
                 'admin_id' => $admin->id,
-                'username' => $admin->username,
+                'warehouse_id' => $admin->warehouse_id,
             ]);
         }
 
@@ -55,7 +55,7 @@ new class extends Component {
             request()->session()->regenerateToken();
         }
 
-        return $this->redirectRoute('warehouse.login', navigate: true);
+        return $this->redirectRoute('tajikistan.login', navigate: true);
     }
 };
 ?>
@@ -69,6 +69,11 @@ new class extends Component {
 
     <div class="navbar-nav-right d-flex align-items-center justify-content-end" id="navbar-collapse">
         <ul class="navbar-nav flex-row align-items-center ms-md-auto">
+            @if ($admin?->warehouse)
+                <li class="nav-item me-3 d-none d-md-block">
+                    <span class="badge bg-label-primary">{{ $admin->warehouse->warehouse_name }}</span>
+                </li>
+            @endif
             <li class="nav-item dropdown me-3">
                 <a class="nav-link dropdown-toggle hide-arrow px-2" href="javascript:void(0);" data-bs-toggle="dropdown">
                     <i class="icon-base ti tabler-language icon-md"></i>
@@ -102,21 +107,17 @@ new class extends Component {
                         <div class="dropdown-item">
                             <div class="fw-medium">{{ $admin->name ?? '' }}</div>
                             <small class="text-body-secondary">{{ Admin::roles()[$admin->role] ?? '' }}</small>
+                            @if ($admin?->warehouse)
+                                <small class="text-body-secondary d-block">{{ $admin->warehouse->warehouse_name }}</small>
+                            @endif
                         </div>
                     </li>
                     <li><div class="dropdown-divider my-1 mx-n2"></div></li>
                     <li>
-                        <a class="dropdown-item" href="{{ route('warehouse.profile') }}">
+                        <a class="dropdown-item" href="{{ route('tajikistan.profile') }}">
                             <i class="icon-base ti tabler-user icon-md me-3"></i>{{ __('admin.my_profile') }}
                         </a>
                     </li>
-                    @if ($admin?->isSuperAdmin())
-                        <li>
-                            <a class="dropdown-item" href="{{ route('admin.dashboard') }}">
-                                <i class="icon-base ti tabler-layout-dashboard icon-md me-3"></i>{{ __('admin.main_admin_panel') }}
-                            </a>
-                        </li>
-                    @endif
                     <li><div class="dropdown-divider my-1 mx-n2"></div></li>
                     <li>
                         <a class="dropdown-item" href="#" wire:click.prevent="logout">

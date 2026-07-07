@@ -2,7 +2,7 @@
     <div class="row g-4">
         <div class="col-lg-5">
             <div class="card h-100">
-                <div class="card-header"><h5 class="mb-0">{{ __('admin.my_profile') }}</h5></div>
+                <div class="card-header"><h5 class="mb-0">{{ $panelTitle ?? __('admin.warehouse_panel') }}</h5></div>
                 <div class="card-body">
                     <p class="mb-2"><strong>{{ __('admin.name') }}:</strong> {{ $admin->name }}</p>
                     <p class="mb-2"><strong>{{ __('admin.username') }}:</strong> {{ $admin->username }}</p>

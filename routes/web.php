@@ -8,7 +8,6 @@ use App\Livewire\Admin\Wallet\{CustomerWalletPage, WalletTransactionListPage};
 use App\Livewire\Admin\ShippingMethod\{ShippingMethodCreatePage, ShippingMethodEditPage, ShippingMethodListPage};
 use App\Livewire\Admin\ShippingRate\{ShippingRateCreatePage, ShippingRateEditPage, ShippingRateListPage};
 use App\Livewire\Admin\Warehouse\{WarehouseCreatePage, WarehouseEditPage, WarehouseListPage, WarehouseShowPage};
-use App\Livewire\Admin\WarehouseStaff\{WarehouseStaffCreatePage, WarehouseStaffEditPage, WarehouseStaffListPage};
 use App\Livewire\Admin\DashboardPage;
 use App\Livewire\Admin\Platform\{PlatformListPage, PlatformCreatePage, PlatformEditPage};
 use App\Livewire\Admin\PlatformSlider\{PlatformSliderListPage, PlatformSliderCreatePage, PlatformSliderEditPage};
@@ -21,13 +20,12 @@ use App\Livewire\Admin\Settings\ElimApiSettingsPage;
 use App\Livewire\Admin\Settings\ElimApiLogListPage;
 use App\Livewire\Admin\Settings\ElimApiLogDetailPage;
 use App\Livewire\Admin\Settings\ElimWarehouseSettingsPage;
+use App\Livewire\Admin\Settings\ChinaWarehouseLoginSettingsPage;
 use App\Livewire\Admin\Settings\FileManagerSettingsPage;
 use App\Livewire\Admin\Settings\PrivacyTermsSettingsPage;
 use App\Livewire\Authenticate\LoginPage;
-use App\Livewire\Warehouse\LoginPage as WarehouseLoginPage;
-use App\Livewire\Warehouse\ProfilePage as WarehouseProfilePage;
-use App\Livewire\Warehouse\China\{OrderDetailPage as ChinaOrderDetailPage, OrderListPage as ChinaOrderListPage};
-use App\Livewire\Warehouse\Tajikistan\{OrderDetailPage as TajikistanOrderDetailPage, OrderListPage as TajikistanOrderListPage};
+use App\Livewire\Warehouse\China\{LoginPage as ChinaLoginPage, OrderDetailPage as ChinaOrderDetailPage, OrderListPage as ChinaOrderListPage, ProfilePage as ChinaProfilePage};
+use App\Livewire\Warehouse\Tajikistan\{LoginPage as TajikistanLoginPage, OrderDetailPage as TajikistanOrderDetailPage, OrderListPage as TajikistanOrderListPage, ProfilePage as TajikistanProfilePage};
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -39,20 +37,21 @@ Route::get('terms-conditions', [PublicController::class, 'termsConditions'])->na
 Route::get('delete-account', [PublicController::class, 'deleteAccount'])->name('delete-account');
 
 Route::get('sp/login', LoginPage::class)->name('login');
-Route::get('warehouse/login', WarehouseLoginPage::class)->name('warehouse.login');
 
-Route::prefix('warehouse')->name('warehouse.')->middleware(['is_auth:admin'])->group(function () {
-    Route::get('profile', WarehouseProfilePage::class)->name('profile');
+Route::get('china/login', ChinaLoginPage::class)->name('china.login');
 
-    Route::middleware(['admin.role:china_warehouse,super_admin'])->prefix('china')->name('china.')->group(function () {
-        Route::get('orders', ChinaOrderListPage::class)->name('orders.index');
-        Route::get('orders/{order}', ChinaOrderDetailPage::class)->name('orders.show');
-    });
+Route::prefix('china')->name('china.')->middleware(['is_auth:admin', 'admin.role:china_warehouse'])->group(function () {
+    Route::get('profile', ChinaProfilePage::class)->name('profile');
+    Route::get('orders', ChinaOrderListPage::class)->name('orders.index');
+    Route::get('orders/{order}', ChinaOrderDetailPage::class)->name('orders.show');
+});
 
-    Route::middleware(['admin.role:tajikistan_warehouse,super_admin'])->prefix('tajikistan')->name('tajikistan.')->group(function () {
-        Route::get('orders', TajikistanOrderListPage::class)->name('orders.index');
-        Route::get('orders/{order}', TajikistanOrderDetailPage::class)->name('orders.show');
-    });
+Route::get('tajikistan/login', TajikistanLoginPage::class)->name('tajikistan.login');
+
+Route::prefix('tajikistan')->name('tajikistan.')->middleware(['is_auth:admin', 'admin.role:tajikistan_warehouse'])->group(function () {
+    Route::get('profile', TajikistanProfilePage::class)->name('profile');
+    Route::get('orders', TajikistanOrderListPage::class)->name('orders.index');
+    Route::get('orders/{order}', TajikistanOrderDetailPage::class)->name('orders.show');
 });
 
 Route::prefix('admin')->name('admin.')->middleware(['is_auth:admin'])->group(function () {
@@ -67,6 +66,7 @@ Route::prefix('admin')->name('admin.')->middleware(['is_auth:admin'])->group(fun
         Route::get('settings/elim-api/logs', ElimApiLogListPage::class)->name('settings.elim-api-logs.index');
         Route::get('settings/elim-api/logs/{log}', ElimApiLogDetailPage::class)->name('settings.elim-api-logs.show');
         Route::get('settings/elim-warehouse', ElimWarehouseSettingsPage::class)->name('settings.elim-warehouse');
+        Route::get('settings/china-warehouse-login', ChinaWarehouseLoginSettingsPage::class)->name('settings.china-warehouse-login');
         Route::get('settings/privacy-terms', PrivacyTermsSettingsPage::class)->name('settings.privacy-terms');
 
         Route::get('orders', OrderListPage::class)->name('orders.index');
@@ -89,10 +89,6 @@ Route::prefix('admin')->name('admin.')->middleware(['is_auth:admin'])->group(fun
         Route::get('warehouses/create', WarehouseCreatePage::class)->name('warehouses.create');
         Route::get('warehouses/{warehouse}', WarehouseShowPage::class)->name('warehouses.show');
         Route::get('warehouses/{warehouse}/edit', WarehouseEditPage::class)->name('warehouses.edit');
-
-        Route::get('warehouse-staff', WarehouseStaffListPage::class)->name('warehouse-staff.index');
-        Route::get('warehouse-staff/create', WarehouseStaffCreatePage::class)->name('warehouse-staff.create');
-        Route::get('warehouse-staff/{admin}/edit', WarehouseStaffEditPage::class)->name('warehouse-staff.edit');
 
         Route::get('shipping-methods', ShippingMethodListPage::class)->name('shipping-methods.index');
         Route::get('shipping-methods/create', ShippingMethodCreatePage::class)->name('shipping-methods.create');

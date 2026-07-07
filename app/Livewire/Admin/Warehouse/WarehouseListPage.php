@@ -3,6 +3,7 @@
 namespace App\Livewire\Admin\Warehouse;
 
 use App\Models\Warehouse;
+use App\Services\Admin\WarehouseLoginAccountService;
 use App\Services\FileManager;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
@@ -82,7 +83,7 @@ class WarehouseListPage extends Component
     }
 
     #[On('sweetalert:confirmed')]
-    public function onConfirmed(): void
+    public function onConfirmed(WarehouseLoginAccountService $loginAccounts): void
     {
         if (! $this->deleteId) {
             return;
@@ -90,6 +91,7 @@ class WarehouseListPage extends Component
 
         $warehouse = Warehouse::findOrFail($this->deleteId);
         app(FileManager::class)->delete($warehouse->image);
+        $loginAccounts->deleteTajikistanAccount($warehouse);
         $warehouse->delete();
         $this->deleteId = null;
         flash()->success(__('admin.warehouse_deleted'));

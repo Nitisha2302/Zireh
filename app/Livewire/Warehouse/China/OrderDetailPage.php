@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-#[Layout('layouts::warehouse', ['title' => 'China Warehouse Order', 'panel' => 'china'])]
+#[Layout('layouts::china-warehouse', ['title' => 'China Warehouse Order'])]
 class OrderDetailPage extends Component
 {
     public CustomerOrder $order;

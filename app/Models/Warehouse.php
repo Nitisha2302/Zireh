@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Warehouse extends Model
@@ -55,6 +56,11 @@ class Warehouse extends Model
     public function admins(): HasMany
     {
         return $this->hasMany(Admin::class);
+    }
+
+    public function tajikistanAccount(): HasOne
+    {
+        return $this->hasOne(Admin::class)->where('role', Admin::ROLE_TAJIKISTAN_WAREHOUSE);
     }
 
     public static function statuses(): array

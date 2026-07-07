@@ -3,6 +3,7 @@
         @include('livewire.admin.warehouse.partials.form', [
             'submitLabel' => __('admin.update_warehouse'),
             'cancelUrl' => route('admin.warehouses.show', $warehouse),
+            'isEdit' => true,
         ])
     </form>
 </div>

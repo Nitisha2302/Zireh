@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire\Warehouse;
+namespace App\Livewire\Warehouse\China;
 
 use App\Models\Admin;
 use App\Models\LoginLog;
@@ -10,7 +10,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 
-#[Layout('layouts::app', ['title' => 'Warehouse Login'])]
+#[Layout('layouts::app', ['title' => 'China Warehouse Login'])]
 class LoginPage extends Component
 {
     #[Validate('required|string|max:255')]
@@ -23,14 +23,14 @@ class LoginPage extends Component
 
     public function mount(): void
     {
-        if (! Auth::guard('admin')->check()) {
+        $admin = Auth::guard('admin')->user();
+
+        if (! $admin instanceof Admin) {
             return;
         }
 
-        $admin = Auth::guard('admin')->user();
-
-        if ($admin instanceof Admin && $admin->isWarehouseStaff()) {
-            $this->redirectRoute($admin->warehouseHomeRoute(), navigate: true);
+        if ($admin->isChinaWarehouseStaff()) {
+            $this->redirectRoute('china.orders.index', navigate: true);
         }
     }
 
@@ -41,8 +41,7 @@ class LoginPage extends Component
         $admin = Admin::query()->where($field, $login)->first();
 
         if (! Auth::guard('admin')->attempt([$field => $login, 'password' => $this->password], $this->remember)) {
-            LoginLog::recordFailure('warehouse', $login, request(), $admin, 'Invalid credentials');
-
+            LoginLog::recordFailure('china_warehouse', $login, request(), $admin, 'Invalid credentials');
             $this->addError('login', __('admin.invalid_credentials'));
 
             return null;
@@ -50,16 +49,23 @@ class LoginPage extends Component
 
         $admin = Auth::guard('admin')->user();
 
-        if (! $admin instanceof Admin || ! $admin->isWarehouseStaff()) {
+        if ($admin->isSuperAdmin()) {
             Auth::guard('admin')->logout();
             $this->addError('login', __('admin.use_admin_login'));
 
             return null;
         }
 
-        if ($admin->isTajikistanWarehouseStaff() && $admin->warehouse_id === null) {
+        if ($admin->isTajikistanWarehouseStaff()) {
             Auth::guard('admin')->logout();
-            $this->addError('login', __('admin.warehouse_staff_missing_assignment'));
+            $this->addError('login', __('admin.use_tajikistan_warehouse_login'));
+
+            return null;
+        }
+
+        if (! $admin->isChinaWarehouseStaff()) {
+            Auth::guard('admin')->logout();
+            $this->addError('login', __('admin.invalid_credentials'));
 
             return null;
         }
@@ -68,22 +74,18 @@ class LoginPage extends Component
             request()->session()->regenerate();
         }
 
-        LoginLog::recordSuccess($admin, 'warehouse', $login, request());
+        LoginLog::recordSuccess($admin, 'china_warehouse', $login, request());
 
-        Log::info('Warehouse staff logged in.', [
-            'admin_id' => $admin->id,
-            'role' => $admin->role,
-            'warehouse_id' => $admin->warehouse_id,
-        ]);
+        Log::info('China warehouse staff logged in.', ['admin_id' => $admin->id]);
 
         flash()->success(__('admin.welcome_back', ['name' => $admin->name]));
 
-        return $this->redirectRoute($admin->warehouseHomeRoute(), navigate: true);
+        return $this->redirectRoute('china.orders.index', navigate: true);
     }
 
     public function render()
     {
-        return view('livewire.warehouse.login-page')
-            ->title(__('admin.warehouse_login'));
+        return view('livewire.warehouse.china.login-page')
+            ->title(__('admin.china_warehouse_login'));
     }
 }

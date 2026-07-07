@@ -80,7 +80,7 @@
                             <td><span class="badge bg-label-warning">{{ $order->payment_status }}</span></td>
                             <td>{{ $order->created_at?->format('M d, Y H:i') }}</td>
                             <td>
-                                <a href="{{ route('warehouse.tajikistan.orders.show', $order) }}" class="btn btn-sm btn-icon btn-text-secondary">
+                                <a href="{{ route('tajikistan.orders.show', $order) }}" class="btn btn-sm btn-icon btn-text-secondary">
                                     <i class="icon-base ti tabler-eye"></i>
                                 </a>
                             </td>

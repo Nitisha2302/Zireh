@@ -22,7 +22,13 @@ class AdminAuthMiddleware
                 return response()->json(['error' => 'Unauthenticated.'], 401);
             }
             if ($guard === 'admin') {
-                $loginRoute = $request->routeIs('warehouse.*') ? 'warehouse.login' : 'login';
+                $loginRoute = 'login';
+
+                if ($request->routeIs('china.*')) {
+                    $loginRoute = 'china.login';
+                } elseif ($request->routeIs('tajikistan.*')) {
+                    $loginRoute = 'tajikistan.login';
+                }
 
                 return redirect()->guest(route($loginRoute));
             }

@@ -8,7 +8,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     @stack('styles')
-    <title>{{ $title ?? __('admin.warehouse_panel') }}</title>
+    <title>{{ $title ?? __('admin.tajikistan_warehouse_panel') }}</title>
     @include('layouts.partials.admin-styles')
 
 </head>
@@ -16,9 +16,9 @@
 <body>
     <div class="layout-wrapper layout-content-navbar ">
         <div class="layout-container">
-            <livewire:warehouse.partials.sidebar :panel="$panel ?? 'china'" :key="'warehouse-sidebar-' . ($panel ?? 'china') . '-' . app()->getLocale()" />
+            <livewire:tajikistan-warehouse.partials.sidebar :key="'tajikistan-sidebar-' . app()->getLocale()" />
             <div class="layout-page">
-                <livewire:warehouse.partials.header :key="'warehouse-header-' . app()->getLocale()" />
+                <livewire:tajikistan-warehouse.partials.header :key="'tajikistan-header-' . app()->getLocale()" />
                 <div class="content-wrapper">
                     {{ $slot }}
                 </div>

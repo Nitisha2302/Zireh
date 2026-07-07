@@ -96,30 +96,6 @@ new class extends Component {
                 </ul>
             </li>
 
-            <li class="menu-item {{ request()->routeIs('warehouse.*') || request()->routeIs('admin.warehouse-staff.*') ? 'open active' : '' }}">
-                <a href="javascript:void(0);" class="menu-link menu-toggle">
-                    <i class="menu-icon icon-base ti tabler-building-warehouse"></i>
-                    <div>{{ __('admin.warehouse_panels') }}</div>
-                </a>
-                <ul class="menu-sub">
-                    <li class="menu-item {{ request()->routeIs('admin.warehouse-staff.*') ? 'active' : '' }}">
-                        <a href="{{ route('admin.warehouse-staff.index') }}" class="menu-link">
-                            <div>{{ __('admin.warehouse_staff') }}</div>
-                        </a>
-                    </li>
-                    <li class="menu-item {{ request()->routeIs('warehouse.china.*') ? 'active' : '' }}">
-                        <a href="{{ route('warehouse.china.orders.index') }}" class="menu-link">
-                            <div>{{ __('admin.china_warehouse') }}</div>
-                        </a>
-                    </li>
-                    <li class="menu-item {{ request()->routeIs('warehouse.tajikistan.*') ? 'active' : '' }}">
-                        <a href="{{ route('warehouse.tajikistan.orders.index') }}" class="menu-link">
-                            <div>{{ __('admin.tajikistan_warehouse') }}</div>
-                        </a>
-                    </li>
-                </ul>
-            </li>
-
             <li class="menu-item {{ request()->routeIs('admin.customers.*') ? 'active' : '' }}">
                 <a href="{{ route('admin.customers.index') }}" class="menu-link">
                     <i class="menu-icon icon-base ti tabler-users"></i>
@@ -202,6 +178,11 @@ new class extends Component {
                     <li class="menu-item {{ request()->routeIs('admin.settings.elim-warehouse') ? 'active' : '' }}">
                         <a href="{{ route('admin.settings.elim-warehouse') }}" class="menu-link">
                             <div>Elim Warehouse</div>
+                        </a>
+                    </li>
+                    <li class="menu-item {{ request()->routeIs('admin.settings.china-warehouse-login') ? 'active' : '' }}">
+                        <a href="{{ route('admin.settings.china-warehouse-login') }}" class="menu-link">
+                            <div>{{ __('admin.china_warehouse_login_settings') }}</div>
                         </a>
                     </li>
                     {{-- <li class="menu-item {{ request()->routeIs('admin.settings.file-manager') ? 'active' : '' }}">
