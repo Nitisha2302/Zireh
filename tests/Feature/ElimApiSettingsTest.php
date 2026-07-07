@@ -33,6 +33,25 @@ it('shows the elim api settings page to authenticated admins', function () {
         ->assertSee('Elim API Settings');
 });
 
+it('saves demo checkout mode from admin settings', function () {
+    $admin = makeElimSettingsAdmin();
+    config(['services.elim.demo_mode' => false]);
+
+    $this->actingAs($admin, 'admin');
+
+    Livewire::test(ElimApiSettingsPage::class)
+        ->set('elim_base_url', 'https://openapi.elim.asia')
+        ->set('elim_email', 'demo@example.com')
+        ->set('elim_password', 'secret')
+        ->set('demo_mode_enabled', true)
+        ->call('save');
+
+    SettingHelper::clearCache();
+
+    expect(SettingHelper::get(ElimApiConfig::SETTING_DEMO_MODE))->toBe('1')
+        ->and(app(ElimApiConfig::class)->demoModeEnabled())->toBeTrue();
+});
+
 it('saves elim api settings and refreshes cached configuration', function () {
     $admin = makeElimSettingsAdmin();
     config([

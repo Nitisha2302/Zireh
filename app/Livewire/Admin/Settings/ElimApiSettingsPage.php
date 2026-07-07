@@ -21,6 +21,8 @@ class ElimApiSettingsPage extends Component
 
     public bool $passwordConfigured = false;
 
+    public bool $demo_mode_enabled = false;
+
     public function mount(): void
     {
         $this->elim_base_url = (string) SettingHelper::get(
@@ -35,6 +37,7 @@ class ElimApiSettingsPage extends Component
             ElimApiConfig::SETTING_PASSWORD,
             config('services.elim.password')
         );
+        $this->demo_mode_enabled = app(ElimApiConfig::class)->demoModeEnabled();
     }
 
     public function save(): void
@@ -67,6 +70,11 @@ class ElimApiSettingsPage extends Component
             $this->passwordConfigured = true;
             $this->elim_password = '';
         }
+
+        Setting::updateOrCreate(
+            ['key' => ElimApiConfig::SETTING_DEMO_MODE],
+            ['value' => $this->demo_mode_enabled ? '1' : '0']
+        );
 
         app(ElimApiConfig::class)->refreshAfterSettingsUpdate();
 

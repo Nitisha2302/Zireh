@@ -38,6 +38,24 @@
                             <div class="form-text">{{ __('admin.elim_api_password_hint') }}</div>
                         @endif
                     </div>
+                    <div class="col-12">
+                        <div class="card bg-label-warning border-0">
+                            <div class="card-body">
+                                <div class="form-check form-switch mb-2">
+                                    <input
+                                        class="form-check-input"
+                                        type="checkbox"
+                                        id="demo_mode_enabled"
+                                        wire:model="demo_mode_enabled"
+                                    >
+                                    <label class="form-check-label fw-semibold" for="demo_mode_enabled">
+                                        {{ __('admin.elim_demo_mode') }}
+                                    </label>
+                                </div>
+                                <p class="mb-0 text-body-secondary small">{{ __('admin.elim_demo_mode_description') }}</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="mt-4 d-flex flex-wrap gap-2">
                     <button type="submit" class="btn btn-primary" wire:loading.attr="disabled" wire:target="save,testConnection">
