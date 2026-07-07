@@ -3,8 +3,11 @@
 namespace App\Livewire\Admin\Warehouse;
 
 use App\Models\Warehouse;
+use App\Services\Admin\WarehouseLoginAccountService;
 use App\Services\FileManager;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -28,6 +31,14 @@ class WarehouseEditPage extends Component
 
     public string $email = '';
 
+    public string $login_username = '';
+
+    public string $login_email = '';
+
+    public string $login_password = '';
+
+    public string $login_password_confirmation = '';
+
     public string $country = Warehouse::DEFAULT_COUNTRY;
 
     public string $state = '';
@@ -46,7 +57,7 @@ class WarehouseEditPage extends Component
 
     public string $notes = '';
 
-    public function mount(Warehouse $warehouse): void
+    public function mount(Warehouse $warehouse, WarehouseLoginAccountService $loginAccounts): void
     {
         $this->warehouse = $warehouse;
         $this->warehouse_name = $warehouse->warehouse_name;
@@ -63,16 +74,34 @@ class WarehouseEditPage extends Component
         $this->longitude = (string) $warehouse->longitude;
         $this->status = $warehouse->status;
         $this->notes = $warehouse->notes ?? '';
+
+        $account = $loginAccounts->findTajikistanAccount($warehouse);
+
+        if ($account) {
+            $this->login_username = $account->username;
+            $this->login_email = $account->email;
+        }
     }
 
     protected function rules(): array
     {
-        return $this->warehouseRules($this->warehouse->id);
+        $account = app(WarehouseLoginAccountService::class)->findTajikistanAccount($this->warehouse);
+
+        return array_merge(
+            $this->warehouseRules($this->warehouse->id),
+            $this->loginRules(isCreate: false, ignoreAdminId: $account?->id),
+        );
     }
 
-    public function update(FileManager $fileManager): void
+    public function update(FileManager $fileManager, WarehouseLoginAccountService $loginAccounts): void
     {
-        $validated = $this->validate();
+        try {
+            $validated = $this->validate();
+        } catch (ValidationException $exception) {
+            $this->setErrorBag($exception->validator->getMessageBag());
+            throw $exception;
+        }
+
         $data = $this->mapValidated($validated);
 
         if ($this->image) {
@@ -80,7 +109,16 @@ class WarehouseEditPage extends Component
             $data['image'] = $fileManager->store($this->image, 'warehouses');
         }
 
-        $this->warehouse->update($data);
+        DB::transaction(function () use ($data, $loginAccounts): void {
+            $this->warehouse->update($data);
+
+            $loginAccounts->syncTajikistanAccount($this->warehouse->fresh(), [
+                'login_username' => $this->login_username,
+                'login_email' => $this->login_email,
+                'login_password' => $this->login_password,
+                'login_password_confirmation' => $this->login_password_confirmation,
+            ], isCreate: false);
+        });
 
         flash()->success(__('admin.warehouse_updated'));
         $this->redirectRoute('admin.warehouses.show', $this->warehouse);
@@ -90,6 +128,7 @@ class WarehouseEditPage extends Component
     {
         return view('livewire.admin.warehouse.warehouse-edit-page', [
             'statuses' => Warehouse::statuses(),
+            'isEdit' => true,
         ])->title(__('admin.edit_warehouse'));
     }
 
@@ -117,6 +156,15 @@ class WarehouseEditPage extends Component
             'longitude' => ['required', 'numeric', 'between:-180,180'],
             'status' => ['required', Rule::in([Warehouse::STATUS_ACTIVE, Warehouse::STATUS_INACTIVE])],
             'notes' => ['nullable', 'string', 'max:2000'],
+        ];
+    }
+
+    protected function loginRules(bool $isCreate, ?int $ignoreAdminId = null): array
+    {
+        return [
+            'login_username' => ['required', 'string', 'max:255', Rule::unique('admins', 'username')->ignore($ignoreAdminId)],
+            'login_email' => ['required', 'email', 'max:255', Rule::unique('admins', 'email')->ignore($ignoreAdminId)],
+            'login_password' => [$isCreate ? 'required' : 'nullable', 'string', 'min:8', 'confirmed'],
         ];
     }
 

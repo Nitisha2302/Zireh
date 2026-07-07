@@ -4,13 +4,13 @@
             <div class="card">
                 <div class="card-body">
                     <div class="app-brand justify-content-center mb-6">
-                        <a href="{{ route('warehouse.login') }}" class="app-brand-link">
-                            <span class="app-brand-text demo text-heading fw-bold">{{ __('admin.warehouse_portal') }}</span>
+                        <a href="{{ route('china.login') }}" class="app-brand-link">
+                            <span class="app-brand-text demo text-heading fw-bold">{{ __('admin.china_warehouse_panel') }}</span>
                         </a>
                     </div>
 
-                    <h4 class="mb-1">{{ __('admin.warehouse_login') }}</h4>
-                    <p class="mb-6">{{ __('admin.warehouse_login_description') }}</p>
+                    <h4 class="mb-1">{{ __('admin.china_warehouse_login') }}</h4>
+                    <p class="mb-6">{{ __('admin.china_warehouse_login_description') }}</p>
 
                     <form class="mb-4" wire:submit.prevent="authenticate">
                         <div class="mb-6 form-control-validation">

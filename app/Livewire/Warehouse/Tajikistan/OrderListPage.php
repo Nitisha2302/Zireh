@@ -10,7 +10,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-#[Layout('layouts::warehouse', ['title' => 'Tajikistan Warehouse Orders', 'panel' => 'tajikistan'])]
+#[Layout('layouts::tajikistan-warehouse', ['title' => 'Tajikistan Warehouse Orders'])]
 class OrderListPage extends Component
 {
     use WithPagination;

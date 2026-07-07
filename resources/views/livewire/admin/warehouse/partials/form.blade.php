@@ -39,6 +39,36 @@
 
         <div class="card mb-4">
             <div class="card-header">
+                <h5 class="mb-1">{{ __('admin.warehouse_panel_login') }}</h5>
+                <small class="text-body-secondary">{{ __('admin.warehouse_panel_login_hint') }}</small>
+            </div>
+            <div class="card-body">
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <label class="form-label" for="login_username">{{ __('admin.login_username') }}</label>
+                        <input id="login_username" type="text" wire:model.blur="login_username" class="form-control @error('login_username') is-invalid @enderror">
+                        @error('login_username') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="login_email">{{ __('admin.login_email') }}</label>
+                        <input id="login_email" type="email" wire:model.blur="login_email" class="form-control @error('login_email') is-invalid @enderror">
+                        @error('login_email') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="login_password">{{ ($isEdit ?? false) ? __('admin.new_password') : __('admin.password') }}</label>
+                        <input id="login_password" type="password" wire:model="login_password" class="form-control @error('login_password') is-invalid @enderror" @if($isEdit ?? false) placeholder="{{ __('admin.leave_blank_to_keep') }}" @endif>
+                        @error('login_password') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="login_password_confirmation">{{ __('admin.confirm_password') }}</label>
+                        <input id="login_password_confirmation" type="password" wire:model="login_password_confirmation" class="form-control">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
                 <h5 class="mb-1">{{ __('admin.warehouse_location') }}</h5>
                 <small class="text-body-secondary">{{ __('admin.warehouse_location_hint') }}</small>
             </div>

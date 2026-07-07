@@ -1,16 +1,13 @@
 <?php
 
-namespace App\Livewire\Warehouse;
+namespace App\Livewire\Warehouse\Concerns;
 
 use App\Models\Admin;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
-use Livewire\Attributes\Layout;
-use Livewire\Component;
 
-#[Layout('layouts::warehouse', ['title' => 'Profile', 'panel' => 'profile'])]
-class ProfilePage extends Component
+trait ManagesWarehouseProfile
 {
     public string $currentPassword = '';
 
@@ -42,11 +39,12 @@ class ProfilePage extends Component
         flash()->success(__('admin.password_updated'));
     }
 
-    public function render()
+    protected function renderProfile(string $panelTitle)
     {
         return view('livewire.warehouse.profile-page', [
             'admin' => Auth::guard('admin')->user()?->load('warehouse'),
             'roleLabel' => Admin::roles()[Auth::guard('admin')->user()?->role] ?? '',
+            'panelTitle' => $panelTitle,
         ])->title(__('admin.my_profile'));
     }
 }

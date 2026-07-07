@@ -2,16 +2,16 @@
 
 namespace Database\Seeders;
 
-use App\Models\Admin;
 use App\Models\Warehouse;
+use App\Services\Admin\WarehouseLoginAccountService;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 
 class WarehouseStaffSeeder extends Seeder
 {
     public function run(): void
     {
+        $loginAccounts = app(WarehouseLoginAccountService::class);
+
         $warehouse = Warehouse::query()->firstOrCreate(
             ['warehouse_code' => 'DUS-TJ-01'],
             [
@@ -28,30 +28,18 @@ class WarehouseStaffSeeder extends Seeder
             ]
         );
 
-        Admin::updateOrCreate(
-            ['username' => 'china_warehouse'],
-            [
-                'name' => 'China Warehouse',
-                'email' => 'china.warehouse@example.com',
-                'role' => Admin::ROLE_CHINA_WAREHOUSE,
-                'warehouse_id' => null,
-                'password' => Hash::make('warehouse123'),
-                'email_verified_at' => now(),
-                'remember_token' => Str::random(10),
-            ]
-        );
+        $loginAccounts->syncTajikistanAccount($warehouse, [
+            'login_username' => 'tj_warehouse',
+            'login_email' => 'tj.warehouse@example.com',
+            'login_password' => 'warehouse123',
+            'login_password_confirmation' => 'warehouse123',
+        ], isCreate: ! $loginAccounts->findTajikistanAccount($warehouse));
 
-        Admin::updateOrCreate(
-            ['username' => 'tj_warehouse'],
-            [
-                'name' => 'Tajikistan Warehouse',
-                'email' => 'tj.warehouse@example.com',
-                'role' => Admin::ROLE_TAJIKISTAN_WAREHOUSE,
-                'warehouse_id' => $warehouse->id,
-                'password' => Hash::make('warehouse123'),
-                'email_verified_at' => now(),
-                'remember_token' => Str::random(10),
-            ]
-        );
+        $loginAccounts->syncChinaAccount([
+            'login_username' => 'china_warehouse',
+            'login_email' => 'china.warehouse@example.com',
+            'login_password' => 'warehouse123',
+            'login_password_confirmation' => 'warehouse123',
+        ]);
     }
 }

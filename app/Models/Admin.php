@@ -64,12 +64,12 @@ class Admin extends Authenticatable
 
     public function canAccessChinaWarehousePanel(): bool
     {
-        return $this->isSuperAdmin() || $this->isChinaWarehouseStaff();
+        return $this->isChinaWarehouseStaff();
     }
 
     public function canAccessTajikistanWarehousePanel(): bool
     {
-        return $this->isSuperAdmin() || $this->isTajikistanWarehouseStaff();
+        return $this->isTajikistanWarehouseStaff();
     }
 
     public function isWarehouseStaff(): bool
@@ -80,9 +80,27 @@ class Admin extends Authenticatable
     public function warehouseHomeRoute(): string
     {
         return match ($this->role) {
-            self::ROLE_CHINA_WAREHOUSE => 'warehouse.china.orders.index',
-            self::ROLE_TAJIKISTAN_WAREHOUSE => 'warehouse.tajikistan.orders.index',
+            self::ROLE_CHINA_WAREHOUSE => 'china.orders.index',
+            self::ROLE_TAJIKISTAN_WAREHOUSE => 'tajikistan.orders.index',
             default => 'admin.dashboard',
+        };
+    }
+
+    public function warehouseLoginRoute(): string
+    {
+        return match ($this->role) {
+            self::ROLE_CHINA_WAREHOUSE => 'china.login',
+            self::ROLE_TAJIKISTAN_WAREHOUSE => 'tajikistan.login',
+            default => 'login',
+        };
+    }
+
+    public function warehouseProfileRoute(): string
+    {
+        return match ($this->role) {
+            self::ROLE_CHINA_WAREHOUSE => 'china.profile',
+            self::ROLE_TAJIKISTAN_WAREHOUSE => 'tajikistan.profile',
+            default => 'admin.profile',
         };
     }
 
