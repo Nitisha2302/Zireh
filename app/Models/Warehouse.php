@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Warehouse extends Model
@@ -44,6 +45,16 @@ class Warehouse extends Model
     public function isActive(): bool
     {
         return $this->status === self::STATUS_ACTIVE;
+    }
+
+    public function customerOrders(): HasMany
+    {
+        return $this->hasMany(CustomerOrder::class);
+    }
+
+    public function admins(): HasMany
+    {
+        return $this->hasMany(Admin::class);
     }
 
     public static function statuses(): array

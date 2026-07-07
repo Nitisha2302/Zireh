@@ -24,7 +24,9 @@ class LoginPage extends Component
     public function mount()
     {
         if (Auth::guard('admin')->check()) {
-            return $this->redirectRoute('admin.dashboard', navigate: true);
+            $admin = Auth::guard('admin')->user();
+
+            return $this->redirectRoute($admin->defaultPanelRoute(), navigate: true);
         }
     }
 
@@ -60,6 +62,13 @@ class LoginPage extends Component
 
         $admin = Auth::guard('admin')->user();
 
+        if ($admin->isWarehouseStaff()) {
+            Auth::guard('admin')->logout();
+            $this->addError('login', __('admin.use_warehouse_login'));
+
+            return null;
+        }
+
         LoginLog::recordSuccess($admin, 'admin', $login, request());
 
         Log::info('Admin logged in.', [
@@ -72,7 +81,7 @@ class LoginPage extends Component
 
         flash()->success('Welcome back, '.$admin->name.'.');
 
-        return $this->redirectRoute('admin.dashboard', navigate: true);
+        return $this->redirectRoute($admin->defaultPanelRoute(), navigate: true);
     }
 
     public function render()

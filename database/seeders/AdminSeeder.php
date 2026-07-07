@@ -23,6 +23,7 @@ class AdminSeeder extends Seeder
             ],
             [
                 'name' => 'Super Admin',
+                'role' => \App\Models\Admin::ROLE_SUPER_ADMIN,
                 'avatar' => $avatar,
                 'phone' => '0000000000',
                 'email_verified_at' => now(),
