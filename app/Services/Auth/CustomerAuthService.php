@@ -173,8 +173,10 @@ class CustomerAuthService
     {
         $attributes = [];
 
-        if (array_key_exists('full_name', $data)) {
-            $attributes['name'] = $data['full_name'];
+        $fullName = $data['full_name'] ?? $data['name'] ?? null;
+
+        if ($fullName !== null) {
+            $attributes['name'] = $fullName;
         }
 
         if (array_key_exists('email', $data)) {
