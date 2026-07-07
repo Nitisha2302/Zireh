@@ -194,3 +194,78 @@ it('skips wallet deduction for online payment method at checkout', function () {
         ->and($order->payment_status)->toBe('unpaid')
         ->and((float) app(WalletService::class)->getBalance($user))->toBe(0.0);
 });
+
+it('allows checkout when elim preview returns empty unavailable item wrapper', function () {
+    config(['services.elim.demo_mode' => false]);
+
+    $user = User::factory()->create();
+    $fixtures = makeCheckoutFixtures($user);
+
+    \App\Models\UserCartItem::create([
+        'user_id' => $user->id,
+        'platform' => 'taobao',
+        'product_id' => '123',
+        'marketplace_id' => '123',
+        'sku_id' => 'sku1',
+        'quantity' => 1,
+        'unit_price' => 20,
+        'product_snapshot' => ['title' => 'Test'],
+        'synced_at' => now(),
+    ]);
+
+    Http::fake([
+        'https://openapi.elim.asia/v1/orders/preview' => Http::response([
+            'data' => [
+                'goods_amount_cny' => 20,
+                'shipping_fee_cny' => 10,
+                'service_fee_cny' => 5,
+                'unavailable_items' => [
+                    'count' => 0,
+                    'items' => [],
+                ],
+            ],
+        ], 200),
+        'https://openapi.elim.asia/v1/orders' => Http::response([
+            'status' => 'pending_payment',
+            'data' => [
+                'id' => 'ORD0000000099',
+                'status' => 'pending_payment',
+                'payment_status' => 'unpaid',
+            ],
+        ], 200),
+    ]);
+
+    $service = app(\App\Services\Cart\Taobao\TaobaoOrderService::class);
+    $order = $service->checkout($user, checkoutPayload($fixtures, CustomerOrder::PAYMENT_METHOD_ONLINE));
+
+    expect($order->payment_status)->toBe('unpaid')
+        ->and($order->elim_order_id)->toBe('ORD0000000099');
+});
+
+it('rejects checkout in demo mode even if unavailable items are present in parsed preview', function () {
+    config(['services.elim.demo_mode' => true]);
+
+    $user = User::factory()->create();
+    $fixtures = makeCheckoutFixtures($user);
+
+    \App\Models\UserCartItem::create([
+        'user_id' => $user->id,
+        'platform' => 'taobao',
+        'product_id' => '123',
+        'marketplace_id' => '123',
+        'sku_id' => 'sku1',
+        'quantity' => 1,
+        'unit_price' => 20,
+        'product_snapshot' => ['title' => 'Test'],
+        'synced_at' => now(),
+    ]);
+
+    Http::fake();
+
+    $service = app(\App\Services\Cart\Taobao\TaobaoOrderService::class);
+    $order = $service->checkout($user, checkoutPayload($fixtures, CustomerOrder::PAYMENT_METHOD_ONLINE));
+
+    expect($order->is_demo_order)->toBeTrue();
+
+    Http::assertNothingSent();
+});
