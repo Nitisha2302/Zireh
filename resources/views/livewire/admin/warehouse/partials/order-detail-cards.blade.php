@@ -63,7 +63,7 @@
 </div>
 
 <div class="row g-4 mt-0">
-    <div class="col-lg-6">
+    <div class="col-lg-12">
         <div class="card h-100">
             <div class="card-header"><h5 class="mb-0">{{ __('admin.tajikistan_warehouse') }}</h5></div>
             <div class="card-body">
@@ -73,22 +73,6 @@
                     <p class="mb-1 text-body-secondary">{{ data_get($warehouse, 'address') }}</p>
                     <p class="mb-1 text-body-secondary">{{ data_get($warehouse, 'city') }}, {{ data_get($warehouse, 'country', 'Tajikistan') }}</p>
                     <p class="mb-0 text-body-secondary">{{ data_get($warehouse, 'contact_person') }} · {{ data_get($warehouse, 'contact_number') }}</p>
-                @else
-                    <p class="mb-0 text-body-secondary">—</p>
-                @endif
-            </div>
-        </div>
-    </div>
-    <div class="col-lg-6">
-        <div class="card h-100">
-            <div class="card-header"><h5 class="mb-0">{{ __('admin.customer_delivery_address') }}</h5></div>
-            <div class="card-body">
-                @php $address = $order->userAddress ?? $order->address_snapshot; @endphp
-                @if (is_array($address) || $order->userAddress)
-                    <p class="mb-1 fw-medium">{{ data_get($address, 'full_name', '—') }}</p>
-                    <p class="mb-1 text-body-secondary">{{ data_get($address, 'phone') }}</p>
-                    <p class="mb-1">{{ data_get($address, 'address_line_1') }}</p>
-                    <p class="mb-0 text-body-secondary">{{ data_get($address, 'city') }}, {{ data_get($address, 'state') }} {{ data_get($address, 'postal_code') }}</p>
                 @else
                     <p class="mb-0 text-body-secondary">—</p>
                 @endif

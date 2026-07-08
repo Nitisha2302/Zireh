@@ -25,7 +25,7 @@ class OrderDetailPage extends Component
         $admin = Auth::guard('admin')->user();
         $warehousePanelService->ensureChinaOrderAccessible($admin, $order);
 
-        $this->order = $order->load(['user', 'items', 'orderStatus', 'warehouse', 'userAddress', 'shippingMethod']);
+        $this->order = $order->load(['user', 'items', 'orderStatus', 'warehouse', 'shippingMethod']);
         $this->statusCode = $order->status;
         $this->parcelTrackingId = (string) ($order->parcel_tracking_id ?? '');
     }
@@ -38,7 +38,7 @@ class OrderDetailPage extends Component
 
         try {
             $this->order = $warehousePanelService->updateOrderStatus($this->order, $this->statusCode)
-                ->load(['user', 'items', 'orderStatus', 'warehouse', 'userAddress', 'shippingMethod']);
+                ->load(['user', 'items', 'orderStatus', 'warehouse', 'shippingMethod']);
         } catch (\Illuminate\Validation\ValidationException $exception) {
             $this->setErrorBag($exception->validator->getMessageBag());
 
@@ -56,7 +56,7 @@ class OrderDetailPage extends Component
 
         try {
             $this->order = $warehousePanelService->updateParcelTracking($this->order, $this->parcelTrackingId)
-                ->load(['user', 'items', 'orderStatus', 'warehouse', 'userAddress', 'shippingMethod']);
+                ->load(['user', 'items', 'orderStatus', 'warehouse', 'shippingMethod']);
         } catch (\Illuminate\Validation\ValidationException $exception) {
             $this->setErrorBag($exception->validator->getMessageBag());
 

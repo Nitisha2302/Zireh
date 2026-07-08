@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\V1\Auth;
 
 use App\Http\Requests\Api\ApiRequest;
+use App\Models\Warehouse;
 use Illuminate\Validation\Rule;
 
 class UpdateProfileRequest extends ApiRequest
@@ -27,6 +28,12 @@ class UpdateProfileRequest extends ApiRequest
             'profile_photo' => ['nullable', 'image', 'max:5120'],
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
             'device_token' => ['sometimes', 'nullable', 'string'],
+            'warehouse_id' => [
+                'sometimes',
+                'required',
+                'integer',
+                Rule::exists('warehouses', 'id')->where('status', Warehouse::STATUS_ACTIVE),
+            ],
         ];
     }
 }

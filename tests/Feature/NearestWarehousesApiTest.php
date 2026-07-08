@@ -146,3 +146,26 @@ it('returns warehouse image url in nearest warehouses api', function () {
         ->assertOk()
         ->assertJsonPath('data.warehouses.0.image', fn ($url) => is_string($url) && str_contains($url, 'warehouses/sample.jpg'));
 });
+
+it('returns active warehouses when address_id is omitted', function () {
+    $user = makeWarehouseUser();
+
+    $active = makeActiveWarehouse([
+        'warehouse_name' => 'Alpha Warehouse',
+        'warehouse_code' => 'A-01',
+    ]);
+
+    makeActiveWarehouse([
+        'warehouse_name' => 'Beta Warehouse',
+        'warehouse_code' => 'B-01',
+        'status' => Warehouse::STATUS_INACTIVE,
+    ]);
+
+    Sanctum::actingAs($user);
+
+    $this->getJson('/api/v1/auth/warehouses')
+        ->assertOk()
+        ->assertJsonCount(1, 'data.warehouses')
+        ->assertJsonPath('data.warehouses.0.id', $active->id)
+        ->assertJsonMissingPath('data.origin');
+});

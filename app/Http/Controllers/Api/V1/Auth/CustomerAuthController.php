@@ -83,7 +83,9 @@ class CustomerAuthController extends ApiController
 
     public function me(Request $request): JsonResponse
     {
-        return $this->successResponse(new CustomerResource($request->user()), __('api.customer_profile_fetched'));
+        $user = $request->user()->load('warehouse');
+
+        return $this->successResponse(new CustomerResource($user), __('api.customer_profile_fetched'));
     }
 
     public function updateProfile(UpdateProfileRequest $request): JsonResponse

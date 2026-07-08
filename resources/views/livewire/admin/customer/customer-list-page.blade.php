@@ -4,7 +4,7 @@
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
                 <div>
                     <h4 class="mb-1">Customers</h4>
-                    <p class="mb-0 text-body-secondary">Manage customer accounts, status, and addresses.</p>
+                    <p class="mb-0 text-body-secondary">Manage customer accounts and status.</p>
                 </div>
             </div>
         </div>
@@ -39,7 +39,6 @@
                         <th>Customer</th>
                         <th>Contact</th>
                         <th width="140">Status</th>
-                        <th width="120">Addresses</th>
                         <th width="180">Joined</th>
                         <th width="100"></th>
                     </tr>
@@ -77,9 +76,6 @@
                                 @endif
                             </td>
                             <td>
-                                <span class="badge bg-label-info">{{ $customer->addresses_count }}</span>
-                            </td>
-                            <td>
                                 <div>{{ $customer->created_at?->format('d M Y') }}</div>
                                 <small class="text-body-secondary">{{ $customer->created_at?->diffForHumans() }}</small>
                             </td>
@@ -100,11 +96,6 @@
                                             </a>
                                         </li>
                                         <li>
-                                            <a href="{{ route('admin.customers.addresses.index', $customer) }}" class="dropdown-item">
-                                                <i class="icon-base ti tabler-map-pin me-2"></i>View Addresses
-                                            </a>
-                                        </li>
-                                        <li>
                                             <button type="button" class="dropdown-item" wire:click="toggleStatus({{ $customer->id }})">
                                                 <i class="icon-base ti tabler-refresh me-2"></i>
                                                 {{ $customer->isActive() ? 'Deactivate' : 'Activate' }}
@@ -122,7 +113,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7">
+                            <td colspan="6">
                                 <div class="text-center py-5">
                                     <i class="icon-base ti tabler-users" style="font-size: 60px"></i>
                                     <h5 class="mt-3">No customers found</h5>

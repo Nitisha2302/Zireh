@@ -102,14 +102,14 @@ function makeCheckoutFixtures(User $user): array
         'is_active' => true,
     ]);
 
+    $user->forceFill(['warehouse_id' => $warehouse->id])->save();
+
     return compact('warehouse', 'address', 'method');
 }
 
 function checkoutPayload(array $fixtures, string $paymentMethod = 'online'): array
 {
     return [
-        'warehouse_id' => $fixtures['warehouse']->id,
-        'address_id' => $fixtures['address']->id,
         'shipping_method_id' => $fixtures['method']->id,
         'payment_method' => $paymentMethod,
         'weight_kg' => 2,
@@ -117,7 +117,7 @@ function checkoutPayload(array $fixtures, string $paymentMethod = 'online'): arr
     ];
 }
 
-it('places demo checkout with wallet payment and stores warehouse and address', function () {
+it('places demo checkout with wallet payment and stores warehouse from profile', function () {
     config(['services.elim.demo_mode' => true]);
 
     $user = User::factory()->create();
@@ -159,13 +159,13 @@ it('places demo checkout with wallet payment and stores warehouse and address', 
 
     expect($order->is_demo_order)->toBeTrue()
         ->and($order->warehouse_id)->toBe($fixtures['warehouse']->id)
-        ->and($order->user_address_id)->toBe($fixtures['address']->id)
+        ->and($order->user_address_id)->toBeNull()
         ->and($order->shipping_method_id)->toBe($fixtures['method']->id)
         ->and($order->payment_method)->toBe(CustomerOrder::PAYMENT_METHOD_WALLET)
         ->and($order->payment_status)->toBe('paid')
         ->and($order->status)->toBe(\App\Models\OrderStatus::CODE_PAID)
         ->and($order->warehouse_snapshot)->toBeArray()
-        ->and($order->address_snapshot)->toBeArray()
+        ->and($order->address_snapshot)->toBeNull()
         ->and($order->cargo_shipping_fee_tjs)->toBeGreaterThan(0);
 
     Http::assertNothingSent();
@@ -307,4 +307,29 @@ it('places checkout locally when demo mode is enabled from admin settings', func
         ->and($order->elim_order_id)->toStartWith('ORD');
 
     Http::assertNothingSent();
+});
+
+it('rejects checkout when user has no warehouse selected in profile', function () {
+    config(['services.elim.demo_mode' => true]);
+
+    $user = User::factory()->create();
+    $fixtures = makeCheckoutFixtures($user);
+    $user->forceFill(['warehouse_id' => null])->save();
+
+    \App\Models\UserCartItem::create([
+        'user_id' => $user->id,
+        'platform' => 'taobao',
+        'product_id' => '123',
+        'marketplace_id' => '123',
+        'sku_id' => 'sku1',
+        'quantity' => 1,
+        'unit_price' => 20,
+        'product_snapshot' => ['title' => 'Test'],
+        'synced_at' => now(),
+    ]);
+
+    $service = app(\App\Services\Cart\Taobao\TaobaoOrderService::class);
+
+    expect(fn () => $service->checkout($user->fresh(), checkoutPayload($fixtures)))
+        ->toThrow(\Illuminate\Validation\ValidationException::class);
 });
