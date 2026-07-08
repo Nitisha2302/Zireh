@@ -76,26 +76,11 @@ class OrderCheckoutService
             ]);
         }
 
-        $cargoShipping = $this->shippingRateService->calculate(
-            $shippingMethod->code,
-            (float) $options['weight_kg'],
-            isset($options['length_cm']) ? (float) $options['length_cm'] : null,
-            isset($options['width_cm']) ? (float) $options['width_cm'] : null,
-            isset($options['height_cm']) ? (float) $options['height_cm'] : null,
-        );
-
-        $cargoShippingFeeTjs = (float) $cargoShipping['shipping_cost'];
-        $cargoShippingFeeCny = $this->convertTjsToCny($cargoShippingFeeTjs);
-
         return new CheckoutContext(
             warehouse: $warehouse,
             address: null,
             shippingMethod: $shippingMethod,
             paymentMethod: $paymentMethod,
-            cargoShipping: $cargoShipping,
-            cargoShippingFeeTjs: $cargoShippingFeeTjs,
-            cargoShippingFeeCny: $cargoShippingFeeCny,
-            weightKg: (float) $options['weight_kg'],
         );
     }
 
@@ -232,7 +217,7 @@ class OrderCheckoutService
             $parsed['shipping_fee_cny'],
             $parsed['service_fee_cny'],
             $commission['commission_amount'] ?? 0,
-            $context->cargoShippingFeeCny,
+            0,
         );
 
         $order = CustomerOrder::query()->create([
@@ -248,8 +233,8 @@ class OrderCheckoutService
             'payment_method' => $context->paymentMethod,
             'goods_subtotal_cny' => $parsed['goods_subtotal_cny'],
             'shipping_fee_cny' => $parsed['shipping_fee_cny'],
-            'cargo_shipping_fee_tjs' => $context->cargoShippingFeeTjs,
-            'cargo_shipping_fee_cny' => $context->cargoShippingFeeCny,
+            'cargo_shipping_fee_tjs' => 0,
+            'cargo_shipping_fee_cny' => 0,
             'elim_service_fee_cny' => $parsed['service_fee_cny'],
             'commission_slab_id' => $commission['slab_id'] ?? null,
             'commission_percentage' => $commission['commission_percentage'] ?? 0,
@@ -257,8 +242,7 @@ class OrderCheckoutService
             'customer_total_cny' => $customerTotalCny,
             'exchange_rate' => $exchangeRate,
             'customer_total_tjs' => round(
-                ($this->currencyExchangeService->convertCnyToTjs($customerTotalCny - $context->cargoShippingFeeCny) ?? 0)
-                + $context->cargoShippingFeeTjs,
+                $this->currencyExchangeService->convertCnyToTjs($customerTotalCny) ?? 0,
                 2
             ),
             'receiver_address' => $receiverAddress,

@@ -16,10 +16,6 @@ abstract class CheckoutRequest extends ApiRequest
                 CustomerOrder::PAYMENT_METHOD_WALLET,
                 CustomerOrder::PAYMENT_METHOD_ONLINE,
             ])],
-            'weight_kg' => ['required', 'numeric', 'gt:0'],
-            'length_cm' => ['nullable', 'numeric', 'gt:0'],
-            'width_cm' => ['nullable', 'numeric', 'gt:0'],
-            'height_cm' => ['nullable', 'numeric', 'gt:0'],
             'remark' => ['nullable', 'string', 'max:500'],
             'promotion_id' => ['nullable', 'string', 'max:255'],
         ];

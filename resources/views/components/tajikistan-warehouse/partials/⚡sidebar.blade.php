@@ -34,6 +34,12 @@ new class extends Component {
                     <div>{{ __('admin.tajikistan_warehouse_orders') }}</div>
                 </a>
             </li>
+            <li class="menu-item {{ request()->routeIs('tajikistan.pickup.*') ? 'active' : '' }}">
+                <a href="{{ route('tajikistan.pickup.index') }}" class="menu-link">
+                    <i class="menu-icon icon-base ti tabler-scan"></i>
+                    <div>{{ __('admin.pickup_qr_scan') }}</div>
+                </a>
+            </li>
             <li class="menu-item {{ request()->routeIs('tajikistan.profile') ? 'active' : '' }}">
                 <a href="{{ route('tajikistan.profile') }}" class="menu-link">
                     <i class="menu-icon icon-base ti tabler-user"></i>

@@ -144,6 +144,79 @@ class ShippingRateService
         ];
     }
 
+    public function calculatePickupShipping(
+        ShippingMethod $method,
+        float $weightKg,
+        float $lengthCm,
+        float $widthCm,
+        float $heightCm,
+    ): array {
+        $actualWeight = max(0, $weightKg);
+        $volumeM3 = round(($lengthCm * $widthCm * $heightCm) / 1_000_000, 6);
+        $volumetricWeight = round(
+            ($lengthCm * $widthCm * $heightCm) / $method->volumetric_divisor,
+            2
+        );
+
+        $weightCost = $this->costForChargeableWeight($method, $actualWeight);
+        $volumeCost = $this->costForChargeableWeight($method, $volumetricWeight);
+
+        $appliedMethod = $volumeCost['shipping_cost'] > $weightCost['shipping_cost']
+            ? 'volume'
+            : 'weight';
+        $finalCost = max($weightCost['shipping_cost'], $volumeCost['shipping_cost']);
+
+        return [
+            'method' => [
+                'id' => $method->id,
+                'name' => $method->name,
+                'code' => $method->code,
+            ],
+            'package' => [
+                'length_cm' => $lengthCm,
+                'width_cm' => $widthCm,
+                'height_cm' => $heightCm,
+                'weight_kg' => $actualWeight,
+                'volume_m3' => $volumeM3,
+                'volumetric_weight_kg' => $volumetricWeight,
+            ],
+            'weight_cost_tjs' => $weightCost['shipping_cost'],
+            'volume_cost_tjs' => $volumeCost['shipping_cost'],
+            'applied_method' => $appliedMethod,
+            'shipping_cost' => $finalCost,
+            'currency' => 'TJS',
+            'weight_breakdown' => $weightCost,
+            'volume_breakdown' => $volumeCost,
+        ];
+    }
+
+    protected function costForChargeableWeight(ShippingMethod $method, float $chargeableWeight): array
+    {
+        $rate = $this->repository->findActiveForWeight($method->id, $chargeableWeight);
+
+        if (! $rate) {
+            throw ValidationException::withMessages([
+                'weight' => [__('api.shipping_rate_not_found_for_weight')],
+            ]);
+        }
+
+        $calculatedCost = round($chargeableWeight * (float) $rate->rate_per_kg, 2);
+        $shippingCost = max($calculatedCost, (float) $method->minimum_charge);
+
+        return [
+            'chargeable_weight_kg' => $chargeableWeight,
+            'rate' => [
+                'id' => $rate->id,
+                'min_weight' => (float) $rate->min_weight,
+                'max_weight' => (float) $rate->max_weight,
+                'rate_per_kg' => (float) $rate->rate_per_kg,
+            ],
+            'minimum_charge' => (float) $method->minimum_charge,
+            'calculated_cost' => $calculatedCost,
+            'shipping_cost' => $shippingCost,
+        ];
+    }
+
     protected function validatePayload(array $data, ?int $ignoreId = null): array
     {
         return validator($data, [

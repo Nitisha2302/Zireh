@@ -13,10 +13,6 @@ class CheckoutContext
         public readonly ?UserAddress $address,
         public readonly ShippingMethod $shippingMethod,
         public readonly string $paymentMethod,
-        public readonly array $cargoShipping,
-        public readonly float $cargoShippingFeeTjs,
-        public readonly float $cargoShippingFeeCny,
-        public readonly float $weightKg,
     ) {}
 
     public function warehouseSnapshot(): array
@@ -72,10 +68,11 @@ class CheckoutContext
                 'name' => $this->shippingMethod->name,
                 'code' => $this->shippingMethod->code,
             ],
-            'cargo_shipping' => $this->cargoShipping,
+            'cargo_shipping' => null,
             'payment_method' => $this->paymentMethod,
-            'cargo_shipping_fee_tjs' => $this->cargoShippingFeeTjs,
-            'cargo_shipping_fee_cny' => $this->cargoShippingFeeCny,
+            'cargo_shipping_fee_tjs' => 0,
+            'cargo_shipping_fee_cny' => 0,
+            'pickup_shipping_note' => __('api.pickup_shipping_charged_at_warehouse'),
         ];
     }
 }

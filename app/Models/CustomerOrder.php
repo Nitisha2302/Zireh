@@ -19,6 +19,21 @@ class CustomerOrder extends Model
 
     public const PAYMENT_METHOD_ONLINE = 'online';
 
+    public const PICKUP_PAYMENT_STATUS_PENDING = 'pending';
+
+    public const PICKUP_PAYMENT_STATUS_PAID = 'paid';
+
+    public const PICKUP_CALCULATION_WEIGHT = 'weight';
+
+    public const PICKUP_CALCULATION_VOLUME = 'volume';
+
+    /** @var list<string> */
+    public const PRE_PICKUP_STATUSES = [
+        OrderStatus::CODE_ARRIVED_IN_TAJIKISTAN,
+        OrderStatus::CODE_SORTING_CENTER,
+        OrderStatus::CODE_SENT_TO_SELECTED_WAREHOUSE,
+    ];
+
     protected $fillable = [
         'user_id',
         'warehouse_id',
@@ -34,6 +49,23 @@ class CustomerOrder extends Model
         'shipping_fee_cny',
         'cargo_shipping_fee_tjs',
         'cargo_shipping_fee_cny',
+        'package_length_cm',
+        'package_width_cm',
+        'package_height_cm',
+        'package_weight_kg',
+        'package_volume_m3',
+        'pickup_shipping_fee_tjs',
+        'pickup_shipping_weight_fee_tjs',
+        'pickup_shipping_volume_fee_tjs',
+        'pickup_shipping_calculation_method',
+        'pickup_shipping_snapshot',
+        'pickup_payment_status',
+        'pickup_payment_method',
+        'pickup_paid_at',
+        'pickup_wallet_transaction_id',
+        'pickup_token',
+        'pickup_confirmed_at',
+        'pickup_confirmed_by',
         'elim_service_fee_cny',
         'commission_slab_id',
         'commission_percentage',
@@ -61,6 +93,17 @@ class CustomerOrder extends Model
             'shipping_fee_cny' => 'decimal:2',
             'cargo_shipping_fee_tjs' => 'decimal:2',
             'cargo_shipping_fee_cny' => 'decimal:2',
+            'package_length_cm' => 'decimal:2',
+            'package_width_cm' => 'decimal:2',
+            'package_height_cm' => 'decimal:2',
+            'package_weight_kg' => 'decimal:2',
+            'package_volume_m3' => 'decimal:6',
+            'pickup_shipping_fee_tjs' => 'decimal:2',
+            'pickup_shipping_weight_fee_tjs' => 'decimal:2',
+            'pickup_shipping_volume_fee_tjs' => 'decimal:2',
+            'pickup_shipping_snapshot' => 'array',
+            'pickup_paid_at' => 'datetime',
+            'pickup_confirmed_at' => 'datetime',
             'elim_service_fee_cny' => 'decimal:2',
             'commission_percentage' => 'decimal:2',
             'commission_amount' => 'decimal:2',
@@ -84,10 +127,43 @@ class CustomerOrder extends Model
             (float) $this->goods_subtotal_cny
             + (float) $this->shipping_fee_cny
             + (float) ($this->elim_service_fee_cny ?? 0)
-            + (float) $this->commission_amount
-            + (float) $this->cargo_shipping_fee_cny,
+            + (float) $this->commission_amount,
             2
         );
+    }
+
+    public function pickupPaymentAmountTjs(): float
+    {
+        return round((float) ($this->pickup_shipping_fee_tjs ?? 0), 2);
+    }
+
+    public function isReadyForPickup(): bool
+    {
+        return $this->status === OrderStatus::CODE_READY_FOR_PICKUP;
+    }
+
+    public function isPickupShippingPaid(): bool
+    {
+        return $this->pickup_payment_status === self::PICKUP_PAYMENT_STATUS_PAID;
+    }
+
+    public function pickupQrPayload(): ?string
+    {
+        if ($this->pickup_token === null) {
+            return null;
+        }
+
+        return 'cargo-pickup:'.$this->pickup_token;
+    }
+
+    public function pickupConfirmedBy(): BelongsTo
+    {
+        return $this->belongsTo(Admin::class, 'pickup_confirmed_by');
+    }
+
+    public function pickupWalletTransaction(): BelongsTo
+    {
+        return $this->belongsTo(WalletTransaction::class, 'pickup_wallet_transaction_id');
     }
 
     public function paymentAmountTjs(): float

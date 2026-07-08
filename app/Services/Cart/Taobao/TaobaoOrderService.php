@@ -62,7 +62,7 @@ class TaobaoOrderService
                 $parsed['shipping_fee_cny'],
                 $parsed['service_fee_cny'],
                 $commission['commission_amount'] ?? 0,
-                $context->cargoShippingFeeCny,
+                0,
             ),
         ]);
     }
