@@ -25,7 +25,7 @@ use App\Livewire\Admin\Settings\FileManagerSettingsPage;
 use App\Livewire\Admin\Settings\PrivacyTermsSettingsPage;
 use App\Livewire\Authenticate\LoginPage;
 use App\Livewire\Warehouse\China\{LoginPage as ChinaLoginPage, OrderDetailPage as ChinaOrderDetailPage, OrderListPage as ChinaOrderListPage, ProfilePage as ChinaProfilePage};
-use App\Livewire\Warehouse\Tajikistan\{LoginPage as TajikistanLoginPage, OrderDetailPage as TajikistanOrderDetailPage, OrderListPage as TajikistanOrderListPage, ProfilePage as TajikistanProfilePage};
+use App\Livewire\Warehouse\Tajikistan\{LoginPage as TajikistanLoginPage, OrderDetailPage as TajikistanOrderDetailPage, OrderListPage as TajikistanOrderListPage, PickupPage as TajikistanPickupPage, ProfilePage as TajikistanProfilePage};
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -52,6 +52,8 @@ Route::prefix('tajikistan')->name('tajikistan.')->middleware(['is_auth:admin', '
     Route::get('profile', TajikistanProfilePage::class)->name('profile');
     Route::get('orders', TajikistanOrderListPage::class)->name('orders.index');
     Route::get('orders/{order}', TajikistanOrderDetailPage::class)->name('orders.show');
+    Route::get('pickup', TajikistanPickupPage::class)->name('pickup.index');
+    Route::get('pickup/{token}', TajikistanPickupPage::class)->name('pickup.show');
 });
 
 Route::prefix('admin')->name('admin.')->middleware(['is_auth:admin'])->group(function () {

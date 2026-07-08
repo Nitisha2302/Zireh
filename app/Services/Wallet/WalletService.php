@@ -169,6 +169,81 @@ class WalletService
         )->paginate($perPage);
     }
 
+    public function payForPickupShipping(User $user, CustomerOrder $order, float $amount, string $description): WalletTransaction
+    {
+        $this->assertPositiveAmount($amount);
+
+        return DB::transaction(function () use ($user, $order, $amount, $description): WalletTransaction {
+            $wallet = UserWallet::query()
+                ->where('user_id', $user->id)
+                ->lockForUpdate()
+                ->first();
+
+            if (! $wallet) {
+                $wallet = $this->getOrCreateWallet($user);
+                $wallet = UserWallet::query()->whereKey($wallet->id)->lockForUpdate()->firstOrFail();
+            }
+
+            $balanceBefore = (float) $wallet->balance;
+
+            if ($balanceBefore < $amount) {
+                throw ValidationException::withMessages([
+                    'wallet' => [__('api.wallet_insufficient_balance')],
+                ]);
+            }
+
+            $balanceAfter = round($balanceBefore - $amount, 2);
+            $wallet->update(['balance' => $balanceAfter]);
+
+            return WalletTransaction::query()->create([
+                'user_id' => $user->id,
+                'type' => WalletTransaction::TYPE_DEBIT,
+                'source' => WalletTransaction::SOURCE_PICKUP_SHIPPING_PAYMENT,
+                'amount' => $amount,
+                'balance_before' => $balanceBefore,
+                'balance_after' => $balanceAfter,
+                'currency' => $wallet->currency,
+                'status' => WalletTransaction::STATUS_COMPLETED,
+                'description' => $description,
+                'reference_type' => CustomerOrder::class,
+                'reference_id' => $order->id,
+            ]);
+        });
+    }
+
+    public function recordPickupShippingOnlinePayment(User $user, CustomerOrder $order, float $amount, string $description): WalletTransaction
+    {
+        $this->assertPositiveAmount($amount);
+
+        return DB::transaction(function () use ($user, $order, $amount, $description): WalletTransaction {
+            $wallet = UserWallet::query()
+                ->where('user_id', $user->id)
+                ->lockForUpdate()
+                ->first();
+
+            if (! $wallet) {
+                $wallet = $this->getOrCreateWallet($user);
+                $wallet = UserWallet::query()->whereKey($wallet->id)->lockForUpdate()->firstOrFail();
+            }
+
+            $balance = (float) $wallet->balance;
+
+            return WalletTransaction::query()->create([
+                'user_id' => $user->id,
+                'type' => WalletTransaction::TYPE_DEBIT,
+                'source' => WalletTransaction::SOURCE_PICKUP_SHIPPING_ONLINE_PAYMENT,
+                'amount' => $amount,
+                'balance_before' => $balance,
+                'balance_after' => $balance,
+                'currency' => $wallet->currency,
+                'status' => WalletTransaction::STATUS_COMPLETED,
+                'description' => $description,
+                'reference_type' => CustomerOrder::class,
+                'reference_id' => $order->id,
+            ]);
+        });
+    }
+
     public function payForOrder(User $user, CustomerOrder $order, float $amount, string $description): WalletTransaction
     {
         $this->assertPositiveAmount($amount);

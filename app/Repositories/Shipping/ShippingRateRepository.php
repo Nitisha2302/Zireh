@@ -86,12 +86,39 @@ class ShippingRateRepository
 
     public function findActiveForWeight(int $methodId, float $weight): ?ShippingRate
     {
-        return ShippingRate::query()
+        $weight = max(0, $weight);
+
+        $rates = ShippingRate::query()
             ->where('shipping_method_id', $methodId)
             ->where('is_active', true)
-            ->where('min_weight', '<=', $weight)
-            ->where('max_weight', '>=', $weight)
-            ->orderByDesc('min_weight')
+            ->orderBy('min_weight')
+            ->get();
+
+        if ($rates->isEmpty()) {
+            return null;
+        }
+
+        $exact = $rates
+            ->filter(fn (ShippingRate $rate) => (float) $rate->min_weight <= $weight
+                && (float) $rate->max_weight >= $weight)
+            ->sortByDesc(fn (ShippingRate $rate) => (float) $rate->min_weight)
             ->first();
+
+        if ($exact) {
+            return $exact;
+        }
+
+        if ($weight < (float) $rates->first()->min_weight) {
+            return $rates->first();
+        }
+
+        if ($weight > (float) $rates->last()->max_weight) {
+            return $rates->last();
+        }
+
+        return $rates
+            ->filter(fn (ShippingRate $rate) => (float) $rate->max_weight < $weight)
+            ->sortByDesc(fn (ShippingRate $rate) => (float) $rate->max_weight)
+            ->first() ?? $rates->last();
     }
 }

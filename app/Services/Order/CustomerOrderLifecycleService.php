@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\UserCartItem;
 use App\Services\Elim\ElimOrderApiService;
 use App\Services\Order\OrderCheckoutService;
+use App\Services\Order\OrderPickupService;
 use App\Services\Wallet\WalletService;
 use Illuminate\Validation\ValidationException;
 
@@ -18,6 +19,7 @@ class CustomerOrderLifecycleService
         private readonly ElimOrderApiService $elimOrders,
         private readonly WalletService $walletService,
         private readonly OrderCheckoutService $checkoutService,
+        private readonly OrderPickupService $pickupService,
     ) {}
 
     public function syncFromElim(User $user, CustomerOrder $order): CustomerOrder
@@ -70,6 +72,76 @@ class CustomerOrderLifecycleService
         }
 
         return $this->syncFromElim($user, $order->fresh());
+    }
+
+    public function pickupPreview(User $user, CustomerOrder $order): array
+    {
+        $this->ensureOwnership($user, $order);
+
+        $details = $this->pickupService->pickupDetailsForCustomer($order);
+        $amountDue = $order->pickupPaymentAmountTjs();
+        $walletBalance = $this->walletService->getBalance($user);
+        $pending = $order->pickup_payment_status === CustomerOrder::PICKUP_PAYMENT_STATUS_PENDING
+            && $amountDue > 0;
+        $canPayWallet = $pending && $walletBalance >= $amountDue;
+        $canPayOnline = $pending;
+
+        return array_merge($details, [
+            'wallet' => [
+                'balance' => $walletBalance,
+                'currency' => \App\Models\UserWallet::CURRENCY_TJS,
+                'deficit_tjs' => max(0, round($amountDue - $walletBalance, 2)),
+            ],
+            'payment_methods' => [
+                CustomerOrder::PAYMENT_METHOD_WALLET => [
+                    'can_pay' => $canPayWallet,
+                ],
+                CustomerOrder::PAYMENT_METHOD_ONLINE => [
+                    'can_pay' => $canPayOnline,
+                ],
+            ],
+            'can_pay' => $canPayWallet || $canPayOnline,
+        ]);
+    }
+
+    public function payPickupShipping(User $user, CustomerOrder $order, string $paymentMethod): CustomerOrder
+    {
+        $this->ensureOwnership($user, $order);
+
+        if (! $order->isReadyForPickup()) {
+            throw ValidationException::withMessages([
+                'pickup' => [__('api.pickup_not_ready')],
+            ]);
+        }
+
+        if ($order->isPickupShippingPaid()) {
+            throw ValidationException::withMessages([
+                'pickup_payment' => [__('api.pickup_shipping_already_paid')],
+            ]);
+        }
+
+        $amountDue = $order->pickupPaymentAmountTjs();
+
+        if ($amountDue <= 0) {
+            throw ValidationException::withMessages([
+                'pickup_payment' => [__('api.pickup_shipping_amount_invalid')],
+            ]);
+        }
+
+        $description = 'Pickup shipping payment for order #'.$order->id;
+
+        $transaction = $paymentMethod === CustomerOrder::PAYMENT_METHOD_ONLINE
+            ? $this->walletService->recordPickupShippingOnlinePayment($user, $order, $amountDue, $description)
+            : $this->walletService->payForPickupShipping($user, $order, $amountDue, $description);
+
+        $order->update([
+            'pickup_payment_status' => CustomerOrder::PICKUP_PAYMENT_STATUS_PAID,
+            'pickup_payment_method' => $paymentMethod,
+            'pickup_paid_at' => now(),
+            'pickup_wallet_transaction_id' => $transaction->id,
+        ]);
+
+        return $order->fresh()->load(['items', 'orderStatus', 'warehouse', 'shippingMethod', 'pickupWalletTransaction']);
     }
 
     public function paymentPreview(User $user, CustomerOrder $order): array

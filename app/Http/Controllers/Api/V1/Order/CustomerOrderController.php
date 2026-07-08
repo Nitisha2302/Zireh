@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1\Order;
 
 use App\Http\Controllers\Api\ApiController;
 use App\Http\Requests\Api\V1\Order\OrderLogisticsRequest;
+use App\Http\Requests\Api\V1\Order\PayPickupShippingRequest;
 use App\Http\Resources\Api\V1\Order\CustomerOrderResource;
 use App\Models\CustomerOrder;
 use App\Services\Order\CustomerOrderLifecycleService;
@@ -15,6 +16,27 @@ class CustomerOrderController extends ApiController
     public function __construct(
         protected CustomerOrderLifecycleService $lifecycleService,
     ) {}
+
+    public function pickup(Request $request, CustomerOrder $order): JsonResponse
+    {
+        $preview = $this->lifecycleService->pickupPreview($request->user(), $order);
+
+        return $this->successResponse($preview, __('api.order_pickup_fetched'));
+    }
+
+    public function payPickup(PayPickupShippingRequest $request, CustomerOrder $order): JsonResponse
+    {
+        $order = $this->lifecycleService->payPickupShipping(
+            $request->user(),
+            $order,
+            $request->validated('payment_method'),
+        );
+
+        return $this->successResponse(
+            (new CustomerOrderResource($order))->resolve(),
+            __('api.pickup_shipping_paid')
+        );
+    }
 
     public function paymentPreview(Request $request, CustomerOrder $order): JsonResponse
     {

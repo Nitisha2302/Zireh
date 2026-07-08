@@ -20,6 +20,10 @@ class WalletTransaction extends Model
 
     public const SOURCE_ORDER_PAYMENT = 'order_payment';
 
+    public const SOURCE_PICKUP_SHIPPING_PAYMENT = 'pickup_shipping_payment';
+
+    public const SOURCE_PICKUP_SHIPPING_ONLINE_PAYMENT = 'pickup_shipping_online_payment';
+
     public const SOURCE_ORDER_REFUND = 'order_refund';
 
     public const SOURCE_WALLET_DEPOSIT = 'wallet_deposit';

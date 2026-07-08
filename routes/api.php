@@ -83,6 +83,8 @@ Route::prefix('v1')->group(function () {
 
             Route::get('orders/elim/purchasing-wallet', [CustomerOrderController::class, 'elimPurchasingWallet']);
             Route::get('orders/elim/exchange-rates', [CustomerOrderController::class, 'elimExchangeRates']);
+            Route::get('orders/{order}/pickup', [CustomerOrderController::class, 'pickup']);
+            Route::post('orders/{order}/pickup/pay', [CustomerOrderController::class, 'payPickup']);
             Route::get('orders/{order}/payment-preview', [CustomerOrderController::class, 'paymentPreview']);
             Route::post('orders/{order}/pay', [CustomerOrderController::class, 'pay']);
             Route::post('orders/{order}/sync', [CustomerOrderController::class, 'sync']);

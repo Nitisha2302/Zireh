@@ -112,7 +112,6 @@ function checkoutPayload(array $fixtures, string $paymentMethod = 'online'): arr
     return [
         'shipping_method_id' => $fixtures['method']->id,
         'payment_method' => $paymentMethod,
-        'weight_kg' => 2,
         'remark' => 'Test checkout',
     ];
 }
@@ -166,7 +165,7 @@ it('places demo checkout with wallet payment and stores warehouse from profile',
         ->and($order->status)->toBe(\App\Models\OrderStatus::CODE_PAID)
         ->and($order->warehouse_snapshot)->toBeArray()
         ->and($order->address_snapshot)->toBeNull()
-        ->and($order->cargo_shipping_fee_tjs)->toBeGreaterThan(0);
+        ->and((float) $order->cargo_shipping_fee_tjs)->toBe(0.0);
 
     Http::assertNothingSent();
 });

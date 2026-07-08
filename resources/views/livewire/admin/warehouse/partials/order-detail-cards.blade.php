@@ -31,7 +31,7 @@
                 @endif
                 <p class="mb-3"><strong>{{ __('admin.created_date') }}:</strong> {{ $order->created_at?->format('M d, Y H:i') }}</p>
 
-                <form wire:submit="updateStatus" class="border-top pt-3">
+                <form wire:submit="updateStatus" class="border-top pt-3 @if (!empty($hideStatusForm)) d-none @endif">
                     <label class="form-label">{{ __('admin.change_order_status') }}</label>
                     <select class="form-select mb-2 @error('statusCode') is-invalid @enderror" wire:model="statusCode">
                         @foreach ($statusOptions as $status)
