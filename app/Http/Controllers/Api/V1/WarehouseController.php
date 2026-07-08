@@ -16,13 +16,21 @@ class WarehouseController extends ApiController
 
     public function index(NearestWarehousesRequest $request): JsonResponse
     {
-        $result = $this->warehouseService->listNearestToAddress(
-            $request->user(),
-            (int) $request->validated('address_id')
-        );
+        if ($request->filled('address_id')) {
+            $result = $this->warehouseService->listNearestToAddress(
+                $request->user(),
+                (int) $request->validated('address_id')
+            );
+
+            return $this->successResponse([
+                'origin' => $result['origin'],
+                'warehouses' => WarehouseResource::collection($result['warehouses'])->resolve(),
+            ], __('api.warehouses_listed'));
+        }
+
+        $result = $this->warehouseService->listActive();
 
         return $this->successResponse([
-            'origin' => $result['origin'],
             'warehouses' => WarehouseResource::collection($result['warehouses'])->resolve(),
         ], __('api.warehouses_listed'));
     }

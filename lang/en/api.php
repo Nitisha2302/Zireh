@@ -137,6 +137,7 @@ return [
     'elim_purchasing_wallet_fetched' => 'Elim purchasing wallet fetched successfully.',
     'elim_exchange_rates_fetched' => 'Elim exchange rates fetched successfully.',
     'warehouse_not_available' => 'The selected warehouse is not available.',
+    'warehouse_not_selected' => 'Please select a warehouse from your profile before checkout.',
     'payment_method_invalid' => 'The selected payment method is invalid.',
     'order_demo_sync_unavailable' => 'Demo orders cannot be synced with Elim.',
 ];

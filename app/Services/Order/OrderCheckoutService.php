@@ -9,7 +9,6 @@ use App\Models\OrderStatus;
 use App\Models\Platform;
 use App\Models\ShippingMethod;
 use App\Models\User;
-use App\Models\UserAddress;
 use App\Models\UserCartItem;
 use App\Models\Warehouse;
 use App\Services\Currency\CurrencyExchangeService;
@@ -41,25 +40,20 @@ class OrderCheckoutService
 
     public function resolveContext(User $user, array $options): CheckoutContext
     {
+        if ($user->warehouse_id === null) {
+            throw ValidationException::withMessages([
+                'warehouse_id' => [__('api.warehouse_not_selected')],
+            ]);
+        }
+
         $warehouse = Warehouse::query()
-            ->whereKey($options['warehouse_id'])
+            ->whereKey($user->warehouse_id)
             ->where('status', Warehouse::STATUS_ACTIVE)
             ->first();
 
         if (! $warehouse) {
             throw ValidationException::withMessages([
                 'warehouse_id' => [__('api.warehouse_not_available')],
-            ]);
-        }
-
-        $address = UserAddress::query()
-            ->whereKey($options['address_id'])
-            ->where('user_id', $user->id)
-            ->first();
-
-        if (! $address) {
-            throw ValidationException::withMessages([
-                'address_id' => [__('api.address_not_found')],
             ]);
         }
 
@@ -95,7 +89,7 @@ class OrderCheckoutService
 
         return new CheckoutContext(
             warehouse: $warehouse,
-            address: $address,
+            address: null,
             shippingMethod: $shippingMethod,
             paymentMethod: $paymentMethod,
             cargoShipping: $cargoShipping,
@@ -244,7 +238,7 @@ class OrderCheckoutService
         $order = CustomerOrder::query()->create([
             'user_id' => $user->id,
             'warehouse_id' => $context->warehouse->id,
-            'user_address_id' => $context->address->id,
+            'user_address_id' => $context->address?->id,
             'shipping_method_id' => $context->shippingMethod->id,
             'platform_id' => $platform->id,
             'platform' => $platformCode,
@@ -269,7 +263,7 @@ class OrderCheckoutService
             ),
             'receiver_address' => $receiverAddress,
             'warehouse_snapshot' => $context->warehouseSnapshot(),
-            'address_snapshot' => $context->addressSnapshot(),
+            'address_snapshot' => $context->address ? $context->addressSnapshot() : null,
             'remark' => $options['remark'] ?? null,
             'elim_preview_snapshot' => $previewResponse,
             'elim_create_snapshot' => $createResponse,

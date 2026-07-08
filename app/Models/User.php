@@ -7,6 +7,7 @@ use Illuminate\Contracts\Translation\HasLocalePreference;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
@@ -23,6 +24,7 @@ use Laravel\Sanctum\HasApiTokens;
     'status',
     'preferred_language',
     'device_token',
+    'warehouse_id',
     'google_id',
     'apple_id',
     'phone_verified_at',
@@ -44,6 +46,11 @@ class User extends Authenticatable implements HasLocalePreference
     public function loginLogs(): MorphMany
     {
         return $this->morphMany(LoginLog::class, 'authenticatable');
+    }
+
+    public function warehouse(): BelongsTo
+    {
+        return $this->belongsTo(Warehouse::class);
     }
 
     public function addresses(): HasMany

@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use App\Models\Warehouse;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 
@@ -68,6 +69,38 @@ it('does not clear email when only name is updated', function () {
     $user->refresh();
 
     expect($user->email)->toBe('keep@example.com');
+});
+
+it('updates profile warehouse_id', function () {
+    $warehouse = Warehouse::create([
+        'warehouse_name' => 'Dushanbe Hub',
+        'warehouse_code' => 'DUS-01',
+        'contact_person' => 'Manager',
+        'contact_number' => '+992900000000',
+        'country' => 'Tajikistan',
+        'state' => 'Dushanbe',
+        'city' => 'Dushanbe',
+        'address' => 'Main Street 1',
+        'latitude' => 38.5598,
+        'longitude' => 68.7870,
+        'status' => Warehouse::STATUS_ACTIVE,
+    ]);
+
+    $user = User::factory()->create();
+
+    Sanctum::actingAs($user);
+
+    $this->patchJson('/api/v1/auth/profile', [
+        'warehouse_id' => $warehouse->id,
+    ])
+        ->assertOk()
+        ->assertJsonPath('data.warehouse_id', $warehouse->id)
+        ->assertJsonPath('data.warehouse.id', $warehouse->id)
+        ->assertJsonPath('data.warehouse.warehouse_name', 'Dushanbe Hub');
+
+    $user->refresh();
+
+    expect($user->warehouse_id)->toBe($warehouse->id);
 });
 
 it('updates profile via multipart patch', function () {

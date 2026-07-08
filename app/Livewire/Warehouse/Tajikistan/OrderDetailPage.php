@@ -23,7 +23,7 @@ class OrderDetailPage extends Component
         $admin = Auth::guard('admin')->user();
         $warehousePanelService->ensureTajikistanOrderAccessible($admin, $order);
 
-        $this->order = $order->load(['user', 'items', 'orderStatus', 'warehouse', 'userAddress', 'shippingMethod']);
+        $this->order = $order->load(['user', 'items', 'orderStatus', 'warehouse', 'shippingMethod']);
         $this->statusCode = $order->status;
     }
 
@@ -35,7 +35,7 @@ class OrderDetailPage extends Component
 
         try {
             $this->order = $warehousePanelService->updateOrderStatus($this->order, $this->statusCode)
-                ->load(['user', 'items', 'orderStatus', 'warehouse', 'userAddress', 'shippingMethod']);
+                ->load(['user', 'items', 'orderStatus', 'warehouse', 'shippingMethod']);
         } catch (\Illuminate\Validation\ValidationException $exception) {
             $this->setErrorBag($exception->validator->getMessageBag());
 

@@ -65,7 +65,6 @@ class CustomerListPage extends Component
     public function render()
     {
         $customers = User::query()
-            ->withCount('addresses')
             ->when($this->search, function ($query): void {
                 $query->where(function ($query): void {
                     $query->where('name', 'like', "%{$this->search}%")

@@ -11,12 +11,6 @@ abstract class CheckoutRequest extends ApiRequest
     public function rules(): array
     {
         return [
-            'warehouse_id' => ['required', 'integer', 'exists:warehouses,id'],
-            'address_id' => [
-                'required',
-                'integer',
-                Rule::exists('user_addresses', 'id')->where(fn ($query) => $query->where('user_id', $this->user()?->id)),
-            ],
             'shipping_method_id' => ['required', 'integer', 'exists:shipping_methods,id'],
             'payment_method' => ['required', 'string', Rule::in([
                 CustomerOrder::PAYMENT_METHOD_WALLET,

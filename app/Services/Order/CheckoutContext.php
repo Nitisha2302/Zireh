@@ -10,7 +10,7 @@ class CheckoutContext
 {
     public function __construct(
         public readonly Warehouse $warehouse,
-        public readonly UserAddress $address,
+        public readonly ?UserAddress $address,
         public readonly ShippingMethod $shippingMethod,
         public readonly string $paymentMethod,
         public readonly array $cargoShipping,
@@ -38,8 +38,12 @@ class CheckoutContext
         ];
     }
 
-    public function addressSnapshot(): array
+    public function addressSnapshot(): ?array
     {
+        if ($this->address === null) {
+            return null;
+        }
+
         return [
             'id' => $this->address->id,
             'full_name' => $this->address->full_name,
@@ -62,7 +66,7 @@ class CheckoutContext
     {
         return [
             'warehouse' => $this->warehouseSnapshot(),
-            'delivery_address' => $this->addressSnapshot(),
+            'delivery_address' => $this->address ? $this->addressSnapshot() : null,
             'shipping_method' => [
                 'id' => $this->shippingMethod->id,
                 'name' => $this->shippingMethod->name,

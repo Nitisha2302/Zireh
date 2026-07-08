@@ -57,6 +57,16 @@ class WarehouseService
         ];
     }
 
+    public function listActive(): array
+    {
+        return [
+            'warehouses' => Warehouse::query()
+                ->where('status', Warehouse::STATUS_ACTIVE)
+                ->orderBy('warehouse_name')
+                ->get(),
+        ];
+    }
+
     protected function ensureAddressHasCoordinates(UserAddress $address): void
     {
         if ($address->latitude === null || $address->longitude === null) {

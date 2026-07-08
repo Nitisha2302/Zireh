@@ -16,6 +16,7 @@ class NearestWarehousesRequest extends FormRequest
     {
         return [
             'address_id' => [
+                'sometimes',
                 'required',
                 'integer',
                 Rule::exists('user_addresses', 'id')->where(fn ($query) => $query->where('user_id', $this->user()->id)),

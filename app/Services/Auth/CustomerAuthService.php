@@ -192,6 +192,10 @@ class CustomerAuthService
             $attributes['device_token'] = $data['device_token'];
         }
 
+        if (array_key_exists('warehouse_id', $data)) {
+            $attributes['warehouse_id'] = $data['warehouse_id'];
+        }
+
         if (array_key_exists('profile_photo', $data)) {
             if ($data['profile_photo'] instanceof UploadedFile) {
                 $this->fileManager->delete($user->profile_photo);
@@ -203,7 +207,7 @@ class CustomerAuthService
             $user->forceFill($attributes)->save();
         }
 
-        return $user->fresh();
+        return $user->fresh(['warehouse']);
     }
 
     public function loginWithSocialProvider(
