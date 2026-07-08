@@ -62,7 +62,7 @@
                         <div id="pickup-qr-reader" class="pickup-qr-reader rounded border overflow-hidden bg-dark"></div>
                     </div>
 
-                    <div class="d-flex flex-wrap gap-2">
+                    <div class="d-flex flex-wrap gap-2 justify-content-center">
                         <button type="button" id="pickup-start-camera" class="btn btn-primary">
                             <i class="icon-base ti tabler-camera me-1"></i>
                             {{ __('admin.start_camera') }}
@@ -409,8 +409,13 @@
             cameraConfig,
             {
                 fps: 10,
-                qrbox: { width: 250, height: 250 },
-                aspectRatio: 1.0,
+                qrbox: (viewfinderWidth, viewfinderHeight) => {
+                    const edge = Math.min(viewfinderWidth, viewfinderHeight);
+                    const size = Math.max(140, Math.floor(edge * 0.65));
+
+                    return { width: size, height: size };
+                },
+                aspectRatio: 1.333,
             },
             async (decodedText) => {
                 if (handlingScan) {
