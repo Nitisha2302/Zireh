@@ -45,6 +45,7 @@ class Platform1688CartService
 
         $unitPrice = $this->normalizer->resolveUnitPrice($detail, $sku);
         $snapshot = $this->normalizer->cartSnapshot($detail, $sku);
+        $newQuantity = ($existing?->quantity ?? 0) + $quantity;
 
         $item = $this->cartQuery($user)->updateOrCreate(
             [
@@ -54,9 +55,9 @@ class Platform1688CartService
             [
                 'platform' => UserCartItem::PLATFORM_1688,
                 'marketplace_id' => (string) ($detail['marketplace_id'] ?? $productId),
-                'quantity' => ($existing?->quantity ?? 0) + $quantity,
+                'quantity' => $newQuantity,
                 'unit_price' => $unitPrice,
-                'final_amount_tjs' => round((float) $data['final_amount'], 2),
+                'final_amount_tjs' => $this->lineFinalAmountTjs((float) $data['final_amount'], $newQuantity),
                 'product_snapshot' => $snapshot,
                 'selected_attributes' => $data['selected_attributes'] ?? $existing?->selected_attributes,
                 'synced_at' => now(),
@@ -95,7 +96,7 @@ class Platform1688CartService
             'marketplace_id' => (string) ($detail['marketplace_id'] ?? $item->product_id),
             'quantity' => $quantity,
             'unit_price' => $this->normalizer->resolveUnitPrice($detail, $sku),
-            'final_amount_tjs' => round((float) $data['final_amount'], 2),
+            'final_amount_tjs' => $this->lineFinalAmountTjs((float) $data['final_amount'], $quantity),
             'product_snapshot' => $this->normalizer->cartSnapshot($detail, $sku),
             'selected_attributes' => $data['selected_attributes'] ?? $item->selected_attributes,
             'synced_at' => now(),
@@ -238,6 +239,11 @@ class Platform1688CartService
                 'final_amount' => round((float) $items->sum('final_amount_tjs'), 2),
             ],
         ];
+    }
+
+    protected function lineFinalAmountTjs(float $unitFinalAmount, int $quantity): float
+    {
+        return round($unitFinalAmount * max(1, $quantity), 2);
     }
 
     protected function ensureOwnership(User $user, UserCartItem $item): void

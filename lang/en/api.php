@@ -105,6 +105,7 @@ return [
     'cart_empty' => 'Your cart is empty.',
     'cart_unavailable_items' => 'Some cart items are unavailable. Please update your cart.',
     'cart_final_amount_invalid' => 'Cart items must include a valid final amount.',
+    'cart_final_amount_per_unit' => 'final_amount is per-unit TJS; line total equals final_amount multiplied by quantity.',
     'checkout_preview_ready' => 'Checkout preview generated successfully.',
     'order_created' => 'Order placed successfully.',
     'order_create_unknown' => 'Order may not have been created. Please contact support.',

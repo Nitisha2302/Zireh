@@ -15,6 +15,9 @@ class TaobaoCartItemResource extends JsonResource
             'marketplace_id' => $this->marketplace_id,
             'sku_id' => $this->sku_id,
             'quantity' => $this->quantity,
+            'final_amount_per_unit' => $this->quantity > 0
+                ? round((float) $this->final_amount_tjs / $this->quantity, 2)
+                : 0.0,
             'final_amount' => (float) $this->final_amount_tjs,
             'product' => $this->product_snapshot,
             'selected_attributes' => $this->selected_attributes,
