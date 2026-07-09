@@ -8,42 +8,18 @@ use App\Http\Controllers\Api\V1\Cart\Platform1688\Platform1688CartController;
 use App\Http\Controllers\Api\V1\Cart\Platform1688\Platform1688CheckoutController;
 use App\Http\Controllers\Api\V1\Cart\Taobao\TaobaoCartController;
 use App\Http\Controllers\Api\V1\Cart\Taobao\TaobaoCheckoutController;
-use App\Http\Controllers\Api\V1\Elim\Alibaba1688CatalogController;
-use App\Http\Controllers\Api\V1\Elim\TaobaoCatalogController;
 use App\Http\Controllers\Api\V1\Order\CustomerOrderController;
-use App\Http\Controllers\Api\V1\OrderStatusController;
-use App\Http\Controllers\Api\V1\PlatformCatalogController;
-use App\Http\Controllers\Api\V1\ShippingController;
 use App\Http\Controllers\Api\V1\WarehouseController;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('v1')->group(function () {
-    Route::get('platforms', [PlatformCatalogController::class, 'platforms']);
-    Route::get('platforms/{platform}/commission-slabs', [PlatformCatalogController::class, 'commissionSlabs']);
-    Route::get('platform-sliders', [PlatformCatalogController::class, 'sliders']);
+$publicCatalogRoutes = require __DIR__.'/api/public-catalog.php';
 
-    Route::get('shipping/methods', [ShippingController::class, 'methods']);
-    Route::post('shipping/calculate', [ShippingController::class, 'calculate']);
+Route::prefix('v1')->group(function () use ($publicCatalogRoutes) {
+    // Guest browsing — no Bearer token required.
+    $publicCatalogRoutes();
 
-    Route::get('order-statuses', [OrderStatusController::class, 'index']);
-
-    Route::prefix('taobao')->name('api.taobao.')->group(function () {
-        Route::get('products', [TaobaoCatalogController::class, 'products'])->name('products.index');
-        Route::get('search', [TaobaoCatalogController::class, 'search'])->name('products.search');
-        Route::get('products/{id}', [TaobaoCatalogController::class, 'show'])->name('products.show');
-        Route::get('categories', [TaobaoCatalogController::class, 'categories'])->name('categories.index');
-        Route::post('image-search', [TaobaoCatalogController::class, 'imageSearch'])->name('products.image-search');
-        Route::post('upload-image', [TaobaoCatalogController::class, 'uploadImage'])->name('products.upload-image');
-    });
-
-    Route::prefix('1688')->name('api.1688.')->group(function () {
-        Route::get('products', [Alibaba1688CatalogController::class, 'products'])->name('products.index');
-        Route::get('search', [Alibaba1688CatalogController::class, 'search'])->name('products.search');
-        Route::get('products/{id}', [Alibaba1688CatalogController::class, 'show'])->name('products.show');
-        Route::get('categories', [Alibaba1688CatalogController::class, 'categories'])->name('categories.index');
-        Route::post('image-search', [Alibaba1688CatalogController::class, 'imageSearch'])->name('products.image-search');
-        Route::post('upload-image', [Alibaba1688CatalogController::class, 'uploadImage'])->name('products.upload-image');
-    });
+    // Preferred prefix for mobile guest mode.
+    Route::prefix('public')->group($publicCatalogRoutes);
 
     Route::prefix('auth')->group(function () {
         Route::prefix('register')->group(function () {
