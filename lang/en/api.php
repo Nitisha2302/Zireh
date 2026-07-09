@@ -104,6 +104,7 @@ return [
     'cart_platform_mismatch' => 'Product does not belong to this platform.',
     'cart_empty' => 'Your cart is empty.',
     'cart_unavailable_items' => 'Some cart items are unavailable. Please update your cart.',
+    'cart_final_amount_invalid' => 'Cart items must include a valid final amount.',
     'checkout_preview_ready' => 'Checkout preview generated successfully.',
     'order_created' => 'Order placed successfully.',
     'order_create_unknown' => 'Order may not have been created. Please contact support.',

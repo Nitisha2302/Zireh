@@ -3,13 +3,10 @@
 namespace App\Services\Cart\Taobao;
 
 use App\Models\CustomerOrder;
-use App\Models\Platform;
 use App\Models\User;
 use App\Models\UserCartItem;
 use App\Services\Order\CustomerOrderLifecycleService;
 use App\Services\Order\OrderCheckoutService;
-use App\Services\PlatformCommissionService;
-use App\Support\Currency\CurrencyPriceConverter;
 use App\Support\Elim\ElimWarehouseAddress;
 use App\Support\Elim\ProductNormalizer;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -21,8 +18,6 @@ class TaobaoOrderService
     public function __construct(
         protected TaobaoCartService $cartService,
         protected ProductNormalizer $normalizer,
-        protected PlatformCommissionService $commissionService,
-        protected CurrencyPriceConverter $currencyPriceConverter,
         protected CustomerOrderLifecycleService $lifecycleService,
         protected OrderCheckoutService $checkoutService,
     ) {}
@@ -48,23 +43,13 @@ class TaobaoOrderService
             ]);
         }
 
-        $commission = $this->resolveCommission($parsed['goods_subtotal_cny']);
-
-        return $this->currencyPriceConverter->applyToCheckout([
+        return [
             'platform' => UserCartItem::PLATFORM_TAOBAO,
             'demo_mode' => $this->checkoutService->isDemoMode(),
             'items' => $items->values()->all(),
             'checkout' => $context->toPreviewArray(),
-            'elim_preview' => $parsed,
-            'commission' => $commission,
-            'customer_total' => $this->checkoutService->calculateCustomerTotalCny(
-                $parsed['goods_subtotal_cny'],
-                $parsed['shipping_fee_cny'],
-                $parsed['service_fee_cny'],
-                $commission['commission_amount'] ?? 0,
-                0,
-            ),
-        ]);
+            'final_amount' => round((float) $items->sum('final_amount_tjs'), 2),
+        ];
     }
 
     public function checkout(User $user, array $options = []): CustomerOrder
@@ -96,8 +81,6 @@ class TaobaoOrderService
             ]);
         }
 
-        $commission = $this->resolveCommission($parsed['goods_subtotal_cny']);
-
         return DB::transaction(function () use (
             $user,
             $items,
@@ -105,7 +88,6 @@ class TaobaoOrderService
             $previewResponse,
             $createResponse,
             $parsed,
-            $commission,
             $options
         ): CustomerOrder {
             $order = $this->checkoutService->persistOrder(
@@ -116,7 +98,6 @@ class TaobaoOrderService
                 $previewResponse,
                 $createResponse,
                 $parsed,
-                $commission,
                 $options,
             );
 
@@ -170,21 +151,6 @@ class TaobaoOrderService
         }
 
         return $payload;
-    }
-
-    protected function resolveCommission(float $subtotal): array
-    {
-        if ($subtotal <= 0) {
-            return [
-                'slab_id' => null,
-                'commission_percentage' => 0.0,
-                'commission_amount' => 0.0,
-            ];
-        }
-
-        $platform = Platform::query()->where('code', UserCartItem::PLATFORM_TAOBAO)->firstOrFail();
-
-        return $this->commissionService->calculate($platform, $subtotal);
     }
 
     protected function ensureOwnership(User $user, CustomerOrder $order): void

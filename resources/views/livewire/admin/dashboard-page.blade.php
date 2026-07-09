@@ -114,13 +114,11 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
-                            <p class="mb-1 text-body-secondary">{{ __('admin.dashboard_commission') }}</p>
-                            <h3 class="mb-0">¥{{ number_format($stats['commission_total'], 2) }}</h3>
-                            <small class="text-body-secondary">¥{{ number_format($stats['commission_month'], 2) }}
-                                {{ __('admin.this_month') }}</small>
+                            <p class="mb-1 text-body-secondary">{{ __('admin.dashboard_pending_payments') }}</p>
+                            <h3 class="mb-0">{{ number_format($stats['orders_pending_payment']) }}</h3>
                         </div>
                         <span class="badge bg-label-warning p-2">
-                            <i class="icon-base ti tabler-percentage"></i>
+                            <i class="icon-base ti tabler-clock-dollar"></i>
                         </span>
                     </div>
                 </div>
@@ -343,8 +341,7 @@
                                 <th>{{ __('admin.dashboard_customers') }}</th>
                                 <th>{{ __('admin.platforms') }}</th>
                                 <th>{{ __('admin.status') }}</th>
-                                <th>CNY</th>
-                                <th>TJS</th>
+                                <th>{{ __('admin.final_amount') }} (TJS)</th>
                                 <th>{{ __('admin.created_date') }}</th>
                                 <th></th>
                             </tr>
@@ -366,13 +363,7 @@
                                         </span>
                                     </td>
                                     <td class="fw-semibold">
-                                        ¥{{ number_format((float) $order->customer_total_cny, 2) }}</td>
-                                    <td>
-                                        @if ($order->customer_total_tjs)
-                                            {{ number_format((float) $order->customer_total_tjs, 2) }}
-                                        @else
-                                            —
-                                        @endif
+                                        {{ number_format($order->paymentAmountTjs(), 2) }} TJS
                                     </td>
                                     <td class="text-nowrap">{{ $order->created_at?->format('M d, Y') }}</td>
                                     <td>

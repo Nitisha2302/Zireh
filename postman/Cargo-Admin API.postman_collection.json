@@ -2120,7 +2120,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"product_id\": \"{{taobao_product_id}}\",\n  \"sku_id\": \"{{taobao_sku_id}}\",\n  \"quantity\": {{cart_quantity}},\n  \"selected_attributes\": {},\n  \"lang\": \"{{elim_lang}}\"\n}",
+              "raw": "{\n  \"product_id\": \"{{taobao_product_id}}\",\n  \"sku_id\": \"{{taobao_sku_id}}\",\n  \"quantity\": {{cart_quantity}},\n  \"final_amount\": {{cart_final_amount}},\n  \"selected_attributes\": {},\n  \"lang\": \"{{elim_lang}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2166,7 +2166,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"quantity\": {{cart_quantity}},\n  \"sku_id\": \"{{taobao_sku_id}}\",\n  \"lang\": \"{{elim_lang}}\"\n}",
+              "raw": "{\n  \"quantity\": {{cart_quantity}},\n  \"sku_id\": \"{{taobao_sku_id}}\",\n  \"final_amount\": {{cart_final_amount}},\n  \"lang\": \"{{elim_lang}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2576,7 +2576,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"product_id\": \"{{alibaba_product_id}}\",\n  \"sku_id\": \"{{alibaba_sku_id}}\",\n  \"quantity\": {{cart_quantity}},\n  \"selected_attributes\": {},\n  \"lang\": \"{{elim_lang}}\"\n}",
+              "raw": "{\n  \"product_id\": \"{{alibaba_product_id}}\",\n  \"sku_id\": \"{{alibaba_sku_id}}\",\n  \"quantity\": {{cart_quantity}},\n  \"final_amount\": {{cart_final_amount}},\n  \"selected_attributes\": {},\n  \"lang\": \"{{elim_lang}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2622,7 +2622,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"quantity\": {{cart_quantity}},\n  \"sku_id\": \"{{alibaba_sku_id}}\",\n  \"lang\": \"{{elim_lang}}\"\n}",
+              "raw": "{\n  \"quantity\": {{cart_quantity}},\n  \"sku_id\": \"{{alibaba_sku_id}}\",\n  \"final_amount\": {{cart_final_amount}},\n  \"lang\": \"{{elim_lang}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -3642,6 +3642,10 @@
     {
       "key": "cart_quantity",
       "value": "1"
+    },
+    {
+      "key": "cart_final_amount",
+      "value": "350.00"
     },
     {
       "key": "order_id",

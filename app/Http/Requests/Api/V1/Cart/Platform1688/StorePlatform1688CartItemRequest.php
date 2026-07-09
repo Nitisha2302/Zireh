@@ -12,6 +12,7 @@ class StorePlatform1688CartItemRequest extends ApiRequest
             'product_id' => ['required', 'string', 'max:255'],
             'sku_id' => ['nullable', 'string', 'max:255'],
             'quantity' => ['required', 'integer', 'min:1'],
+            'final_amount' => ['required', 'numeric', 'min:0.01'],
             'selected_attributes' => ['nullable', 'array'],
             'lang' => ['nullable', 'string', 'max:10'],
         ];

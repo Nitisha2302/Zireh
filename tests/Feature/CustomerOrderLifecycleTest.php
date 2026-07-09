@@ -37,6 +37,7 @@ function makeCustomerOrder(User $user, array $overrides = []): CustomerOrder
         'commission_amount' => 3,
         'customer_total_cny' => 118,
         'customer_total_tjs' => 118,
+        'final_amount_tjs' => 118,
         'receiver_address' => [
             'name' => 'Warehouse',
             'phone' => '02812345678',
@@ -57,7 +58,7 @@ it('returns payment preview with wallet deficit', function () {
     $response = $this->getJson("/api/v1/auth/orders/{$order->id}/payment-preview");
 
     $response->assertOk()
-        ->assertJsonPath('data.breakdown.total_tjs', 118)
+        ->assertJsonPath('data.final_amount', 118)
         ->assertJsonPath('data.wallet.deficit_tjs', 118)
         ->assertJsonPath('data.can_pay', false);
 });

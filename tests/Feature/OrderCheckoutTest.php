@@ -146,6 +146,7 @@ it('places demo checkout with wallet payment and stores warehouse from profile',
         'sku_id' => 'sku1',
         'quantity' => 1,
         'unit_price' => 20,
+        'final_amount_tjs' => 350.00,
         'product_snapshot' => ['title' => 'Test'],
         'synced_at' => now(),
     ]);
@@ -184,6 +185,7 @@ it('skips wallet deduction for online payment method at checkout in production e
         'sku_id' => 'sku1',
         'quantity' => 1,
         'unit_price' => 20,
+        'final_amount_tjs' => 350.00,
         'product_snapshot' => ['title' => 'Test'],
         'synced_at' => now(),
     ]);
@@ -211,6 +213,7 @@ it('allows checkout when elim preview returns empty unavailable item wrapper', f
         'sku_id' => 'sku1',
         'quantity' => 1,
         'unit_price' => 20,
+        'final_amount_tjs' => 350.00,
         'product_snapshot' => ['title' => 'Test'],
         'synced_at' => now(),
     ]);
@@ -259,6 +262,7 @@ it('rejects checkout in demo mode even if unavailable items are present in parse
         'sku_id' => 'sku1',
         'quantity' => 1,
         'unit_price' => 20,
+        'final_amount_tjs' => 350.00,
         'product_snapshot' => ['title' => 'Test'],
         'synced_at' => now(),
     ]);
@@ -293,6 +297,7 @@ it('places checkout locally when demo mode is enabled from admin settings', func
         'sku_id' => 'sku1',
         'quantity' => 1,
         'unit_price' => 20,
+        'final_amount_tjs' => 350.00,
         'product_snapshot' => ['title' => 'Test'],
         'synced_at' => now(),
     ]);
@@ -323,6 +328,7 @@ it('rejects checkout when user has no warehouse selected in profile', function (
         'sku_id' => 'sku1',
         'quantity' => 1,
         'unit_price' => 20,
+        'final_amount_tjs' => 350.00,
         'product_snapshot' => ['title' => 'Test'],
         'synced_at' => now(),
     ]);

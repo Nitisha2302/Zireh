@@ -156,19 +156,7 @@ class CustomerOrderLifecycleService
             'elim_order_id' => $order->elim_order_id,
             'payment_status' => $order->payment_status,
             'status' => $order->status,
-            'breakdown' => [
-                'goods_subtotal_cny' => (float) $order->goods_subtotal_cny,
-                'shipping_fee_cny' => (float) $order->shipping_fee_cny,
-                'elim_service_fee_cny' => $order->elim_service_fee_cny !== null
-                    ? (float) $order->elim_service_fee_cny
-                    : 0.0,
-                'commission_amount' => (float) $order->commission_amount,
-                'cargo_shipping_fee_cny' => (float) $order->cargo_shipping_fee_cny,
-                'cargo_shipping_fee_tjs' => (float) $order->cargo_shipping_fee_tjs,
-                'total_cny' => $order->paymentAmountCny(),
-                'total_tjs' => $amountDue,
-            ],
-            'payment_amount_tjs' => $amountDue,
+            'final_amount' => $amountDue,
             'payment_method' => $order->payment_method,
             'wallet' => [
                 'balance' => $walletBalance,

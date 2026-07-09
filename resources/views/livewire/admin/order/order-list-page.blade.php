@@ -48,8 +48,7 @@
                         <th>Platform</th>
                         <th>Status</th>
                         <th>Payment</th>
-                        <th>Total (CNY)</th>
-                        <th>Commission</th>
+                        <th>{{ __('admin.final_amount') }} (TJS)</th>
                         <th>Date</th>
                         <th width="80"></th>
                     </tr>
@@ -72,8 +71,7 @@
                                 @endif
                             </td>
                             <td><span class="badge bg-label-warning">{{ $order->payment_status }}</span></td>
-                            <td class="fw-semibold">¥{{ number_format((float) $order->customer_total_cny, 2) }}</td>
-                            <td>¥{{ number_format((float) $order->commission_amount, 2) }} ({{ $order->commission_percentage }}%)</td>
+                            <td class="fw-semibold">{{ number_format($order->paymentAmountTjs(), 2) }} TJS</td>
                             <td>{{ $order->created_at?->format('M d, Y H:i') }}</td>
                             <td>
                                 <a href="{{ route('admin.orders.show', $order) }}" class="btn btn-sm btn-icon btn-text-secondary">
@@ -83,7 +81,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="10" class="text-center py-5 text-body-secondary">No orders found.</td>
+                            <td colspan="9" class="text-center py-5 text-body-secondary">No orders found.</td>
                         </tr>
                     @endforelse
                 </tbody>

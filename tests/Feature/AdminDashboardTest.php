@@ -51,6 +51,7 @@ it('aggregates dashboard metrics from database records', function () {
         'customer_total_cny' => 110,
         'exchange_rate' => 2,
         'customer_total_tjs' => 220,
+        'final_amount_tjs' => 220,
     ]);
 
     UserWallet::create([
@@ -76,7 +77,6 @@ it('aggregates dashboard metrics from database records', function () {
         ->and($overview['stats']['orders_completed'])->toBe(1)
         ->and($overview['stats']['revenue_cny_total'])->toBe(110.0)
         ->and($overview['stats']['revenue_tjs_total'])->toBe(220.0)
-        ->and($overview['stats']['commission_total'])->toBe(10.0)
         ->and($overview['stats']['wallet_balance_total'])->toBe(50.0)
         ->and($overview['stats']['exchange_rate'])->toBe(2.0)
         ->and($overview['recent_orders'])->toHaveCount(1);
