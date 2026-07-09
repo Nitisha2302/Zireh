@@ -70,6 +70,20 @@ new class extends Component {
                 </a>
             </li>
 
+            <li class="menu-item {{ request()->routeIs('admin.lessons.*') ? 'active' : '' }}">
+                <a href="{{ route('admin.lessons.index') }}" class="menu-link">
+                    <i class="menu-icon icon-base ti tabler-book"></i>
+                    <div>Lessons</div>
+                </a>
+            </li>
+
+            <li class="menu-item {{ request()->routeIs('admin.news.*') ? 'active' : '' }}">
+                <a href="{{ route('admin.news.index') }}" class="menu-link">
+                    <i class="menu-icon icon-base ti tabler-news"></i>
+                    <div>News</div>
+                </a>
+            </li>
+
             <li class="menu-item {{ request()->routeIs('admin.wallet-transactions.*') ? 'active' : '' }}">
                 <a href="{{ route('admin.wallet-transactions.index') }}" class="menu-link">
                     <i class="menu-icon icon-base ti tabler-receipt"></i>

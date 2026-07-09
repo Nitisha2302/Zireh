@@ -13,6 +13,8 @@ use App\Livewire\Admin\Platform\{PlatformListPage, PlatformCreatePage, PlatformE
 use App\Livewire\Admin\PlatformSlider\{PlatformSliderListPage, PlatformSliderCreatePage, PlatformSliderEditPage};
 use App\Livewire\Admin\PlatformCommissionSlab\{PlatformCommissionSlabListPage, PlatformCommissionSlabCreatePage, PlatformCommissionSlabEditPage};
 use App\Livewire\Admin\PlatformCategory\{PlatformCategoryListPage, PlatformCategoryCreatePage, PlatformCategoryEditPage};
+use App\Livewire\Admin\Lesson\{LessonListPage, LessonCreatePage, LessonEditPage};
+use App\Livewire\Admin\News\{NewsListPage, NewsCreatePage, NewsEditPage};
 use App\Livewire\Admin\ProfilePage;
 use App\Livewire\Admin\Settings\DiditSettingsPage;
 use App\Livewire\Admin\Settings\CurrencyExchangeSettingsPage;
@@ -109,5 +111,11 @@ Route::prefix('admin')->name('admin.')->middleware(['is_auth:admin'])->group(fun
         Route::get('platform-categories', PlatformCategoryListPage::class)->name('platform-categories.index');
         Route::get('platform-categories/create', PlatformCategoryCreatePage::class)->name('platform-categories.create');
         Route::get('platform-categories/{platformCategory}/edit', PlatformCategoryEditPage::class)->name('platform-categories.edit');
+        Route::get('lessons', LessonListPage::class)->name('lessons.index');
+        Route::get('lessons/create', LessonCreatePage::class)->name('lessons.create');
+        Route::get('lessons/{lesson}/edit', LessonEditPage::class)->name('lessons.edit');
+        Route::get('news', NewsListPage::class)->name('news.index');
+        Route::get('news/create', NewsCreatePage::class)->name('news.create');
+        Route::get('news/{news}/edit', NewsEditPage::class)->name('news.edit');
     });
 });
