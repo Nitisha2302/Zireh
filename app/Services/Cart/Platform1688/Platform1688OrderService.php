@@ -10,6 +10,7 @@ use App\Services\Order\OrderCheckoutService;
 use App\Support\Elim\ElimWarehouseAddress;
 use App\Support\Elim\ProductNormalizer;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -24,13 +25,8 @@ class Platform1688OrderService
 
     public function preview(User $user, array $options = []): array
     {
-        $items = $this->cartService->cartItems($user);
-
-        if ($items->isEmpty()) {
-            throw ValidationException::withMessages([
-                'cart' => [__('api.cart_empty')],
-            ]);
-        }
+        $item = $this->cartService->resolveCartItem($user, (int) $options['cart_item_id']);
+        $items = $this->itemsForCheckout($item);
 
         $context = $this->checkoutService->resolveContext($user, $options);
         $payload = $this->buildOrderPayload($items, $options);
@@ -45,22 +41,18 @@ class Platform1688OrderService
 
         return [
             'platform' => UserCartItem::PLATFORM_1688,
+            'cart_item_id' => $item->id,
             'demo_mode' => $this->checkoutService->isDemoMode(),
             'items' => $items->values()->all(),
             'checkout' => $context->toPreviewArray(),
-            'final_amount' => round((float) $items->sum('final_amount_tjs'), 2),
+            'final_amount' => round((float) $item->final_amount_tjs, 2),
         ];
     }
 
     public function checkout(User $user, array $options = []): CustomerOrder
     {
-        $items = $this->cartService->cartItems($user);
-
-        if ($items->isEmpty()) {
-            throw ValidationException::withMessages([
-                'cart' => [__('api.cart_empty')],
-            ]);
-        }
+        $item = $this->cartService->resolveCartItem($user, (int) $options['cart_item_id']);
+        $items = $this->itemsForCheckout($item);
 
         $context = $this->checkoutService->resolveContext($user, $options);
         $payload = $this->buildOrderPayload($items, $options);
@@ -83,6 +75,7 @@ class Platform1688OrderService
 
         return DB::transaction(function () use (
             $user,
+            $item,
             $items,
             $context,
             $previewResponse,
@@ -101,7 +94,7 @@ class Platform1688OrderService
                 $options,
             );
 
-            $this->cartService->clearCartItems($user);
+            $this->cartService->removeCartItem($user, $item);
 
             return $this->checkoutService->finalizeCheckout($user, $order);
         });
@@ -126,6 +119,11 @@ class Platform1688OrderService
         }
 
         return $order->load(['items', 'orderStatus', 'warehouse', 'userAddress', 'shippingMethod']);
+    }
+
+    protected function itemsForCheckout(UserCartItem $item): Collection
+    {
+        return collect([$item]);
     }
 
     protected function buildOrderPayload($items, array $options): array

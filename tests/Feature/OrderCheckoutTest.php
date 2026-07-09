@@ -107,13 +107,30 @@ function makeCheckoutFixtures(User $user): array
     return compact('warehouse', 'address', 'method');
 }
 
-function checkoutPayload(array $fixtures, string $paymentMethod = 'online'): array
+function checkoutPayload(array $fixtures, int $cartItemId, string $paymentMethod = 'online'): array
 {
     return [
+        'cart_item_id' => $cartItemId,
         'shipping_method_id' => $fixtures['method']->id,
         'payment_method' => $paymentMethod,
         'remark' => 'Test checkout',
     ];
+}
+
+function seedTaobaoCartItem(User $user, array $overrides = []): \App\Models\UserCartItem
+{
+    return \App\Models\UserCartItem::create(array_merge([
+        'user_id' => $user->id,
+        'platform' => 'taobao',
+        'product_id' => '123',
+        'marketplace_id' => '123',
+        'sku_id' => 'sku1',
+        'quantity' => 1,
+        'unit_price' => 20,
+        'final_amount_tjs' => 350.00,
+        'product_snapshot' => ['title' => 'Test'],
+        'synced_at' => now(),
+    ], $overrides));
 }
 
 it('places demo checkout with wallet payment and stores warehouse from profile', function () {
@@ -137,25 +154,13 @@ it('places demo checkout with wallet payment and stores warehouse from profile',
 
     $service = app(\App\Services\Cart\Taobao\TaobaoOrderService::class);
 
-    // Seed cart item manually
-    \App\Models\UserCartItem::create([
-        'user_id' => $user->id,
-        'platform' => 'taobao',
-        'product_id' => '123',
-        'marketplace_id' => '123',
-        'sku_id' => 'sku1',
-        'quantity' => 1,
-        'unit_price' => 20,
-        'final_amount_tjs' => 350.00,
-        'product_snapshot' => ['title' => 'Test'],
-        'synced_at' => now(),
-    ]);
+    $cartItem = seedTaobaoCartItem($user);
 
     Http::fake();
 
     Sanctum::actingAs($user);
 
-    $order = $service->checkout($user, checkoutPayload($fixtures, CustomerOrder::PAYMENT_METHOD_WALLET));
+    $order = $service->checkout($user, checkoutPayload($fixtures, $cartItem->id, CustomerOrder::PAYMENT_METHOD_WALLET));
 
     expect($order->is_demo_order)->toBeTrue()
         ->and($order->warehouse_id)->toBe($fixtures['warehouse']->id)
@@ -166,7 +171,9 @@ it('places demo checkout with wallet payment and stores warehouse from profile',
         ->and($order->status)->toBe(\App\Models\OrderStatus::CODE_PAID)
         ->and($order->warehouse_snapshot)->toBeArray()
         ->and($order->address_snapshot)->toBeNull()
-        ->and((float) $order->cargo_shipping_fee_tjs)->toBe(0.0);
+        ->and((float) $order->cargo_shipping_fee_tjs)->toBe(0.0)
+        ->and((float) $order->final_amount_tjs)->toBe(350.0)
+        ->and(\App\Models\UserCartItem::query()->where('user_id', $user->id)->count())->toBe(0);
 
     Http::assertNothingSent();
 });
@@ -177,21 +184,10 @@ it('skips wallet deduction for online payment method at checkout in production e
     $user = User::factory()->create();
     $fixtures = makeCheckoutFixtures($user);
 
-    \App\Models\UserCartItem::create([
-        'user_id' => $user->id,
-        'platform' => 'taobao',
-        'product_id' => '123',
-        'marketplace_id' => '123',
-        'sku_id' => 'sku1',
-        'quantity' => 1,
-        'unit_price' => 20,
-        'final_amount_tjs' => 350.00,
-        'product_snapshot' => ['title' => 'Test'],
-        'synced_at' => now(),
-    ]);
+    $cartItem = seedTaobaoCartItem($user);
 
     $service = app(\App\Services\Cart\Taobao\TaobaoOrderService::class);
-    $order = $service->checkout($user, checkoutPayload($fixtures, CustomerOrder::PAYMENT_METHOD_ONLINE));
+    $order = $service->checkout($user, checkoutPayload($fixtures, $cartItem->id, CustomerOrder::PAYMENT_METHOD_ONLINE));
 
     expect($order->payment_method)->toBe(CustomerOrder::PAYMENT_METHOD_ONLINE)
         ->and($order->payment_status)->toBe('paid')
@@ -205,18 +201,7 @@ it('allows checkout when elim preview returns empty unavailable item wrapper', f
     $user = User::factory()->create();
     $fixtures = makeCheckoutFixtures($user);
 
-    \App\Models\UserCartItem::create([
-        'user_id' => $user->id,
-        'platform' => 'taobao',
-        'product_id' => '123',
-        'marketplace_id' => '123',
-        'sku_id' => 'sku1',
-        'quantity' => 1,
-        'unit_price' => 20,
-        'final_amount_tjs' => 350.00,
-        'product_snapshot' => ['title' => 'Test'],
-        'synced_at' => now(),
-    ]);
+    $cartItem = seedTaobaoCartItem($user);
 
     Http::fake([
         'https://openapi.elim.asia/v1/orders/preview' => Http::response([
@@ -241,7 +226,7 @@ it('allows checkout when elim preview returns empty unavailable item wrapper', f
     ]);
 
     $service = app(\App\Services\Cart\Taobao\TaobaoOrderService::class);
-    $order = $service->checkout($user, checkoutPayload($fixtures, CustomerOrder::PAYMENT_METHOD_ONLINE));
+    $order = $service->checkout($user, checkoutPayload($fixtures, $cartItem->id, CustomerOrder::PAYMENT_METHOD_ONLINE));
 
     expect($order->payment_status)->toBe('unpaid')
         ->and($order->status)->toBe(\App\Models\OrderStatus::CODE_PAID)
@@ -254,23 +239,12 @@ it('rejects checkout in demo mode even if unavailable items are present in parse
     $user = User::factory()->create();
     $fixtures = makeCheckoutFixtures($user);
 
-    \App\Models\UserCartItem::create([
-        'user_id' => $user->id,
-        'platform' => 'taobao',
-        'product_id' => '123',
-        'marketplace_id' => '123',
-        'sku_id' => 'sku1',
-        'quantity' => 1,
-        'unit_price' => 20,
-        'final_amount_tjs' => 350.00,
-        'product_snapshot' => ['title' => 'Test'],
-        'synced_at' => now(),
-    ]);
+    $cartItem = seedTaobaoCartItem($user);
 
     Http::fake();
 
     $service = app(\App\Services\Cart\Taobao\TaobaoOrderService::class);
-    $order = $service->checkout($user, checkoutPayload($fixtures, CustomerOrder::PAYMENT_METHOD_ONLINE));
+    $order = $service->checkout($user, checkoutPayload($fixtures, $cartItem->id, CustomerOrder::PAYMENT_METHOD_ONLINE));
 
     expect($order->is_demo_order)->toBeTrue();
 
@@ -289,23 +263,12 @@ it('places checkout locally when demo mode is enabled from admin settings', func
     $user = User::factory()->create();
     $fixtures = makeCheckoutFixtures($user);
 
-    \App\Models\UserCartItem::create([
-        'user_id' => $user->id,
-        'platform' => 'taobao',
-        'product_id' => '123',
-        'marketplace_id' => '123',
-        'sku_id' => 'sku1',
-        'quantity' => 1,
-        'unit_price' => 20,
-        'final_amount_tjs' => 350.00,
-        'product_snapshot' => ['title' => 'Test'],
-        'synced_at' => now(),
-    ]);
+    $cartItem = seedTaobaoCartItem($user);
 
     Http::fake();
 
     $service = app(\App\Services\Cart\Taobao\TaobaoOrderService::class);
-    $order = $service->checkout($user, checkoutPayload($fixtures, CustomerOrder::PAYMENT_METHOD_ONLINE));
+    $order = $service->checkout($user, checkoutPayload($fixtures, $cartItem->id, CustomerOrder::PAYMENT_METHOD_ONLINE));
 
     expect($order->is_demo_order)->toBeTrue()
         ->and($order->elim_order_id)->toStartWith('ORD');
@@ -320,21 +283,10 @@ it('rejects checkout when user has no warehouse selected in profile', function (
     $fixtures = makeCheckoutFixtures($user);
     $user->forceFill(['warehouse_id' => null])->save();
 
-    \App\Models\UserCartItem::create([
-        'user_id' => $user->id,
-        'platform' => 'taobao',
-        'product_id' => '123',
-        'marketplace_id' => '123',
-        'sku_id' => 'sku1',
-        'quantity' => 1,
-        'unit_price' => 20,
-        'final_amount_tjs' => 350.00,
-        'product_snapshot' => ['title' => 'Test'],
-        'synced_at' => now(),
-    ]);
+    $cartItem = seedTaobaoCartItem($user);
 
     $service = app(\App\Services\Cart\Taobao\TaobaoOrderService::class);
 
-    expect(fn () => $service->checkout($user->fresh(), checkoutPayload($fixtures)))
+    expect(fn () => $service->checkout($user->fresh(), checkoutPayload($fixtures, $cartItem->id)))
         ->toThrow(\Illuminate\Validation\ValidationException::class);
 });

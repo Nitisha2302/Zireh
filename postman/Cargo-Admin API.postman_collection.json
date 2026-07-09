@@ -2277,7 +2277,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"shipping_method_id\": {{shipping_method_id}},\n  \"payment_method\": \"online\",\n  \"remark\": \"Test order preview\",\n  \"promotion_id\": \"\"\n}",
+              "raw": "{\n  \"cart_item_id\": {{cart_item_id}},\n  \"shipping_method_id\": {{shipping_method_id}},\n  \"payment_method\": \"online\",\n  \"remark\": \"Test order preview\",\n  \"promotion_id\": \"\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2336,7 +2336,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"shipping_method_id\": {{shipping_method_id}},\n  \"payment_method\": \"wallet\",\n  \"remark\": \"Test order checkout\",\n  \"promotion_id\": \"\"\n}",
+              "raw": "{\n  \"cart_item_id\": {{cart_item_id}},\n  \"shipping_method_id\": {{shipping_method_id}},\n  \"payment_method\": \"wallet\",\n  \"remark\": \"Test order checkout\",\n  \"promotion_id\": \"\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2733,7 +2733,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"shipping_method_id\": {{shipping_method_id}},\n  \"payment_method\": \"online\",\n  \"remark\": \"Test order preview\",\n  \"promotion_id\": \"\"\n}",
+              "raw": "{\n  \"cart_item_id\": {{cart_item_id}},\n  \"shipping_method_id\": {{shipping_method_id}},\n  \"payment_method\": \"online\",\n  \"remark\": \"Test order preview\",\n  \"promotion_id\": \"\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2792,7 +2792,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"shipping_method_id\": {{shipping_method_id}},\n  \"payment_method\": \"wallet\",\n  \"remark\": \"Test order checkout\",\n  \"promotion_id\": \"\"\n}",
+              "raw": "{\n  \"cart_item_id\": {{cart_item_id}},\n  \"shipping_method_id\": {{shipping_method_id}},\n  \"payment_method\": \"wallet\",\n  \"remark\": \"Test order checkout\",\n  \"promotion_id\": \"\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
