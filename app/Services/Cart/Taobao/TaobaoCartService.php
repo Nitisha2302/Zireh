@@ -126,6 +126,27 @@ class TaobaoCartService
         return $this->cartQuery($user)->get();
     }
 
+    public function resolveCartItem(User $user, int $cartItemId): UserCartItem
+    {
+        $item = $this->cartQuery($user)->find($cartItemId);
+
+        if (! $item) {
+            throw ValidationException::withMessages([
+                'cart_item_id' => [__('api.cart_item_not_found')],
+            ]);
+        }
+
+        $this->ensureOwnership($user, $item);
+
+        return $item;
+    }
+
+    public function removeCartItem(User $user, UserCartItem $item): void
+    {
+        $this->ensureOwnership($user, $item);
+        $item->delete();
+    }
+
     public function clearCartItems(User $user): void
     {
         $this->cartQuery($user)->delete();

@@ -13,6 +13,7 @@ class TaobaoCheckoutPreviewResource extends JsonResource
 
         return [
             'platform' => $this->resource['platform'] ?? 'taobao',
+            'cart_item_id' => $this->resource['cart_item_id'] ?? null,
             'items' => TaobaoCartItemResource::collection($items)->resolve(),
             'checkout' => $this->resource['checkout'] ?? [],
             'demo_mode' => (bool) ($this->resource['demo_mode'] ?? false),

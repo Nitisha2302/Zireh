@@ -13,6 +13,7 @@ class Platform1688CheckoutPreviewResource extends JsonResource
 
         return [
             'platform' => $this->resource['platform'] ?? '1688',
+            'cart_item_id' => $this->resource['cart_item_id'] ?? null,
             'items' => Platform1688CartItemResource::collection($items)->resolve(),
             'checkout' => $this->resource['checkout'] ?? [],
             'demo_mode' => (bool) ($this->resource['demo_mode'] ?? false),
