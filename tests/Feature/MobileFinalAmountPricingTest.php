@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Resources\Api\V1\Cart\Taobao\TaobaoCartItemResource;
 use App\Models\CustomerOrder;
 use App\Models\ShippingMethod;
 use App\Models\User;
@@ -7,6 +8,8 @@ use App\Models\UserCartItem;
 use App\Models\Warehouse;
 use App\Services\Cart\Taobao\TaobaoCartService;
 use App\Services\Cart\Taobao\TaobaoOrderService;
+use App\Services\Elim\TaobaoService;
+use App\Services\Wallet\WalletService;
 use Database\Seeders\OrderStatusSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
@@ -307,6 +310,146 @@ it('rejects checkout for another users cart item', function () {
 
     expect(fn () => app(TaobaoCartService::class)->resolveCartItem($other, $cartItem->id))
         ->toThrow(\Illuminate\Validation\ValidationException::class);
+});
+
+function mockTaobaoProductDetail(): array
+{
+    return [
+        'id' => '123',
+        'platform' => 'taobao',
+        'marketplace_id' => '123',
+        'status' => 'available',
+        'price' => 20,
+        'skus' => [],
+    ];
+}
+
+function bindMockTaobaoService(): void
+{
+    $mock = Mockery::mock(TaobaoService::class);
+    $mock->shouldReceive('find')->andReturn(mockTaobaoProductDetail());
+    app()->instance(TaobaoService::class, $mock);
+}
+
+it('stores line total as per-unit final_amount multiplied by quantity on add', function () {
+    bindMockTaobaoService();
+
+    $user = User::factory()->create();
+
+    $result = app(TaobaoCartService::class)->add($user, [
+        'product_id' => '123',
+        'sku_id' => '',
+        'quantity' => 2,
+        'final_amount' => 100,
+    ]);
+
+    expect((float) $result['item']->final_amount_tjs)->toBe(200.0)
+        ->and($result['item']->quantity)->toBe(2);
+});
+
+it('recalculates line total when quantity is updated', function () {
+    bindMockTaobaoService();
+
+    $user = User::factory()->create();
+    $cartItem = UserCartItem::create([
+        'user_id' => $user->id,
+        'platform' => 'taobao',
+        'product_id' => '123',
+        'marketplace_id' => '123',
+        'sku_id' => '',
+        'quantity' => 1,
+        'unit_price' => 20,
+        'final_amount_tjs' => 100,
+        'product_snapshot' => ['title' => 'Test'],
+        'synced_at' => now(),
+    ]);
+
+    app(TaobaoCartService::class)->update($user, $cartItem, [
+        'quantity' => 2,
+        'final_amount' => 100,
+    ]);
+
+    expect((float) $cartItem->fresh()->final_amount_tjs)->toBe(200.0)
+        ->and($cartItem->fresh()->quantity)->toBe(2);
+});
+
+it('exposes final_amount_per_unit and line total in cart item resource', function () {
+    $item = UserCartItem::make([
+        'product_id' => 'p1',
+        'sku_id' => 's1',
+        'quantity' => 2,
+        'final_amount_tjs' => 200,
+        'product_snapshot' => ['title' => 'A'],
+    ]);
+    $item->id = 1;
+
+    $payload = (new TaobaoCartItemResource($item))->resolve();
+
+    expect($payload['final_amount_per_unit'])->toBe(100.0)
+        ->and($payload['final_amount'])->toBe(200.0);
+});
+
+it('debits wallet for quantity-scaled line total on checkout', function () {
+    $user = User::factory()->create();
+
+    $warehouse = Warehouse::create([
+        'warehouse_name' => 'Dushanbe Hub',
+        'warehouse_code' => 'DUS-01',
+        'contact_person' => 'Manager',
+        'contact_number' => '+992900000000',
+        'country' => 'Tajikistan',
+        'state' => 'Dushanbe',
+        'city' => 'Dushanbe',
+        'address' => 'Main Street 1',
+        'latitude' => 38.5598,
+        'longitude' => 68.7870,
+        'status' => Warehouse::STATUS_ACTIVE,
+    ]);
+
+    $method = ShippingMethod::create([
+        'name' => 'Cargo',
+        'code' => 'cargo',
+        'volumetric_divisor' => 5000,
+        'minimum_charge' => 50,
+        'is_active' => true,
+    ]);
+
+    $user->forceFill(['warehouse_id' => $warehouse->id])->save();
+
+    app(WalletService::class)->adminAddFunds(
+        $user,
+        500,
+        'Seed',
+        \App\Models\Admin::create([
+            'name' => 'A',
+            'username' => 'a',
+            'email' => 'a@test.com',
+            'password' => bcrypt('x'),
+            'email_verified_at' => now(),
+        ])
+    );
+
+    $cartItem = UserCartItem::create([
+        'user_id' => $user->id,
+        'platform' => 'taobao',
+        'product_id' => 'p1',
+        'marketplace_id' => 'p1',
+        'sku_id' => 's1',
+        'quantity' => 2,
+        'unit_price' => 10,
+        'final_amount_tjs' => 200.00,
+        'product_snapshot' => ['title' => 'A'],
+        'synced_at' => now(),
+    ]);
+
+    $order = app(TaobaoOrderService::class)->checkout($user, [
+        'cart_item_id' => $cartItem->id,
+        'shipping_method_id' => $method->id,
+        'payment_method' => CustomerOrder::PAYMENT_METHOD_WALLET,
+    ]);
+
+    expect((float) $order->final_amount_tjs)->toBe(200.0)
+        ->and((float) app(WalletService::class)->getBalance($user))->toBe(300.0);
 });
 
 it('exposes final_amount only in order api response', function () {

@@ -2101,6 +2101,7 @@
           ],
           "request": {
             "method": "POST",
+            "description": "final_amount is per-unit TJS. Stored line total = final_amount × quantity. Response final_amount is the payable line total; final_amount_per_unit is the unit price.",
             "header": [
               {
                 "key": "Accept",
@@ -2147,6 +2148,7 @@
           "name": "Update Cart Item",
           "request": {
             "method": "PATCH",
+            "description": "final_amount is per-unit TJS. Line total stored as final_amount × quantity.",
             "header": [
               {
                 "key": "Accept",
@@ -2557,6 +2559,7 @@
           ],
           "request": {
             "method": "POST",
+            "description": "final_amount is per-unit TJS. Stored line total = final_amount × quantity. Response final_amount is the payable line total; final_amount_per_unit is the unit price.",
             "header": [
               {
                 "key": "Accept",
@@ -2603,6 +2606,7 @@
           "name": "Update Cart Item",
           "request": {
             "method": "PATCH",
+            "description": "final_amount is per-unit TJS. Line total stored as final_amount × quantity.",
             "header": [
               {
                 "key": "Accept",
