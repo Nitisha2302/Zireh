@@ -54,16 +54,11 @@ class DashboardService
                 ->whereIn('status', self::REVENUE_STATUSES)
                 ->where('created_at', '>=', $monthStart)
                 ->sum('customer_total_cny'),
-            'revenue_tjs_total' => (float) (clone $revenueBaseQuery)->sum('customer_total_tjs'),
+            'revenue_tjs_total' => (float) (clone $revenueBaseQuery)->sum('final_amount_tjs'),
             'revenue_tjs_month' => (float) CustomerOrder::query()
                 ->whereIn('status', self::REVENUE_STATUSES)
                 ->where('created_at', '>=', $monthStart)
-                ->sum('customer_total_tjs'),
-            'commission_total' => (float) (clone $revenueBaseQuery)->sum('commission_amount'),
-            'commission_month' => (float) CustomerOrder::query()
-                ->whereIn('status', self::REVENUE_STATUSES)
-                ->where('created_at', '>=', $monthStart)
-                ->sum('commission_amount'),
+                ->sum('final_amount_tjs'),
             'wallet_balance_total' => (float) UserWallet::query()->sum('balance'),
             'wallet_transactions_month' => WalletTransaction::query()
                 ->where('created_at', '>=', $monthStart)

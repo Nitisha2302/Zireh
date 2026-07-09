@@ -204,21 +204,18 @@ class OrderCheckoutService
         array $previewResponse,
         array $createResponse,
         array $parsed,
-        array $commission,
         array $options,
     ): CustomerOrder {
         $orderData = $createResponse['data'] ?? $createResponse;
         $platform = Platform::query()->where('code', $platformCode)->firstOrFail();
         $receiverAddress = ElimWarehouseAddress::get();
-        $exchangeRate = $this->currencyExchangeService->getRate();
+        $finalAmountTjs = round((float) $items->sum('final_amount_tjs'), 2);
 
-        $customerTotalCny = $this->calculateCustomerTotalCny(
-            $parsed['goods_subtotal_cny'],
-            $parsed['shipping_fee_cny'],
-            $parsed['service_fee_cny'],
-            $commission['commission_amount'] ?? 0,
-            0,
-        );
+        if ($finalAmountTjs <= 0) {
+            throw ValidationException::withMessages([
+                'cart' => [__('api.cart_final_amount_invalid')],
+            ]);
+        }
 
         $order = CustomerOrder::query()->create([
             'user_id' => $user->id,
@@ -236,15 +233,13 @@ class OrderCheckoutService
             'cargo_shipping_fee_tjs' => 0,
             'cargo_shipping_fee_cny' => 0,
             'elim_service_fee_cny' => $parsed['service_fee_cny'],
-            'commission_slab_id' => $commission['slab_id'] ?? null,
-            'commission_percentage' => $commission['commission_percentage'] ?? 0,
-            'commission_amount' => $commission['commission_amount'] ?? 0,
-            'customer_total_cny' => $customerTotalCny,
-            'exchange_rate' => $exchangeRate,
-            'customer_total_tjs' => round(
-                $this->currencyExchangeService->convertCnyToTjs($customerTotalCny) ?? 0,
-                2
-            ),
+            'commission_slab_id' => null,
+            'commission_percentage' => 0,
+            'commission_amount' => 0,
+            'customer_total_cny' => 0,
+            'exchange_rate' => null,
+            'customer_total_tjs' => $finalAmountTjs,
+            'final_amount_tjs' => $finalAmountTjs,
             'receiver_address' => $receiverAddress,
             'warehouse_snapshot' => $context->warehouseSnapshot(),
             'address_snapshot' => $context->address ? $context->addressSnapshot() : null,
@@ -263,6 +258,7 @@ class OrderCheckoutService
                 'quantity' => $item->quantity,
                 'unit_price' => $item->unit_price,
                 'line_subtotal' => $item->lineSubtotal(),
+                'final_amount_tjs' => round((float) $item->final_amount_tjs, 2),
                 'product_snapshot' => $item->product_snapshot,
                 'selected_attributes' => $item->selected_attributes,
             ]);

@@ -15,8 +15,7 @@ class Platform1688OrderItemResource extends JsonResource
             'marketplace_id' => $this->marketplace_id,
             'sku_id' => $this->sku_id,
             'quantity' => $this->quantity,
-            'unit_price' => (float) $this->unit_price,
-            'line_subtotal' => (float) $this->line_subtotal,
+            'final_amount' => round((float) ($this->final_amount_tjs ?? 0), 2),
             'product' => $this->product_snapshot,
             'selected_attributes' => $this->selected_attributes,
         ];

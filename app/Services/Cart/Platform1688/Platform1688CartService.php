@@ -3,12 +3,9 @@
 namespace App\Services\Cart\Platform1688;
 
 use App\Exceptions\Elim\ElimException;
-use App\Models\Platform;
 use App\Models\User;
 use App\Models\UserCartItem;
 use App\Services\Elim\Alibaba1688Service;
-use App\Services\PlatformCommissionService;
-use App\Support\Currency\CurrencyPriceConverter;
 use App\Support\Elim\ProductNormalizer;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
@@ -18,8 +15,6 @@ class Platform1688CartService
     public function __construct(
         protected Alibaba1688Service $alibaba1688Service,
         protected ProductNormalizer $normalizer,
-        protected PlatformCommissionService $commissionService,
-        protected CurrencyPriceConverter $currencyPriceConverter,
     ) {}
 
     public function getCart(User $user): array
@@ -61,6 +56,7 @@ class Platform1688CartService
                 'marketplace_id' => (string) ($detail['marketplace_id'] ?? $productId),
                 'quantity' => ($existing?->quantity ?? 0) + $quantity,
                 'unit_price' => $unitPrice,
+                'final_amount_tjs' => round((float) $data['final_amount'], 2),
                 'product_snapshot' => $snapshot,
                 'selected_attributes' => $data['selected_attributes'] ?? $existing?->selected_attributes,
                 'synced_at' => now(),
@@ -99,6 +95,7 @@ class Platform1688CartService
             'marketplace_id' => (string) ($detail['marketplace_id'] ?? $item->product_id),
             'quantity' => $quantity,
             'unit_price' => $this->normalizer->resolveUnitPrice($detail, $sku),
+            'final_amount_tjs' => round((float) $data['final_amount'], 2),
             'product_snapshot' => $this->normalizer->cartSnapshot($detail, $sku),
             'selected_attributes' => $data['selected_attributes'] ?? $item->selected_attributes,
             'synced_at' => now(),
@@ -211,41 +208,15 @@ class Platform1688CartService
 
     protected function buildCartResponse(Collection $items): array
     {
-        $subtotal = round($items->sum(fn (UserCartItem $item): float => $item->lineSubtotal()), 2);
-        $commission = $this->resolveCommission($subtotal);
-
         return [
             'platform' => UserCartItem::PLATFORM_1688,
             'items' => $items->values()->all(),
-            'summary' => $this->currencyPriceConverter->applyToCartSummary([
+            'summary' => [
                 'item_count' => $items->count(),
                 'total_quantity' => (int) $items->sum('quantity'),
-                'subtotal' => $subtotal,
-                'commission' => $commission,
-                'total' => round($subtotal + ($commission['commission_amount'] ?? 0), 2),
-            ]),
+                'final_amount' => round((float) $items->sum('final_amount_tjs'), 2),
+            ],
         ];
-    }
-
-    protected function resolveCommission(float $subtotal): array
-    {
-        if ($subtotal <= 0) {
-            return [
-                'slab_id' => null,
-                'commission_percentage' => 0.0,
-                'commission_amount' => 0.0,
-            ];
-        }
-
-        $platform = Platform::query()->where('code', UserCartItem::PLATFORM_1688)->first();
-
-        if (! $platform) {
-            throw ValidationException::withMessages([
-                'platform' => [__('api.platform_not_available')],
-            ]);
-        }
-
-        return $this->commissionService->calculate($platform, $subtotal);
     }
 
     protected function ensureOwnership(User $user, UserCartItem $item): void

@@ -51,12 +51,10 @@
         <div class="card h-100">
             <div class="card-header"><h5 class="mb-0">{{ __('admin.order_totals') }}</h5></div>
             <div class="card-body">
-                <p class="mb-2"><strong>{{ __('admin.goods_total') }}:</strong> ¥{{ number_format((float) $order->goods_subtotal_cny, 2) }}</p>
-                <p class="mb-2"><strong>{{ __('admin.shipping') }}:</strong> ¥{{ number_format((float) $order->shipping_fee_cny, 2) }}</p>
+                <p class="mb-0 fw-semibold fs-4">{{ number_format($order->paymentAmountTjs(), 2) }} TJS</p>
                 @if ($order->cargo_shipping_fee_tjs)
-                    <p class="mb-2"><strong>{{ __('admin.cargo_shipping') }}:</strong> {{ number_format((float) $order->cargo_shipping_fee_tjs, 2) }} TJS</p>
+                    <p class="mb-0 mt-2 text-body-secondary"><strong>{{ __('admin.cargo_shipping') }}:</strong> {{ number_format((float) $order->cargo_shipping_fee_tjs, 2) }} TJS</p>
                 @endif
-                <p class="mb-0 fw-semibold"><strong>{{ __('admin.customer_total') }}:</strong> ¥{{ number_format((float) $order->customer_total_cny, 2) }}</p>
             </div>
         </div>
     </div>

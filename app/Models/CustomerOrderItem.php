@@ -15,6 +15,7 @@ class CustomerOrderItem extends Model
         'quantity',
         'unit_price',
         'line_subtotal',
+        'final_amount_tjs',
         'product_snapshot',
         'selected_attributes',
     ];
@@ -24,6 +25,7 @@ class CustomerOrderItem extends Model
         return [
             'unit_price' => 'decimal:2',
             'line_subtotal' => 'decimal:2',
+            'final_amount_tjs' => 'decimal:2',
             'product_snapshot' => 'array',
             'selected_attributes' => 'array',
         ];

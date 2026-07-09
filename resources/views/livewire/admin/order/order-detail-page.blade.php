@@ -57,18 +57,12 @@
         </div>
         <div class="col-lg-4">
             <div class="card h-100">
-                <div class="card-header"><h5 class="mb-0">Totals (CNY)</h5></div>
+                <div class="card-header"><h5 class="mb-0">{{ __('admin.final_amount') }} (TJS)</h5></div>
                 <div class="card-body">
-                    <p class="mb-2"><strong>Goods:</strong> ¥{{ number_format((float) $order->goods_subtotal_cny, 2) }}</p>
-                    <p class="mb-2"><strong>Shipping:</strong> ¥{{ number_format((float) $order->shipping_fee_cny, 2) }}</p>
-                    <p class="mb-2"><strong>Commission:</strong> ¥{{ number_format((float) $order->commission_amount, 2) }} ({{ $order->commission_percentage }}%)</p>
-                    @if ($order->elim_service_fee_cny)
-                        <p class="mb-2"><strong>Elim Service Fee:</strong> ¥{{ number_format((float) $order->elim_service_fee_cny, 2) }}</p>
-                    @endif
+                    <p class="mb-0 fw-semibold fs-4">{{ number_format($order->paymentAmountTjs(), 2) }} TJS</p>
                     @if ($order->cargo_shipping_fee_tjs)
-                        <p class="mb-2"><strong>Cargo Shipping:</strong> {{ number_format((float) $order->cargo_shipping_fee_tjs, 2) }} TJS</p>
+                        <p class="mb-0 mt-2 text-body-secondary"><strong>{{ __('admin.cargo_shipping') }}:</strong> {{ number_format((float) $order->cargo_shipping_fee_tjs, 2) }} TJS</p>
                     @endif
-                    <p class="mb-0 fw-semibold"><strong>Customer Total:</strong> ¥{{ number_format((float) $order->customer_total_cny, 2) }}</p>
                 </div>
             </div>
         </div>

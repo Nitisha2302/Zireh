@@ -73,6 +73,7 @@ class CustomerOrder extends Model
         'customer_total_cny',
         'exchange_rate',
         'customer_total_tjs',
+        'final_amount_tjs',
         'receiver_address',
         'warehouse_snapshot',
         'address_snapshot',
@@ -110,6 +111,7 @@ class CustomerOrder extends Model
             'customer_total_cny' => 'decimal:2',
             'exchange_rate' => 'decimal:6',
             'customer_total_tjs' => 'decimal:2',
+            'final_amount_tjs' => 'decimal:2',
             'receiver_address' => 'array',
             'warehouse_snapshot' => 'array',
             'address_snapshot' => 'array',
@@ -168,17 +170,7 @@ class CustomerOrder extends Model
 
     public function paymentAmountTjs(): float
     {
-        if ($this->customer_total_tjs !== null) {
-            return round((float) $this->customer_total_tjs, 2);
-        }
-
-        $rate = (float) ($this->exchange_rate ?? 0);
-
-        if ($rate > 0) {
-            return round($this->paymentAmountCny() * $rate, 2);
-        }
-
-        return $this->paymentAmountCny();
+        return round((float) ($this->final_amount_tjs ?? $this->customer_total_tjs ?? 0), 2);
     }
 
     public function isCancellable(): bool

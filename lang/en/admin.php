@@ -505,6 +505,7 @@ return [
     'pickup_delivered' => 'Order delivered to customer.',
     'open_pickup_view' => 'Open Pickup View',
     'customer_total' => 'Customer Total',
+    'final_amount' => 'Final Amount',
     'customer_delivery_address' => 'Customer Delivery Address',
     'china_receiver_address' => 'China Receiver Address (Elim)',
     'order_items' => 'Order Items',
