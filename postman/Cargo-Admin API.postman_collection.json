@@ -2,13 +2,101 @@
   "info": {
     "_postman_id": "6cb07bb2-aa25-43bd-8416-9b7bc36e1e92",
     "name": "Cargo-Admin API",
-    "description": "Laravel public API collection generated from routes/api.php. Set collection variables before running requests.\n\nCheckout flow: select a Tajikistan warehouse on the user profile (`PATCH /v1/auth/profile` with `warehouse_id`), then call cart preview/checkout without `warehouse_id`, `address_id`, or package dimensions in the body. Checkout pays goods only.\n\nPickup flow (Tajikistan cargo shipping):\n1. Warehouse staff measure package and confirm → order becomes `ready_for_pickup`\n2. Mobile app reads `pickup` from order list/detail (`GET /v1/auth/taobao/orders` or `/v1/auth/1688/orders`)\n3. Build customer QR from `pickup.qr.payload` (format: `cargo-pickup:{token}`)\n4. Optional: `GET /v1/auth/orders/{order}/pickup` for wallet balance + `can_pay`\n5. Pay cargo shipping: `POST /v1/auth/orders/{order}/pickup/pay` with `payment_method`: `wallet` or `online`",
+    "description": "Laravel public API collection generated from routes/api.php. Set collection variables before running requests.\n\n**Guest / public browsing (no Bearer token):**\n- `GET /v1/public/platforms` — platforms + sliders\n- `GET /v1/public/platform-sliders` — homepage banners\n- `GET /v1/public/taobao/products` — product listing\n- `GET /v1/public/taobao/products/{id}` — product detail\n- `GET /v1/public/1688/products` — same for 1688\n\nLegacy paths without `/public` prefix still work (`/v1/taobao/products`, etc.).\n\n**Authenticated routes** (`/v1/auth/*`) require `Authorization: Bearer {{customer_token}}`.\n\nCheckout flow: select a Tajikistan warehouse on the user profile (`PATCH /v1/auth/profile` with `warehouse_id`), then call cart preview/checkout without `warehouse_id`, `address_id`, or package dimensions in the body. Checkout pays goods only.\n\nPickup flow (Tajikistan cargo shipping):\n1. Warehouse staff measure package and confirm → order becomes `ready_for_pickup`\n2. Mobile app reads `pickup` from order list/detail (`GET /v1/auth/taobao/orders` or `/v1/auth/1688/orders`)\n3. Build customer QR from `pickup.qr.payload` (format: `cargo-pickup:{token}`)\n4. Optional: `GET /v1/auth/orders/{order}/pickup` for wallet balance + `can_pay`\n5. Pay cargo shipping: `POST /v1/auth/orders/{order}/pickup/pay` with `payment_method`: `wallet` or `online`",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "29209019"
   },
   "item": [
     {
-      "name": "01 - Platform Catalog",
+      "name": "00 - Public Guest (No Token)",
+      "description": "Guest browsing endpoints. Do not send Authorization header. Prefer `/v1/public/*` paths in the mobile app.",
+      "auth": {
+        "type": "noauth"
+      },
+      "item": [
+        {
+          "name": "List Platforms",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Accept-Language", "value": "{{locale}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/public/platforms",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "public", "platforms"]
+            },
+            "description": "Platforms with embedded sliders and commission slabs. No token required."
+          },
+          "response": []
+        },
+        {
+          "name": "List Platform Sliders",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Accept-Language", "value": "{{locale}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/public/platform-sliders",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "public", "platform-sliders"]
+            },
+            "description": "Homepage slider banners. Optional `platform_id` query filter."
+          },
+          "response": []
+        },
+        {
+          "name": "Taobao Products List",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Accept-Language", "value": "{{locale}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/public/taobao/products?q={{search_query}}&lang={{elim_lang}}&page={{page}}&size={{size}}",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "public", "taobao", "products"],
+              "query": [
+                { "key": "q", "value": "{{search_query}}" },
+                { "key": "lang", "value": "{{elim_lang}}" },
+                { "key": "page", "value": "{{page}}" },
+                { "key": "size", "value": "{{size}}" }
+              ]
+            },
+            "description": "Guest product listing. No Bearer token."
+          },
+          "response": []
+        },
+        {
+          "name": "Taobao Product Detail",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Accept-Language", "value": "{{locale}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/public/taobao/products/{{taobao_product_id}}?lang={{elim_lang}}",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "public", "taobao", "products", "{{taobao_product_id}}"],
+              "query": [{ "key": "lang", "value": "{{elim_lang}}" }]
+            },
+            "description": "Guest product detail. No Bearer token."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "01 - Platform Catalog (Public)",
       "item": [
         {
           "name": "List Platforms",
