@@ -92,6 +92,50 @@
             "description": "Guest product detail. No Bearer token."
           },
           "response": []
+        },
+        {
+          "name": "List Lessons",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Accept-Language", "value": "{{locale}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/public/lessons?page=1&per_page=15",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "public", "lessons"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "per_page", "value": "15" }
+              ]
+            },
+            "description": "Guest lessons listing. Returns only active items. Set collection `locale` (en, ru, tg) via Accept-Language header."
+          },
+          "response": []
+        },
+        {
+          "name": "List News",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Accept-Language", "value": "{{locale}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/public/news?page=1&per_page=15",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "public", "news"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "per_page", "value": "15" }
+              ]
+            },
+            "description": "Guest news listing. Returns only active items. Set collection `locale` (en, ru, tg) via Accept-Language header."
+          },
+          "response": []
         }
       ]
     },

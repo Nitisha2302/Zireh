@@ -60,6 +60,8 @@ return [
     'plateform_listed' => 'Platform fetched successfully.',
     'platforms_listed' => 'Platforms fetched successfully.',
     'platform_sliders_listed' => 'Platform sliders fetched successfully.',
+    'lessons_listed' => 'Lessons fetched successfully.',
+    'news_listed' => 'News fetched successfully.',
     'elim_products_listed' => 'Products fetched successfully.',
     'elim_product_fetched' => 'Product fetched successfully.',
     'elim_categories_listed' => 'Categories fetched successfully.',

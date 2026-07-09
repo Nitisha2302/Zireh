@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\ContentController;
 use App\Http\Controllers\Api\V1\Elim\Alibaba1688CatalogController;
 use App\Http\Controllers\Api\V1\Elim\TaobaoCatalogController;
 use App\Http\Controllers\Api\V1\OrderStatusController;
@@ -11,6 +12,9 @@ return function (): void {
     Route::get('platforms', [PlatformCatalogController::class, 'platforms']);
     Route::get('platforms/{platform}/commission-slabs', [PlatformCatalogController::class, 'commissionSlabs']);
     Route::get('platform-sliders', [PlatformCatalogController::class, 'sliders']);
+
+    Route::get('lessons', [ContentController::class, 'lessons']);
+    Route::get('news', [ContentController::class, 'news']);
 
     Route::get('shipping/methods', [ShippingController::class, 'methods']);
     Route::post('shipping/calculate', [ShippingController::class, 'calculate']);
