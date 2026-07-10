@@ -1,7 +1,6 @@
 <?php
 
 use App\Livewire\Admin\OrderStatus\OrderStatusCreatePage;
-use App\Livewire\Admin\OrderStatus\OrderStatusListPage;
 use App\Models\Admin;
 use App\Models\CustomerOrder;
 use App\Models\OrderStatus;
@@ -9,6 +8,7 @@ use App\Models\User;
 use App\Services\Order\OrderStatusService;
 use Database\Seeders\OrderStatusSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Livewire\Livewire;
 
@@ -30,9 +30,23 @@ function makeOrderStatusAdmin(): Admin
     ]);
 }
 
-it('seeds default system order statuses', function () {
-    expect(OrderStatus::query()->where('is_system', true)->where('is_active', true)->count())->toBe(10)
-        ->and(OrderStatus::query()->where('code', OrderStatus::CODE_PAID)->exists())->toBeTrue()
+function multilangName(string $en, ?string $ru = null, ?string $tg = null): array
+{
+    return [
+        'en' => $en,
+        'ru' => $ru ?? $en,
+        'tg' => $tg ?? $en,
+    ];
+}
+
+it('seeds default system order statuses with translations', function () {
+    $paid = OrderStatus::query()->where('code', OrderStatus::CODE_PAID)->first();
+
+    expect(OrderStatus::query()->where('is_system', true)->where('is_active', true)->count())->toBe(8)
+        ->and($paid)->not->toBeNull()
+        ->and($paid->getTranslation('name', 'en'))->toBe('Order Created')
+        ->and($paid->getTranslation('name', 'ru'))->toBe('Заказ создан')
+        ->and($paid->getTranslation('name', 'tg'))->toBe('Фармоиш эҷод шуд')
         ->and(OrderStatus::query()->where('code', OrderStatus::CODE_DELIVERED_TO_CUSTOMER)->exists())->toBeTrue();
 });
 
@@ -41,15 +55,22 @@ it('allows admin to create custom order status', function () {
     $this->actingAs($admin, 'admin');
 
     Livewire::test(OrderStatusCreatePage::class)
-        ->set('name', 'In Transit')
-        ->set('code', 'in_transit')
+        ->set('name.en', 'In Transit Custom')
+        ->set('name.ru', 'В пути (свой)')
+        ->set('name.tg', 'Дар роҳ (фармоишӣ)')
+        ->set('code', 'in_transit_custom')
         ->set('color', 'primary')
         ->set('sortOrder', '35')
         ->set('isActive', true)
         ->call('save')
         ->assertRedirect(route('admin.order-statuses.index'));
 
-    expect(OrderStatus::query()->where('code', 'in_transit')->exists())->toBeTrue();
+    $status = OrderStatus::query()->where('code', 'in_transit_custom')->first();
+
+    expect($status)->not->toBeNull()
+        ->and($status->getTranslation('name', 'en'))->toBe('In Transit Custom')
+        ->and($status->getTranslation('name', 'ru'))->toBe('В пути (свой)')
+        ->and($status->getTranslation('name', 'tg'))->toBe('Дар роҳ (фармоишӣ)');
 });
 
 it('prevents deleting system order statuses', function () {
@@ -61,7 +82,7 @@ it('prevents deleting system order statuses', function () {
 
 it('soft deletes custom status and restores from trash', function () {
     $status = OrderStatus::create([
-        'name' => 'Custom',
+        'name' => multilangName('Custom'),
         'code' => 'custom_status',
         'color' => 'info',
         'sort_order' => 99,
@@ -82,7 +103,7 @@ it('soft deletes custom status and restores from trash', function () {
 it('prevents permanent delete when orders use the status', function () {
     $user = User::factory()->create();
     $status = OrderStatus::create([
-        'name' => 'Legacy',
+        'name' => multilangName('Legacy'),
         'code' => 'legacy',
         'color' => 'secondary',
         'sort_order' => 200,
@@ -121,5 +142,5 @@ it('shows order status management page to admins', function () {
         ->get(route('admin.order-statuses.index'))
         ->assertOk()
         ->assertSee('Order Statuses')
-        ->assertSee('Paid');
+        ->assertSee('Order Created');
 });

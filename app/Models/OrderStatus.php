@@ -5,9 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Translatable\HasTranslations;
 
 class OrderStatus extends Model
 {
+    use HasTranslations;
     use SoftDeletes;
 
     public const CODE_PAID = 'paid';
@@ -30,31 +32,47 @@ class OrderStatus extends Model
 
     public const CODE_CANCELLED = 'cancelled';
 
+    /** Aliases for the simplified 7-step lifecycle. */
+    public const CODE_ORDER_CREATED = self::CODE_PAID;
+
+    public const CODE_IN_TRANSIT = self::CODE_SHIPPED_TO_TAJIKISTAN;
+
+    public const CODE_CUSTOMS_CLEARANCE = self::CODE_ARRIVED_IN_TAJIKISTAN;
+
+    public const CODE_SORTING = self::CODE_SORTING_CENTER;
+
+    public const CODE_DELIVERED = self::CODE_DELIVERED_TO_CUSTOMER;
+
     /** @var list<string> */
     public const SYSTEM_CODES = [
         self::CODE_PAID,
         self::CODE_RECEIVED_AT_CHINA_WAREHOUSE,
-        self::CODE_PREPARING_FOR_SHIPMENT,
         self::CODE_SHIPPED_TO_TAJIKISTAN,
         self::CODE_ARRIVED_IN_TAJIKISTAN,
         self::CODE_SORTING_CENTER,
-        self::CODE_SENT_TO_SELECTED_WAREHOUSE,
         self::CODE_READY_FOR_PICKUP,
         self::CODE_DELIVERED_TO_CUSTOMER,
         self::CODE_CANCELLED,
+        // Legacy codes kept for historical orders; seeded inactive.
+        self::CODE_PREPARING_FOR_SHIPMENT,
+        self::CODE_SENT_TO_SELECTED_WAREHOUSE,
     ];
 
     /** @var list<string> */
     public const FULFILLMENT_CODES = [
         self::CODE_PAID,
         self::CODE_RECEIVED_AT_CHINA_WAREHOUSE,
-        self::CODE_PREPARING_FOR_SHIPMENT,
         self::CODE_SHIPPED_TO_TAJIKISTAN,
         self::CODE_ARRIVED_IN_TAJIKISTAN,
         self::CODE_SORTING_CENTER,
-        self::CODE_SENT_TO_SELECTED_WAREHOUSE,
         self::CODE_READY_FOR_PICKUP,
         self::CODE_DELIVERED_TO_CUSTOMER,
+    ];
+
+    /** @var list<string> */
+    public const LEGACY_INACTIVE_CODES = [
+        self::CODE_PREPARING_FOR_SHIPMENT,
+        self::CODE_SENT_TO_SELECTED_WAREHOUSE,
     ];
 
     /** @var list<string> */
@@ -75,6 +93,10 @@ class OrderStatus extends Model
         'is_system',
         'is_active',
         'sort_order',
+    ];
+
+    public array $translatable = [
+        'name',
     ];
 
     protected function casts(): array
@@ -99,6 +121,13 @@ class OrderStatus extends Model
     public function badgeClass(): string
     {
         return 'bg-label-'.($this->color ?: 'secondary');
+    }
+
+    public function label(?string $locale = null): string
+    {
+        return $this->getTranslation('name', $locale ?? app()->getLocale())
+            ?: $this->getTranslation('name', 'en')
+            ?: $this->code;
     }
 
     public static function mapFromElimStatus(?string $elimStatus): ?string

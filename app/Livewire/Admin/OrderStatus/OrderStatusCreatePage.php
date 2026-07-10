@@ -10,7 +10,11 @@ use Livewire\Component;
 #[Layout('layouts::admin', ['title' => 'Add Order Status'])]
 class OrderStatusCreatePage extends Component
 {
-    public string $name = '';
+    public array $name = [
+        'en' => '',
+        'ru' => '',
+        'tg' => '',
+    ];
 
     public string $code = '';
 
@@ -25,7 +29,9 @@ class OrderStatusCreatePage extends Component
     protected function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:255'],
+            'name.en' => ['required', 'string', 'max:255'],
+            'name.ru' => ['required', 'string', 'max:255'],
+            'name.tg' => ['required', 'string', 'max:255'],
             'code' => ['required', 'string', 'max:50', 'regex:/^[a-z0-9_]+$/', 'unique:order_statuses,code'],
             'color' => ['required', 'string', 'in:'.implode(',', OrderStatus::COLOR_OPTIONS)],
             'description' => ['nullable', 'string', 'max:1000'],

@@ -6,10 +6,8 @@
             </div>
             <div class="card-body">
                 <div class="row g-3">
-                    <div class="col-md-6">
-                        <label class="form-label">{{ __('admin.order_status_name') }}</label>
-                        <input type="text" class="form-control @error('name') is-invalid @enderror" wire:model.blur="name">
-                        @error('name') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    <div class="col-12">
+                        @include('livewire.admin.order-status.partials.translation-fields')
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">{{ __('admin.order_status_code') }}</label>
@@ -42,7 +40,10 @@
                         @error('description') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                     <div class="col-12">
-                        <span class="badge bg-label-{{ $color }}">{{ $name ?: __('admin.order_status_name') }}</span>
+                        @php
+                            $previewName = $name[app()->getLocale()] ?? $name['en'] ?? '';
+                        @endphp
+                        <span class="badge bg-label-{{ $color }}">{{ $previewName ?: __('admin.order_status_name') }}</span>
                     </div>
                 </div>
             </div>

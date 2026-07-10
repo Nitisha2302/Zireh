@@ -63,7 +63,16 @@
                 <tbody>
                     @forelse ($statuses as $status)
                         <tr>
-                            <td class="fw-semibold">{{ $status->name }}</td>
+                            <td>
+                                <div class="d-flex flex-column">
+                                    @foreach (['en' => '🇺🇸', 'ru' => '🇷🇺', 'tg' => '🇹🇯'] as $locale => $flag)
+                                        <span
+                                            class="{{ $loop->first ? 'fw-semibold text-dark' : 'text-body-secondary' }} {{ $loop->first ? '' : 'small' }}">
+                                            {{ $flag }} {{ $status->getTranslation('name', $locale) }}
+                                        </span>
+                                    @endforeach
+                                </div>
+                            </td>
                             <td><code>{{ $status->code }}</code></td>
                             <td><span class="badge {{ $status->badgeClass() }}">{{ ucfirst($status->color) }}</span></td>
                             <td>{{ $status->sort_order }}</td>
