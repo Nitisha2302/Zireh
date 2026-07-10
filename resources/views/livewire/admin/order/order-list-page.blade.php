@@ -3,8 +3,8 @@
         <div class="card-header">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
                 <div>
-                    <h4 class="mb-1">Customer Orders</h4>
-                    <p class="mb-0 text-body-secondary">View orders with product prices, commission, and Elim status.</p>
+                    <h4 class="mb-1">{{ __('admin.customer_orders') }}</h4>
+                    <p class="mb-0 text-body-secondary">{{ __('admin.customer_orders_description') }}</p>
                 </div>
             </div>
         </div>
@@ -14,12 +14,12 @@
                 <div class="col-md-4">
                     <div class="input-group">
                         <span class="input-group-text"><i class="icon-base ti tabler-search"></i></span>
-                        <input type="text" class="form-control" placeholder="Search order ID, customer..." wire:model.live.debounce.500ms="search">
+                        <input type="text" class="form-control" placeholder="{{ __('admin.search_orders_placeholder') }}" wire:model.live.debounce.500ms="search">
                     </div>
                 </div>
                 <div class="col-md-3">
                     <select class="form-select" wire:model.live="platformFilter">
-                        <option value="">All platforms</option>
+                        <option value="">{{ __('admin.all_platforms') }}</option>
                         <option value="taobao">Taobao</option>
                         <option value="1688">1688</option>
                     </select>
@@ -33,7 +33,7 @@
                     </select>
                 </div>
                 <div class="col-md-2 text-md-end">
-                    <span class="badge bg-label-primary fs-6">Total: {{ $orders->total() }}</span>
+                    <span class="badge bg-label-primary fs-6">{{ __('admin.total') }}: {{ $orders->total() }}</span>
                 </div>
             </div>
         </div>
@@ -43,13 +43,13 @@
                 <thead>
                     <tr>
                         <th width="80">ID</th>
-                        <th>Elim Order</th>
-                        <th>Customer</th>
-                        <th>Platform</th>
-                        <th>Status</th>
-                        <th>Payment</th>
+                        <th>{{ __('admin.elim_order') }}</th>
+                        <th>{{ __('admin.customer') }}</th>
+                        <th>{{ __('admin.platforms') }}</th>
+                        <th>{{ __('admin.status') }}</th>
+                        <th>{{ __('admin.payment') }}</th>
                         <th>{{ __('admin.final_amount') }} (TJS)</th>
-                        <th>Date</th>
+                        <th>{{ __('admin.created_date') }}</th>
                         <th width="80"></th>
                     </tr>
                 </thead>
@@ -81,7 +81,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="9" class="text-center py-5 text-body-secondary">No orders found.</td>
+                            <td colspan="9" class="text-center py-5 text-body-secondary">{{ __('admin.no_orders_found') }}</td>
                         </tr>
                     @endforelse
                 </tbody>

@@ -59,35 +59,35 @@ new class extends Component {
             <li class="menu-item {{ request()->routeIs('admin.platform-sliders.*') ? 'active' : '' }}">
                 <a href="{{ route('admin.platform-sliders.index') }}" class="menu-link">
                     <i class="menu-icon icon-base ti tabler-photo"></i>
-                    <div>Platform Sliders</div>
+                    <div>{{ __('admin.platform_sliders') }}</div>
                 </a>
             </li>
 
             <li class="menu-item {{ request()->routeIs('admin.platform-categories.*') ? 'active' : '' }}">
                 <a href="{{ route('admin.platform-categories.index') }}" class="menu-link">
                     <i class="menu-icon icon-base ti tabler-category"></i>
-                    <div>Platform Categories</div>
+                    <div>{{ __('admin.platform_categories') }}</div>
                 </a>
             </li>
 
             <li class="menu-item {{ request()->routeIs('admin.lessons.*') ? 'active' : '' }}">
                 <a href="{{ route('admin.lessons.index') }}" class="menu-link">
                     <i class="menu-icon icon-base ti tabler-book"></i>
-                    <div>Lessons</div>
+                    <div>{{ __('admin.lessons') }}</div>
                 </a>
             </li>
 
             <li class="menu-item {{ request()->routeIs('admin.news.*') ? 'active' : '' }}">
                 <a href="{{ route('admin.news.index') }}" class="menu-link">
                     <i class="menu-icon icon-base ti tabler-news"></i>
-                    <div>News</div>
+                    <div>{{ __('admin.news') }}</div>
                 </a>
             </li>
 
             <li class="menu-item {{ request()->routeIs('admin.wallet-transactions.*') ? 'active' : '' }}">
                 <a href="{{ route('admin.wallet-transactions.index') }}" class="menu-link">
                     <i class="menu-icon icon-base ti tabler-receipt"></i>
-                    <div>Wallet Transactions</div>
+                    <div>{{ __('admin.wallet_transactions') }}</div>
                 </a>
             </li>
 
@@ -113,7 +113,7 @@ new class extends Component {
             <li class="menu-item {{ request()->routeIs('admin.customers.*') ? 'active' : '' }}">
                 <a href="{{ route('admin.customers.index') }}" class="menu-link">
                     <i class="menu-icon icon-base ti tabler-users"></i>
-                    <div>Customers</div>
+                    <div>{{ __('admin.customers') }}</div>
                 </a>
             </li>
 
@@ -191,7 +191,7 @@ new class extends Component {
                     </li>
                     <li class="menu-item {{ request()->routeIs('admin.settings.elim-warehouse') ? 'active' : '' }}">
                         <a href="{{ route('admin.settings.elim-warehouse') }}" class="menu-link">
-                            <div>Elim Warehouse</div>
+                            <div>{{ __('admin.elim_warehouse') }}</div>
                         </a>
                     </li>
                     <li class="menu-item {{ request()->routeIs('admin.settings.china-warehouse-login') ? 'active' : '' }}">

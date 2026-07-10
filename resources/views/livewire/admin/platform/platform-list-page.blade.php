@@ -3,10 +3,10 @@
         <div class="card-header">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
                 <div>
-                    <h4 class="mb-1">Platforms</h4>
-                    <p class="mb-0 text-body-secondary">Manage available platforms.</p>
+                    <h4 class="mb-1">{{ __('admin.platforms') }}</h4>
+                    <p class="mb-0 text-body-secondary">{{ __('admin.platforms_description') }}</p>
                 </div><a href="{{ route('admin.platforms.create') }}" class="btn btn-primary"><i
-                        class="icon-base ti tabler-plus me-1"></i> Add Platform</a>
+                        class="icon-base ti tabler-plus me-1"></i> {{ __('admin.add_platform') }}</a>
             </div>
         </div>
         <div class="card-body border-top border-bottom">
@@ -14,9 +14,9 @@
                 <div class="col-md-5">
                     <div class="input-group"><span class="input-group-text"><i
                                 class="icon-base ti tabler-search"></i></span><input type="text" class="form-control"
-                            placeholder="Search platforms..." wire:model.live.debounce.500ms="search"></div>
+                            placeholder="{{ __('admin.search_platforms_placeholder') }}" wire:model.live.debounce.500ms="search"></div>
                 </div>
-                <div class="col-md-7 text-md-end"><span class="badge bg-label-primary fs-6">Total:
+                <div class="col-md-7 text-md-end"><span class="badge bg-label-primary fs-6">{{ __('admin.total') }}:
                         {{ $platforms->total() }}</span></div>
             </div>
         </div>
@@ -25,21 +25,20 @@
                 <thead>
                     <tr>
                         <th width="80">ID</th>
-                        <th>Platform translations and logos</th>
-                        <th width="140">Code</th>
-                        <th width="140">Commission Slabs</th>
-                        <th width="140">Status</th>
-                        <th width="180">Created</th>
+                        <th>{{ __('admin.platform_translations_logos') }}</th>
+                        <th width="140">{{ __('admin.code') }}</th>
+                        <th width="140">{{ __('admin.commission_slabs') }}</th>
+                        <th width="140">{{ __('admin.status') }}</th>
+                        <th width="180">{{ __('admin.created') }}</th>
                         <th width="100"></th>
                     </tr>
-                    {{-- @include('livewire.admin.partials._table-header') --}}
                 </thead>
                 <tbody>
                     @forelse($platforms as $platform)
                         <tr>
                             <td><span class="fw-semibold">#{{ $platform->id }}</span></td>
                             <td>
-                                @foreach (['en' => 'English', 'ru' => 'Russian', 'tg' => 'Tajik'] as $locale => $label)
+                                @foreach (['en' => __('admin.english'), 'ru' => __('admin.russian'), 'tg' => __('admin.tajik')] as $locale => $label)
                                     @php($logo = $platform->getTranslation('logo', $locale, false))
                                     <div class="d-flex align-items-center gap-2 {{ $loop->first ? '' : 'mt-2' }}">
                                         @if ($logo)
@@ -60,13 +59,13 @@
                             <td><code>{{ $platform->code }}</code></td>
                             <td>
                                 <a href="{{ route('admin.platforms.commission-slabs.index', $platform) }}" class="badge bg-label-primary text-decoration-none">
-                                    {{ $platform->commission_slabs_count }} slab(s)
+                                    {{ __('admin.slab_count', ['count' => $platform->commission_slabs_count]) }}
                                 </a>
                             </td>
                             <td>
                                 @if ($platform->is_available)
-                                <span class="badge bg-label-success">Active</span>@else<span
-                                        class="badge bg-label-danger">Inactive</span>
+                                <span class="badge bg-label-success">{{ __('admin.active') }}</span>@else<span
+                                        class="badge bg-label-danger">{{ __('admin.inactive') }}</span>
                                 @endif
                             </td>
                             <td>
@@ -79,34 +78,31 @@
                                     <ul class="dropdown-menu dropdown-menu-end">
                                         <li><a href="{{ route('admin.platforms.commission-slabs.index', $platform) }}"
                                                 class="dropdown-item"><i
-                                                    class="icon-base ti tabler-percentage me-2"></i>Commission Slabs</a></li>
+                                                    class="icon-base ti tabler-percentage me-2"></i>{{ __('admin.commission_slabs') }}</a></li>
                                         <li><a href="{{ route('admin.platforms.edit', $platform) }}"
                                                 class="dropdown-item"><i
-                                                    class="icon-base ti tabler-pencil me-2"></i>Edit</a></li>
+                                                    class="icon-base ti tabler-pencil me-2"></i>{{ __('admin.edit') }}</a></li>
                                         <li><button type="button" class="dropdown-item"
                                                 wire:click="toggleStatus({{ $platform->id }})"><i
-                                                    class="icon-base ti tabler-refresh me-2"></i>{{ $platform->is_available ? 'Deactivate' : 'Activate' }}</button>
+                                                    class="icon-base ti tabler-refresh me-2"></i>{{ $platform->is_available ? __('admin.deactivate') : __('admin.activate') }}</button>
                                         </li>
                                         <li>
                                             <hr class="dropdown-divider">
                                         </li>
-                                        {{-- <li><button type="button" class="dropdown-item text-danger"
-                                                wire:click="delete({{ $platform->id }})"><i
-                                                    class="icon-base ti tabler-trash me-2"></i>Delete</button></li> --}}
                                     </ul>
                                 </div>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5">
+                            <td colspan="7">
                                 <div class="text-center py-5">
                                     <div class="mb-3"><i class="icon-base ti tabler-app-window"
                                             style="font-size:70px"></i></div>
-                                    <h5 class="mb-2">No platforms found</h5>
-                                    <p class="text-body-secondary mb-4">Start by creating your first platform.</p><a
+                                    <h5 class="mb-2">{{ __('admin.no_platforms_found') }}</h5>
+                                    <p class="text-body-secondary mb-4">{{ __('admin.no_platforms_found_hint') }}</p><a
                                         href="{{ route('admin.platforms.create') }}" class="btn btn-primary"><i
-                                            class="icon-base ti tabler-plus me-1"></i>Add Platform</a>
+                                            class="icon-base ti tabler-plus me-1"></i>{{ __('admin.add_platform') }}</a>
                                 </div>
                             </td>
                         </tr>

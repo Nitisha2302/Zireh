@@ -351,7 +351,7 @@
                                 <tr>
                                     <td><span class="fw-semibold">#{{ $order->id }}</span></td>
                                     <td>
-                                        <div class="fw-medium">{{ $order->user?->name ?? 'Unnamed customer' }}</div>
+                                        <div class="fw-medium">{{ $order->user?->name ?? __('admin.unnamed_customer') }}</div>
                                         <small class="text-body-secondary">{{ $order->user?->phone }}</small>
                                     </td>
                                     <td><span class="badge bg-label-info text-uppercase">{{ $order->platform }}</span>
@@ -396,7 +396,7 @@
                     @forelse ($recentCustomers as $customer)
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <div>
-                                <div class="fw-medium">{{ $customer->name ?: 'Unnamed customer' }}</div>
+                                <div class="fw-medium">{{ $customer->name ?: __('admin.unnamed_customer') }}</div>
                                 <small
                                     class="text-body-secondary">{{ $customer->phone ?: $customer->email ?: __('admin.not_added') }}</small>
                             </div>
@@ -423,7 +423,7 @@
                         <li class="list-group-item">
                             <div class="d-flex justify-content-between align-items-start">
                                 <div>
-                                    <div class="fw-medium">{{ $transaction->user?->name ?? 'Unnamed customer' }}</div>
+                                    <div class="fw-medium">{{ $transaction->user?->name ?? __('admin.unnamed_customer') }}</div>
                                     <small
                                         class="text-body-secondary">{{ str($transaction->source)->replace('_', ' ')->title() }}</small>
                                 </div>
