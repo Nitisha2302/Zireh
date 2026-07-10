@@ -404,6 +404,7 @@ return [
     'order_status_force_deleted' => 'Order status permanently deleted.',
     'order_status_in_use_force_delete' => 'Cannot permanently delete a status that is assigned to existing orders.',
     'order_status_name' => 'Status Name',
+    'order_status_name_in' => 'Номи ҳолат (:language)',
     'order_status_not_available' => 'The selected order status is not available.',
     'order_status_paid' => 'Пардохтшуда',
     'order_status_pending_payment' => 'Интизори пардохт',

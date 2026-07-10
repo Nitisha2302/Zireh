@@ -175,7 +175,10 @@ class OrderStatusService
         }
 
         return validator($data, [
-            'name' => ['required', 'string', 'max:255'],
+            'name' => ['required', 'array'],
+            'name.en' => ['required', 'string', 'max:255'],
+            'name.ru' => ['required', 'string', 'max:255'],
+            'name.tg' => ['required', 'string', 'max:255'],
             'code' => $codeRule,
             'color' => ['required', 'string', 'in:'.implode(',', OrderStatus::COLOR_OPTIONS)],
             'description' => ['nullable', 'string', 'max:1000'],

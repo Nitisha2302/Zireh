@@ -400,6 +400,7 @@ return [
     'change_order_status' => 'Change Status',
     'order_status_changed' => 'Order status updated successfully.',
     'order_status_name' => 'Status Name',
+    'order_status_name_in' => 'Status name (:language)',
     'order_status_code' => 'Status Code',
     'order_status_code_hint' => 'Lowercase letters, numbers, and underscores only.',
     'order_status_code_system_hint' => 'System status codes cannot be changed.',

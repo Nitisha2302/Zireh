@@ -1,10 +1,11 @@
 @php
     use App\Models\OrderStatus;
 
-    $orderStatusLabels = collect(OrderStatus::FULFILLMENT_CODES)
-        ->merge([OrderStatus::CODE_CANCELLED])
-        ->mapWithKeys(fn (string $code): array => [
-            $code => OrderStatus::query()->where('code', $code)->value('name') ?? $code,
+    $orderStatusLabels = OrderStatus::query()
+        ->whereIn('code', collect(OrderStatus::FULFILLMENT_CODES)->merge([OrderStatus::CODE_CANCELLED])->all())
+        ->get()
+        ->mapWithKeys(fn (OrderStatus $status): array => [
+            $status->code => $status->name,
         ])
         ->all();
 

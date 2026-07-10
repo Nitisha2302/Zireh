@@ -12,7 +12,11 @@ class OrderStatusEditPage extends Component
 {
     public OrderStatus $orderStatus;
 
-    public string $name = '';
+    public array $name = [
+        'en' => '',
+        'ru' => '',
+        'tg' => '',
+    ];
 
     public string $code = '';
 
@@ -27,7 +31,7 @@ class OrderStatusEditPage extends Component
     public function mount(OrderStatus $orderStatus): void
     {
         $this->orderStatus = $orderStatus;
-        $this->name = $orderStatus->name;
+        $this->name = array_replace($this->name, $orderStatus->getTranslations('name'));
         $this->code = $orderStatus->code;
         $this->color = $orderStatus->color;
         $this->description = $orderStatus->description ?? '';
@@ -38,7 +42,9 @@ class OrderStatusEditPage extends Component
     protected function rules(): array
     {
         $rules = [
-            'name' => ['required', 'string', 'max:255'],
+            'name.en' => ['required', 'string', 'max:255'],
+            'name.ru' => ['required', 'string', 'max:255'],
+            'name.tg' => ['required', 'string', 'max:255'],
             'color' => ['required', 'string', 'in:'.implode(',', OrderStatus::COLOR_OPTIONS)],
             'description' => ['nullable', 'string', 'max:1000'],
             'sortOrder' => ['required', 'integer', 'min:0'],
@@ -58,15 +64,14 @@ class OrderStatusEditPage extends Component
 
         $payload = [
             'name' => $validated['name'],
+            'code' => $this->orderStatus->isSystem()
+                ? $this->orderStatus->code
+                : strtolower($validated['code']),
             'color' => $validated['color'],
             'description' => $validated['description'] ?: null,
             'sort_order' => (int) $validated['sortOrder'],
             'is_active' => $validated['isActive'],
         ];
-
-        if (! $this->orderStatus->isSystem()) {
-            $payload['code'] = strtolower($validated['code']);
-        }
 
         try {
             $service->update($this->orderStatus, $payload);
