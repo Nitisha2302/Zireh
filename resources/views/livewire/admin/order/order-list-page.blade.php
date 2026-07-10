@@ -70,9 +70,9 @@
                                     <span class="badge bg-label-secondary">{{ $order->status }}</span>
                                 @endif
                             </td>
-                            <td><span class="badge bg-label-warning">{{ $order->payment_status }}</span></td>
+                            <td><span class="badge bg-label-warning">{{ trans()->has('admin.payment_status_'.$order->payment_status) ? __('admin.payment_status_'.$order->payment_status) : $order->payment_status }}</span></td>
                             <td class="fw-semibold">{{ number_format($order->paymentAmountTjs(), 2) }} TJS</td>
-                            <td>{{ $order->created_at?->format('M d, Y H:i') }}</td>
+                            <td>{{ $order->created_at?->translatedFormat('d M Y H:i') }}</td>
                             <td>
                                 <a href="{{ route('admin.orders.show', $order) }}" class="btn btn-sm btn-icon btn-text-secondary">
                                     <i class="icon-base ti tabler-eye"></i>

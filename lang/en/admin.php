@@ -482,6 +482,8 @@ return [
     'weight_cost' => 'Weight Cost',
     'volume_cost' => 'Volume Cost',
     'applied_method' => 'Applied Method',
+    'pickup_method_weight' => 'By weight',
+    'pickup_method_volume' => 'By volume',
     'pickup_payment_status' => 'Pickup Payment',
     'pickup_qr_scan' => 'Scan Pickup QR',
     'pickup_qr_scan_hint' => 'Scan the customer app QR with the camera, or paste the pickup token manually.',
@@ -662,6 +664,13 @@ return [
     'demo_order' => 'Demo Order',
     'sku' => 'SKU',
     'qty' => 'Qty',
+    'payment_status_paid' => 'Paid',
+    'payment_status_unpaid' => 'Unpaid',
+    'payment_status_pending' => 'Pending',
+    'payment_status_refunded' => 'Refunded',
+    'payment_method_wallet' => 'Wallet',
+    'payment_method_cash' => 'Cash',
+    'tajikistan' => 'Tajikistan',
 
     // Platforms
     'platforms_description' => 'Manage available platforms.',
