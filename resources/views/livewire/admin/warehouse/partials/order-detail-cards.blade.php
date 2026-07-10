@@ -27,7 +27,7 @@
                     <p class="mb-2"><strong>{{ __('admin.parcel_tracking_id') }}:</strong> {{ $order->parcel_tracking_id }}</p>
                 @endif
                 @if ($order->is_demo_order)
-                    <p class="mb-2"><span class="badge bg-label-warning">Demo Order</span></p>
+                    <p class="mb-2"><span class="badge bg-label-warning">{{ __('admin.demo_order') }}</span></p>
                 @endif
                 <p class="mb-3"><strong>{{ __('admin.created_date') }}:</strong> {{ $order->created_at?->format('M d, Y H:i') }}</p>
 
@@ -96,7 +96,7 @@
             <thead>
                 <tr>
                     <th>{{ __('admin.product') }}</th>
-                    <th>SKU</th>
+                    <th>{{ __('admin.sku') }}</th>
                     <th>{{ __('admin.quantity') }}</th>
                     <th>{{ __('admin.unit_price') }}</th>
                     <th>{{ __('admin.line_subtotal') }}</th>

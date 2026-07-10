@@ -1,18 +1,18 @@
 <div class="container-xxl flex-grow-1 container-p-y">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h4 class="mb-1">Order #{{ $order->id }}</h4>
-            <p class="mb-0 text-body-secondary">{{ $order->elim_order_id ?? 'No Elim order ID' }}</p>
+            <h4 class="mb-1">{{ __('admin.order_number', ['id' => $order->id]) }}</h4>
+            <p class="mb-0 text-body-secondary">{{ $order->elim_order_id ?? __('admin.no_elim_order_id') }}</p>
         </div>
         <a href="{{ route('admin.orders.index') }}" class="btn btn-label-secondary">
-            <i class="icon-base ti tabler-arrow-left me-1"></i> Back to Orders
+            <i class="icon-base ti tabler-arrow-left me-1"></i> {{ __('admin.back_to_orders') }}
         </a>
     </div>
 
     <div class="row g-4">
         <div class="col-lg-4">
             <div class="card h-100">
-                <div class="card-header"><h5 class="mb-0">Customer</h5></div>
+                <div class="card-header"><h5 class="mb-0">{{ __('admin.customer') }}</h5></div>
                 <div class="card-body">
                     <p class="mb-1 fw-medium">{{ $order->user?->name }}</p>
                     <p class="mb-1 text-body-secondary">{{ $order->user?->phone }}</p>
@@ -35,7 +35,7 @@
                     </p>
                     <p class="mb-2"><strong>{{ __('admin.payment') }}:</strong> {{ $order->payment_status }} ({{ $order->payment_method }})</p>
                     @if ($order->is_demo_order)
-                        <p class="mb-2"><span class="badge bg-label-warning">Demo Order</span></p>
+                        <p class="mb-2"><span class="badge bg-label-warning">{{ __('admin.demo_order') }}</span></p>
                     @endif
                     <p class="mb-3"><strong>{{ __('admin.created_date') }}:</strong> {{ $order->created_at?->format('M d, Y H:i') }}</p>
 
@@ -90,14 +90,14 @@
     @if ($order->shippingMethod)
         <div class="card mt-4">
             <div class="card-body">
-                <strong>Shipping Method:</strong> {{ $order->shippingMethod->name }} ({{ $order->shippingMethod->code }})
+                <strong>{{ __('admin.shipping_method') }}:</strong> {{ $order->shippingMethod->name }} ({{ $order->shippingMethod->code }})
             </div>
         </div>
     @endif
 
     @if ($order->receiver_address)
         <div class="card mt-4">
-            <div class="card-header"><h5 class="mb-0">China Receiver Address (Elim)</h5></div>
+            <div class="card-header"><h5 class="mb-0">{{ __('admin.china_receiver_address') }}</h5></div>
             <div class="card-body">
                 <p class="mb-1">{{ $order->receiver_address['name'] ?? '' }} · {{ $order->receiver_address['mobile'] ?? '' }}</p>
                 <p class="mb-0">{{ $order->receiver_address['address'] ?? '' }}, {{ $order->receiver_address['city'] ?? '' }}</p>
@@ -106,16 +106,16 @@
     @endif
 
     <div class="card mt-4">
-        <div class="card-header"><h5 class="mb-0">Order Items</h5></div>
+        <div class="card-header"><h5 class="mb-0">{{ __('admin.order_items') }}</h5></div>
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
                 <thead>
                     <tr>
-                        <th>Product</th>
-                        <th>SKU</th>
-                        <th>Qty</th>
-                        <th>Unit Price</th>
-                        <th>Line Subtotal</th>
+                        <th>{{ __('admin.product') }}</th>
+                        <th>{{ __('admin.sku') }}</th>
+                        <th>{{ __('admin.qty') }}</th>
+                        <th>{{ __('admin.unit_price') }}</th>
+                        <th>{{ __('admin.line_subtotal') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -146,7 +146,7 @@
     @if ($order->remark)
         <div class="card mt-4">
             <div class="card-body">
-                <strong>Remark:</strong> {{ $order->remark }}
+                <strong>{{ __('admin.remark') }}:</strong> {{ $order->remark }}
             </div>
         </div>
     @endif

@@ -3,8 +3,8 @@
         <div class="card-header">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
                 <div>
-                    <h4 class="mb-1">Customers</h4>
-                    <p class="mb-0 text-body-secondary">Manage customer accounts and status.</p>
+                    <h4 class="mb-1">{{ __('admin.customers') }}</h4>
+                    <p class="mb-0 text-body-secondary">{{ __('admin.customers_description') }}</p>
                 </div>
             </div>
         </div>
@@ -14,19 +14,19 @@
                 <div class="col-md-5">
                     <div class="input-group">
                         <span class="input-group-text"><i class="icon-base ti tabler-search"></i></span>
-                        <input type="text" class="form-control" placeholder="Search customers..." wire:model.live.debounce.500ms="search">
+                        <input type="text" class="form-control" placeholder="{{ __('admin.search_customers_placeholder') }}" wire:model.live.debounce.500ms="search">
                     </div>
                 </div>
                 <div class="col-md-3">
                     <select class="form-select" wire:model.live="statusFilter">
-                        <option value="">All statuses</option>
+                        <option value="">{{ __('admin.all_statuses') }}</option>
                         @foreach ($statuses as $value => $label)
                             <option value="{{ $value }}">{{ $label }}</option>
                         @endforeach
                     </select>
                 </div>
                 <div class="col-md-4 text-md-end">
-                    <span class="badge bg-label-primary fs-6">Total: {{ $customers->total() }}</span>
+                    <span class="badge bg-label-primary fs-6">{{ __('admin.total') }}: {{ $customers->total() }}</span>
                 </div>
             </div>
         </div>
@@ -36,10 +36,10 @@
                 <thead>
                     <tr>
                         <th width="80">ID</th>
-                        <th>Customer</th>
-                        <th>Contact</th>
-                        <th width="140">Status</th>
-                        <th width="180">Joined</th>
+                        <th>{{ __('admin.customer') }}</th>
+                        <th>{{ __('admin.contact') }}</th>
+                        <th width="140">{{ __('admin.status') }}</th>
+                        <th width="180">{{ __('admin.joined') }}</th>
                         <th width="100"></th>
                     </tr>
                 </thead>
@@ -57,22 +57,22 @@
                                         </div>
                                     @endif
                                     <div>
-                                        <div class="fw-semibold">{{ $customer->name ?: 'Unnamed customer' }}</div>
-                                        <small class="text-body-secondary">Language: {{ strtoupper($customer->preferred_language ?: 'en') }}</small>
+                                        <div class="fw-semibold">{{ $customer->name ?: __('admin.unnamed_customer') }}</div>
+                                        <small class="text-body-secondary">{{ __('admin.preferred_language') }}: {{ strtoupper($customer->preferred_language ?: 'en') }}</small>
                                     </div>
                                 </div>
                             </td>
                             <td>
                                 <div>{{ $customer->phone ?: '—' }}</div>
-                                <small class="text-body-secondary">{{ $customer->email ?: 'No email' }}</small>
+                                <small class="text-body-secondary">{{ $customer->email ?: __('admin.no_email') }}</small>
                             </td>
                             <td>
                                 @if ($customer->status === \App\Models\User::STATUS_ACTIVE)
-                                    <span class="badge bg-label-success">Active</span>
+                                    <span class="badge bg-label-success">{{ __('admin.active') }}</span>
                                 @elseif ($customer->status === \App\Models\User::STATUS_BLOCKED)
-                                    <span class="badge bg-label-warning">Blocked</span>
+                                    <span class="badge bg-label-warning">{{ __('admin.blocked') }}</span>
                                 @else
-                                    <span class="badge bg-label-danger">Inactive</span>
+                                    <span class="badge bg-label-danger">{{ __('admin.inactive') }}</span>
                                 @endif
                             </td>
                             <td>
@@ -87,24 +87,24 @@
                                     <ul class="dropdown-menu dropdown-menu-end">
                                         <li>
                                             <a href="{{ route('admin.customers.edit', $customer) }}" class="dropdown-item">
-                                                <i class="icon-base ti tabler-pencil me-2"></i>Edit
+                                                <i class="icon-base ti tabler-pencil me-2"></i>{{ __('admin.edit') }}
                                             </a>
                                         </li>
                                         <li>
                                             <a href="{{ route('admin.customers.wallet', $customer) }}" class="dropdown-item">
-                                                <i class="icon-base ti tabler-wallet me-2"></i>Manage Wallet
+                                                <i class="icon-base ti tabler-wallet me-2"></i>{{ __('admin.manage_wallet') }}
                                             </a>
                                         </li>
                                         <li>
                                             <button type="button" class="dropdown-item" wire:click="toggleStatus({{ $customer->id }})">
                                                 <i class="icon-base ti tabler-refresh me-2"></i>
-                                                {{ $customer->isActive() ? 'Deactivate' : 'Activate' }}
+                                                {{ $customer->isActive() ? __('admin.deactivate') : __('admin.activate') }}
                                             </button>
                                         </li>
                                         <li><hr class="dropdown-divider"></li>
                                         <li>
                                             <button type="button" class="dropdown-item text-danger" wire:click="delete({{ $customer->id }})">
-                                                <i class="icon-base ti tabler-trash me-2"></i>Delete
+                                                <i class="icon-base ti tabler-trash me-2"></i>{{ __('admin.delete') }}
                                             </button>
                                         </li>
                                     </ul>
@@ -116,8 +116,8 @@
                             <td colspan="6">
                                 <div class="text-center py-5">
                                     <i class="icon-base ti tabler-users" style="font-size: 60px"></i>
-                                    <h5 class="mt-3">No customers found</h5>
-                                    <p class="text-body-secondary mb-0">Customers will appear here after registration.</p>
+                                    <h5 class="mt-3">{{ __('admin.no_customers_found') }}</h5>
+                                    <p class="text-body-secondary mb-0">{{ __('admin.no_customers_found_hint') }}</p>
                                 </div>
                             </td>
                         </tr>
