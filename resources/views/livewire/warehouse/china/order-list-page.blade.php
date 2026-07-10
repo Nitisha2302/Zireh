@@ -72,7 +72,7 @@
                             </td>
                             <td>{{ $order->parcel_tracking_id ?: '—' }}</td>
                             <td>{{ $order->warehouse?->warehouse_name ?? data_get($order->warehouse_snapshot, 'warehouse_name', '—') }}</td>
-                            <td>{{ $order->created_at?->format('M d, Y H:i') }}</td>
+                            <td>{{ $order->created_at?->translatedFormat('d M Y H:i') }}</td>
                             <td>
                                 <a href="{{ route('china.orders.show', $order) }}" class="btn btn-sm btn-icon btn-text-secondary">
                                     <i class="icon-base ti tabler-eye"></i>

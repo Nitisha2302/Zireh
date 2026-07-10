@@ -33,11 +33,14 @@
                             {{ $order->status }}
                         @endif
                     </p>
-                    <p class="mb-2"><strong>{{ __('admin.payment') }}:</strong> {{ $order->payment_status }} ({{ $order->payment_method }})</p>
+                    <p class="mb-2"><strong>{{ __('admin.payment') }}:</strong>
+                        {{ trans()->has('admin.payment_status_'.$order->payment_status) ? __('admin.payment_status_'.$order->payment_status) : $order->payment_status }}
+                        ({{ trans()->has('admin.payment_method_'.$order->payment_method) ? __('admin.payment_method_'.$order->payment_method) : $order->payment_method }})
+                    </p>
                     @if ($order->is_demo_order)
                         <p class="mb-2"><span class="badge bg-label-warning">{{ __('admin.demo_order') }}</span></p>
                     @endif
-                    <p class="mb-3"><strong>{{ __('admin.created_date') }}:</strong> {{ $order->created_at?->format('M d, Y H:i') }}</p>
+                    <p class="mb-3"><strong>{{ __('admin.created_date') }}:</strong> {{ $order->created_at?->translatedFormat('d M Y H:i') }}</p>
 
                     <form wire:submit="updateStatus" class="border-top pt-3">
                         <label class="form-label">{{ __('admin.change_order_status') }}</label>
@@ -77,7 +80,7 @@
                     @if (is_array($warehouse) || $order->warehouse)
                         <p class="mb-1 fw-medium">{{ data_get($warehouse, 'warehouse_name', '—') }}</p>
                         <p class="mb-1 text-body-secondary">{{ data_get($warehouse, 'address') }}</p>
-                        <p class="mb-1 text-body-secondary">{{ data_get($warehouse, 'city') }}, {{ data_get($warehouse, 'country', 'Tajikistan') }}</p>
+                        <p class="mb-1 text-body-secondary">{{ data_get($warehouse, 'city') }}, {{ data_get($warehouse, 'country', __('admin.tajikistan')) }}</p>
                         <p class="mb-0 text-body-secondary">{{ data_get($warehouse, 'contact_person') }} · {{ data_get($warehouse, 'contact_number') }}</p>
                     @else
                         <p class="mb-0 text-body-secondary">—</p>

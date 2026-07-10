@@ -78,7 +78,7 @@
                             <div class="col-md-6">
                                 <p class="mb-1"><strong>{{ __('admin.weight_cost') }}:</strong> {{ number_format($shippingPreview['weight_cost_tjs'], 2) }} TJS</p>
                                 <p class="mb-1"><strong>{{ __('admin.volume_cost') }}:</strong> {{ number_format($shippingPreview['volume_cost_tjs'], 2) }} TJS</p>
-                                <p class="mb-1"><strong>{{ __('admin.applied_method') }}:</strong> {{ ucfirst($shippingPreview['applied_method']) }}</p>
+                                <p class="mb-1"><strong>{{ __('admin.applied_method') }}:</strong> {{ isset($shippingPreview['applied_method']) && trans()->has('admin.pickup_method_'.$shippingPreview['applied_method']) ? __('admin.pickup_method_'.$shippingPreview['applied_method']) : ucfirst($shippingPreview['applied_method'] ?? '—') }}</p>
                             </div>
                         </div>
                         <hr class="my-3">
@@ -107,8 +107,8 @@
                 <div class="row g-4 align-items-start">
                     <div class="col-md-7">
                         <p class="mb-1"><strong>{{ __('admin.pickup_shipping') }}:</strong> {{ number_format((float) $order->pickup_shipping_fee_tjs, 2) }} TJS</p>
-                        <p class="mb-1"><strong>{{ __('admin.applied_method') }}:</strong> {{ ucfirst($order->pickup_shipping_calculation_method ?? '—') }}</p>
-                        <p class="mb-1"><strong>{{ __('admin.pickup_payment_status') }}:</strong> {{ $order->pickup_payment_status }}</p>
+                        <p class="mb-1"><strong>{{ __('admin.applied_method') }}:</strong> {{ $order->pickup_shipping_calculation_method && trans()->has('admin.pickup_method_'.$order->pickup_shipping_calculation_method) ? __('admin.pickup_method_'.$order->pickup_shipping_calculation_method) : ($order->pickup_shipping_calculation_method ? ucfirst($order->pickup_shipping_calculation_method) : '—') }}</p>
+                        <p class="mb-1"><strong>{{ __('admin.pickup_payment_status') }}:</strong> {{ $order->pickup_payment_status && trans()->has('admin.payment_status_'.$order->pickup_payment_status) ? __('admin.payment_status_'.$order->pickup_payment_status) : $order->pickup_payment_status }}</p>
                         <p class="mb-1"><strong>{{ __('admin.package_weight_kg') }}:</strong> {{ $order->package_weight_kg }} kg</p>
                         <p class="mb-3"><strong>{{ __('admin.pickup_token') }}:</strong> <code>{{ $order->pickup_token }}</code></p>
                         <a href="{{ route('tajikistan.pickup.show', $order->pickup_token) }}" class="btn btn-primary">
