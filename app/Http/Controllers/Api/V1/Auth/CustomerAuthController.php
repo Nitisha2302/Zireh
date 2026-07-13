@@ -17,6 +17,8 @@ use App\Services\Auth\AppleAuthService;
 use App\Services\Auth\Contracts\SocialAuthServiceInterface;
 use App\Services\Auth\CustomerAuthService;
 use App\Services\Auth\GoogleAuthService;
+use App\Services\CustomerManagementService;
+use App\Services\FileManager;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -27,6 +29,8 @@ class CustomerAuthController extends ApiController
         protected CustomerAuthService $customerAuthService,
         protected GoogleAuthService $googleAuthService,
         protected AppleAuthService $appleAuthService,
+        protected CustomerManagementService $customerManagementService,
+        protected FileManager $fileManager,
     ) {}
 
     public function sendRegistrationOtp(SendRegistrationOtpRequest $request): JsonResponse
@@ -111,6 +115,21 @@ class CustomerAuthController extends ApiController
         $this->customerAuthService->logout($user, $request);
 
         return $this->successResponse(null, __('api.customer_logged_out'));
+    }
+
+    public function deleteAccount(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        if (! $user) {
+            throw ValidationException::withMessages([
+                'auth' => [__('api.unauthenticated')],
+            ]);
+        }
+
+        $this->customerManagementService->delete($user, $this->fileManager);
+
+        return $this->successResponse(null, __('api.account_deleted'));
     }
 
     public function updateLanguage(UpdateLanguageRequest $request): JsonResponse

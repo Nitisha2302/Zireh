@@ -17,6 +17,8 @@ return [
     'customer_logged_in_with_otp' => 'Клиент успешно вошел по OTP.',
     'customer_profile_fetched' => 'Профиль клиента успешно получен.',
     'customer_logged_out' => 'Клиент успешно вышел из системы.',
+    'account_deleted' => 'Ваш аккаунт ZirehCargo успешно удалён.',
+    'legal_content_fetched' => 'Юридический контент успешно получен.',
     'customer_not_found' => 'Клиент с таким номером телефона не найден.',
     'customer_fallback_name' => 'Клиент',
     'social_redirect_generated' => 'Ссылка для входа через :provider успешно создана.',

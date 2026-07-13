@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>{{ $title ?? 'QadamFood' }}</title>
+    <title>{{ $title ?? 'ZirehCargo' }}</title>
 
     @include('layouts.partials.style')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -54,7 +54,7 @@
         <div class="container">
 
             <a class="navbar-brand fw-bold" href="/">
-                QadamFood
+                ZirehCargo
             </a>
 
             <button
@@ -142,7 +142,7 @@
             <div class="row align-items-center">
 
                 <div class="col-md-6 text-center text-md-start">
-                    <strong>QadamFood</strong>
+                    <strong>ZirehCargo</strong>
                 </div>
 
                 <div class="col-md-6 text-center text-md-end">
@@ -167,7 +167,7 @@
             </div>
 
             <div class="text-center mt-3 text-muted small">
-                © {{ date('Y') }} QadamFood. All rights reserved.
+                © {{ date('Y') }} ZirehCargo. All rights reserved.
             </div>
 
         </div>
