@@ -17,6 +17,8 @@ return [
     'customer_logged_in_with_otp' => 'Customer logged in with OTP successfully.',
     'customer_profile_fetched' => 'Customer profile fetched successfully.',
     'customer_logged_out' => 'Customer logged out successfully.',
+    'account_deleted' => 'Your ZirehCargo account has been deleted successfully.',
+    'legal_content_fetched' => 'Legal content fetched successfully.',
     'customer_not_found' => 'Customer not found for the provided phone number.',
     'customer_fallback_name' => 'Customer',
     'social_redirect_generated' => ':provider redirect URL generated successfully.',

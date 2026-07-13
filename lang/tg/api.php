@@ -17,6 +17,8 @@ return [
     'customer_logged_in_with_otp' => 'Муштарӣ бо OTP бомуваффақият ворид шуд.',
     'customer_profile_fetched' => 'Профили муштарӣ бомуваффақият гирифта шуд.',
     'customer_logged_out' => 'Муштарӣ бомуваффақият хориҷ шуд.',
+    'account_deleted' => 'Ҳисоби ZirehCargo-и шумо бомуваффақият нест карда шуд.',
+    'legal_content_fetched' => 'Мундариҷаи ҳуқуқӣ бомуваффақият гирифта шуд.',
     'customer_not_found' => 'Муштарӣ бо ин рақами телефон ёфт нашуд.',
     'customer_fallback_name' => 'Муштарӣ',
     'social_redirect_generated' => 'Пайванди воридшавӣ тавассути :provider бомуваффақият сохта шуд.',

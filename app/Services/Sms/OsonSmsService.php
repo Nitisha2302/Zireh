@@ -24,7 +24,7 @@ class OsonSmsService
 
         $response = Http::withToken($token)
             ->acceptJson()
-            ->get(config('services.osonsms.base_url', 'https://api.osonsms.com').'/sendsms_v1.php', [
+            ->get(config('services.osonsms.base_url', 'https://api.osonsms.com') . '/sendsms_v1.php', [
                 'from' => $sender,
                 'phone_number' => $phoneNumber,
                 'msg' => __('api.sms_otp_message', ['otp' => $otp], $locale),

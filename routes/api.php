@@ -39,6 +39,7 @@ Route::prefix('v1')->group(function () use ($publicCatalogRoutes) {
             Route::get('me', [CustomerAuthController::class, 'me']);
             Route::match(['put', 'patch'], 'profile', [CustomerAuthController::class, 'updateProfile']);
             Route::post('logout', [CustomerAuthController::class, 'logout']);
+            Route::delete('account', [CustomerAuthController::class, 'deleteAccount']);
             Route::patch('language', [CustomerAuthController::class, 'updateLanguage']);
 
             Route::get('addresses', [UserAddressController::class, 'index']);
