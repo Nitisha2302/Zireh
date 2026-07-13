@@ -23,6 +23,7 @@ use App\Livewire\Admin\Settings\ElimApiLogListPage;
 use App\Livewire\Admin\Settings\ElimApiLogDetailPage;
 use App\Livewire\Admin\Settings\ElimWarehouseSettingsPage;
 use App\Livewire\Admin\Settings\ChinaWarehouseLoginSettingsPage;
+use App\Livewire\Admin\Settings\CompanySettingsPage;
 use App\Livewire\Admin\Settings\FileManagerSettingsPage;
 use App\Livewire\Admin\Settings\PrivacyTermsSettingsPage;
 use App\Livewire\Authenticate\LoginPage;
@@ -71,6 +72,7 @@ Route::prefix('admin')->name('admin.')->middleware(['is_auth:admin'])->group(fun
         Route::get('settings/elim-api/logs/{log}', ElimApiLogDetailPage::class)->name('settings.elim-api-logs.show');
         Route::get('settings/elim-warehouse', ElimWarehouseSettingsPage::class)->name('settings.elim-warehouse');
         Route::get('settings/china-warehouse-login', ChinaWarehouseLoginSettingsPage::class)->name('settings.china-warehouse-login');
+        Route::get('settings/company', CompanySettingsPage::class)->name('settings.company');
         Route::get('settings/privacy-terms', PrivacyTermsSettingsPage::class)->name('settings.privacy-terms');
 
         Route::get('orders', OrderListPage::class)->name('orders.index');

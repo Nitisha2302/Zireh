@@ -16,9 +16,7 @@ new class extends Component {
 <div>
     <aside id="layout-menu" class="layout-menu menu-vertical menu">
         <div class="app-brand demo ">
-            <a href="{{ route('tajikistan.orders.index') }}" class="app-brand-link">
-                <span class="app-brand-text demo menu-text fw-bold ms-3">{{ __('admin.tajikistan_warehouse_panel') }}</span>
-            </a>
+            <x-company-brand :href="route('tajikistan.orders.index')" />
             <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">
                 <i class="icon-base ti menu-toggle-icon d-none d-xl-block"></i>
                 <i class="icon-base ti tabler-x d-block d-xl-none"></i>
