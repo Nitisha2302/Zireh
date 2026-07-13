@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Terms & Conditions - ZirehCargo</title>
+    <title>{{ __('admin.terms_conditions') }} - {{ company_name() }}</title>
 
     @include('layouts.partials.style')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -61,8 +61,11 @@
     <nav class="navbar navbar-expand-lg bg-white shadow-sm sticky-top">
         <div class="container">
 
-            <a class="navbar-brand fw-bold" href="/">
-                ZirehCargo
+            <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="/">
+                @if (company_logo_url())
+                    <img src="{{ company_logo_url() }}" alt="{{ company_name() }}" style="height: 32px; width: auto; object-fit: contain;">
+                @endif
+                {{ company_name() }}
             </a>
 
             <button
@@ -154,7 +157,7 @@
             <div class="row align-items-center">
 
                 <div class="col-md-6 text-center text-md-start">
-                    <strong>ZirehCargo</strong>
+                    <strong>{{ company_name() }}</strong>
                 </div>
 
                 <div class="col-md-6 text-center text-md-end">
@@ -179,7 +182,7 @@
             </div>
 
             <div class="text-center mt-3 text-muted small">
-                © {{ date('Y') }} ZirehCargo. All rights reserved.
+                © {{ date('Y') }} {{ company_name() }}. All rights reserved.
             </div>
 
         </div>

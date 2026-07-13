@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             AdminSeeder::class,
             OrderStatusSeeder::class,
             PrivacyTermsSeeder::class,
+            CompanySettingsSeeder::class,
         ]);
     }
 }

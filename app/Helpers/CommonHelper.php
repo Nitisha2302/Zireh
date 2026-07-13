@@ -38,6 +38,30 @@ if (! function_exists('setting')) {
     }
 }
 
+if (! function_exists('company')) {
+    /**
+     * @return array{name: string, logo: ?string, logo_url: ?string}
+     */
+    function company(): array
+    {
+        return SettingHelper::company();
+    }
+}
+
+if (! function_exists('company_name')) {
+    function company_name(): string
+    {
+        return SettingHelper::companyName();
+    }
+}
+
+if (! function_exists('company_logo_url')) {
+    function company_logo_url(): ?string
+    {
+        return SettingHelper::companyLogoUrl();
+    }
+}
+
 if (! function_exists('generateIndianMobileNumber')) {
     function generateIndianMobileNumber(): string
     {

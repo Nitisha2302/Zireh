@@ -4,9 +4,11 @@
             <div class="card">
                 <div class="card-body">
                     <div class="app-brand justify-content-center mb-6">
-                        <a href="{{ route('tajikistan.login') }}" class="app-brand-link">
-                            <span class="app-brand-text demo text-heading fw-bold">{{ __('admin.tajikistan_warehouse_panel') }}</span>
-                        </a>
+                        <x-company-brand
+                            :href="route('tajikistan.login')"
+                            text-class="app-brand-text demo text-heading fw-bold"
+                            :centered="true"
+                        />
                     </div>
 
                     <h4 class="mb-1">{{ __('admin.tajikistan_warehouse_login') }}</h4>
