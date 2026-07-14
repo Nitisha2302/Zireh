@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\ChinaWarehouseController;
 use App\Http\Controllers\Api\V1\Content\LegalContentController;
 use App\Http\Controllers\Api\V1\ContentController;
 use App\Http\Controllers\Api\V1\Elim\Alibaba1688CatalogController;
@@ -17,6 +18,7 @@ return function (): void {
     Route::get('lessons', [ContentController::class, 'lessons']);
     Route::get('news', [ContentController::class, 'news']);
     Route::get('legal', [LegalContentController::class, 'index']);
+    Route::get('china-warehouse', [ChinaWarehouseController::class, 'show']);
 
     Route::get('shipping/methods', [ShippingController::class, 'methods']);
     Route::post('shipping/calculate', [ShippingController::class, 'calculate']);

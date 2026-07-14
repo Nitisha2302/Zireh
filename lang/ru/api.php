@@ -71,4 +71,6 @@ return [
     'address_deleted' => 'Address deleted successfully.',
     'address_not_found' => 'Address not found.',
     'default_address_updated' => 'Default address updated successfully.',
+    'china_warehouse_fetched' => 'Данные китайского склада успешно получены.',
+    'elim_warehouse_address_missing' => 'Адрес склада не настроен. Обратитесь в поддержку.',
 ];

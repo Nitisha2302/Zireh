@@ -119,6 +119,7 @@ return [
     'wallet_deposit_successful' => 'Funds added to wallet successfully.',
     'wallet_transactions_listed' => 'Wallet transactions fetched successfully.',
     'warehouses_listed' => 'Warehouses fetched successfully.',
+    'china_warehouse_fetched' => 'China warehouse details fetched successfully.',
     'address_coordinates_missing' => 'This address does not have latitude and longitude. Please update the address with map coordinates.',
     'commission_slab_not_found' => 'No active commission slab matches this transaction amount for the selected platform.',
     'commission_slabs_listed' => 'Commission slabs fetched successfully.',

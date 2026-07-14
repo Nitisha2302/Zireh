@@ -72,4 +72,6 @@ return [
     'address_deleted' => 'Address deleted successfully.',
     'address_not_found' => 'Address not found.',
     'default_address_updated' => 'Default address updated successfully.',
+    'china_warehouse_fetched' => 'Тафсилоти анбори Чин бомуваффақият гирифта шуд.',
+    'elim_warehouse_address_missing' => 'Суроғаи анбор тanzim нашудааст. Лутфан ба дастгирӣ муроҷиат кунед.',
 ];
