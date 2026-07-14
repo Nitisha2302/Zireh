@@ -33,8 +33,11 @@ class OtpService
         }
 
         $payload = $this->create($phone, $purpose, $context, $existing);
-
-        if (! app()->isLocal() || ! config('app.debug')) {
+        // dd(strlen($phone) === 9);
+        if (
+            (! app()->isLocal() || ! config('app.debug')) &&
+            strlen($phone) === 9
+        ) {
             $this->smsService->sendOtp(
                 $phone,
                 $payload['otp'],
