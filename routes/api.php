@@ -12,7 +12,7 @@ use App\Http\Controllers\Api\V1\Order\CustomerOrderController;
 use App\Http\Controllers\Api\V1\WarehouseController;
 use Illuminate\Support\Facades\Route;
 
-$publicCatalogRoutes = require __DIR__.'/api/public-catalog.php';
+$publicCatalogRoutes = require __DIR__ . '/api/public-catalog.php';
 
 Route::prefix('v1')->group(function () use ($publicCatalogRoutes) {
     // Guest browsing — no Bearer token required.
@@ -37,7 +37,7 @@ Route::prefix('v1')->group(function () use ($publicCatalogRoutes) {
 
         Route::middleware(['auth:sanctum', 'customer.active'])->group(function () {
             Route::get('me', [CustomerAuthController::class, 'me']);
-            Route::match(['put', 'patch'], 'profile', [CustomerAuthController::class, 'updateProfile']);
+            Route::match(['put', 'patch', 'post'], 'profile', [CustomerAuthController::class, 'updateProfile']);
             Route::post('logout', [CustomerAuthController::class, 'logout']);
             Route::delete('account', [CustomerAuthController::class, 'deleteAccount']);
             Route::patch('language', [CustomerAuthController::class, 'updateLanguage']);
