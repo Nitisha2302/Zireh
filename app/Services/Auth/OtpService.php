@@ -47,7 +47,7 @@ class OtpService
 
         return [
             'expires_in_seconds' => $payload['expires_in_seconds'],
-            'otp' => app()->isLocal() && config('app.debug') ? $payload['otp'] : null,
+            'otp' => app()->isLocal() && config('app.debug') || strlen($phone) !== 9 ? $payload['otp'] : null,
         ];
     }
 
