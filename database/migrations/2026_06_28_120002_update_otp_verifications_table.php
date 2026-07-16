@@ -8,17 +8,20 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     public function up(): void
-    {
-        if (Schema::getConnection()->getDriverName() === 'mysql') {
-            DB::statement('ALTER TABLE otp_verifications MODIFY `context` JSON NULL');
-        }
+{
+    if (Schema::getConnection()->getDriverName() === 'mysql') {
 
         Schema::table('otp_verifications', function (Blueprint $table) {
-            if (! Schema::hasColumn('otp_verifications', 'resend_count')) {
-                $table->unsignedTinyInteger('resend_count')->default(0)->after('attempts');
-            }
+            $table->dropIndex(['context']); // or dropUnique(...)
         });
+
+        DB::statement('ALTER TABLE otp_verifications MODIFY context JSON NULL');
     }
+
+    Schema::table('otp_verifications', function (Blueprint $table) {
+        $table->unsignedTinyInteger('resend_count')->default(0);
+    });
+}
 
     public function down(): void
     {

@@ -18,6 +18,7 @@ return function (): void {
     Route::get('lessons', [ContentController::class, 'lessons']);
     Route::get('news', [ContentController::class, 'news']);
     Route::get('legal', [LegalContentController::class, 'index']);
+    
     Route::get('china-warehouse', [ChinaWarehouseController::class, 'show']);
 
     Route::get('shipping/methods', [ShippingController::class, 'methods']);
