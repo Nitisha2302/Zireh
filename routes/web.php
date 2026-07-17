@@ -32,7 +32,7 @@ use App\Livewire\Warehouse\Tajikistan\{LoginPage as TajikistanLoginPage, OrderDe
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return 'nginx in working';
+    return view('public.landing');
 });
 
 Route::get('privacy-policy', [PublicController::class, 'privacyPolicy'])->name('privacy-policy');
