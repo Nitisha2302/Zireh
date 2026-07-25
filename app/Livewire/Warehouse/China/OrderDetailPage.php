@@ -4,9 +4,11 @@ namespace App\Livewire\Warehouse\China;
 
 use App\Models\Admin;
 use App\Models\CustomerOrder;
+use App\Services\Order\CustomerOrderLifecycleService;
 use App\Services\Order\OrderStatusService;
 use App\Services\Warehouse\WarehousePanelService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -39,7 +41,7 @@ class OrderDetailPage extends Component
         try {
             $this->order = $warehousePanelService->updateOrderStatus($this->order, $this->statusCode)
                 ->load(['user', 'items', 'orderStatus', 'warehouse', 'shippingMethod']);
-        } catch (\Illuminate\Validation\ValidationException $exception) {
+        } catch (ValidationException $exception) {
             $this->setErrorBag($exception->validator->getMessageBag());
 
             return;
@@ -57,7 +59,7 @@ class OrderDetailPage extends Component
         try {
             $this->order = $warehousePanelService->updateParcelTracking($this->order, $this->parcelTrackingId)
                 ->load(['user', 'items', 'orderStatus', 'warehouse', 'shippingMethod']);
-        } catch (\Illuminate\Validation\ValidationException $exception) {
+        } catch (ValidationException $exception) {
             $this->setErrorBag($exception->validator->getMessageBag());
 
             return;
@@ -68,10 +70,32 @@ class OrderDetailPage extends Component
         flash()->success(__('admin.parcel_tracking_updated'));
     }
 
+    public function cancelOrder(
+        CustomerOrderLifecycleService $lifecycleService,
+        WarehousePanelService $warehousePanelService,
+    ) {
+        /** @var Admin $admin */
+        $admin = Auth::guard('admin')->user();
+        $warehousePanelService->ensureChinaOrderAccessible($admin, $this->order);
+
+        try {
+            $lifecycleService->cancelByStaff($admin, $this->order);
+        } catch (ValidationException $exception) {
+            $this->setErrorBag($exception->validator->getMessageBag());
+
+            return;
+        }
+
+        flash()->success(__('admin.order_cancelled_and_refunded'));
+
+        return $this->redirect(route('china.orders.index'), navigate: true);
+    }
+
     public function render(OrderStatusService $orderStatusService)
     {
         return view('livewire.warehouse.china.order-detail-page', [
-            'statusOptions' => $orderStatusService->listActive(),
+            'statusOptions' => $orderStatusService->listActiveForManualUpdate(),
+            'canCancelOrder' => $this->order->isCancellable(),
         ])->title(__('admin.china_warehouse_order').' #'.$this->order->id);
     }
 }

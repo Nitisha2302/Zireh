@@ -29,4 +29,9 @@
             </form>
         </div>
     </div>
+
+    @include('livewire.admin.order.partials.cancel-order-card', [
+        'order' => $order,
+        'canCancelOrder' => $canCancelOrder ?? false,
+    ])
 </div>

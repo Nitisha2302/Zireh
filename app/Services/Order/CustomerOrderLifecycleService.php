@@ -3,6 +3,7 @@
 namespace App\Services\Order;
 
 use App\Exceptions\Elim\ElimRequestException;
+use App\Models\Admin;
 use App\Models\CustomerOrder;
 use App\Models\OrderStatus;
 use App\Models\User;
@@ -11,6 +12,7 @@ use App\Services\Elim\ElimOrderApiService;
 use App\Services\Order\OrderCheckoutService;
 use App\Services\Order\OrderPickupService;
 use App\Services\Wallet\WalletService;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class CustomerOrderLifecycleService
@@ -55,23 +57,87 @@ class CustomerOrderLifecycleService
             ]);
         }
 
-        if ($order->is_demo_order) {
-            $order->update(['status' => OrderStatus::CODE_CANCELLED]);
+        return $this->cancelAndRefund($order);
+    }
 
-            return $order->fresh()->load(['items', 'orderStatus', 'warehouse', 'userAddress', 'shippingMethod']);
-        }
+    public function cancelByStaff(Admin $admin, CustomerOrder $order): CustomerOrder
+    {
+        return $this->cancelAndRefund($order, $admin);
+    }
 
-        $this->assertHasElimOrderId($order);
-
-        try {
-            $this->elimOrders->cancel($order->elim_order_id);
-        } catch (ElimRequestException $exception) {
+    public function cancelAndRefund(CustomerOrder $order, ?Admin $admin = null): CustomerOrder
+    {
+        if (! $order->isCancellable()) {
             throw ValidationException::withMessages([
-                'cancel' => [$exception->getMessage()],
+                'order' => [__('admin.order_not_cancellable')],
             ]);
         }
 
-        return $this->syncFromElim($user, $order->fresh());
+        if (! $order->is_demo_order) {
+            $this->assertHasElimOrderId($order);
+
+            try {
+                $this->elimOrders->cancel($order->elim_order_id);
+            } catch (ElimRequestException $exception) {
+                throw ValidationException::withMessages([
+                    'cancel' => [$exception->getMessage()],
+                ]);
+            }
+        }
+
+        return DB::transaction(function () use ($order, $admin): CustomerOrder {
+            $lockedOrder = CustomerOrder::query()
+                ->whereKey($order->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if (! $lockedOrder->isCancellable()) {
+                throw ValidationException::withMessages([
+                    'order' => [__('admin.order_already_cancelled_or_refunded')],
+                ]);
+            }
+
+            $refundAmount = $lockedOrder->paymentAmountTjs();
+
+            if ($refundAmount <= 0) {
+                throw ValidationException::withMessages([
+                    'order' => [__('admin.order_refund_amount_invalid')],
+                ]);
+            }
+
+            $description = __('admin.order_cancellation_refund_description', [
+                'id' => $lockedOrder->id,
+                'elim' => $lockedOrder->elim_order_id ?: '#'.$lockedOrder->id,
+                'method' => $lockedOrder->payment_method ?: 'unknown',
+            ]);
+
+            $refundTransaction = $this->walletService->creditOrderCancellationRefund(
+                $lockedOrder,
+                $refundAmount,
+                $description,
+                $admin
+            );
+
+            $lockedOrder->update([
+                'status' => OrderStatus::CODE_CANCELLED,
+                'payment_status' => CustomerOrder::PAYMENT_STATUS_REFUNDED,
+                'cancellation_refund_transaction_id' => $refundTransaction->id,
+                'cancelled_by_admin_id' => $admin?->id,
+                'cancelled_at' => now(),
+            ]);
+
+            return $lockedOrder->fresh()->load([
+                'items',
+                'orderStatus',
+                'warehouse',
+                'userAddress',
+                'shippingMethod',
+                'user',
+                'walletTransaction',
+                'cancellationRefundTransaction',
+                'cancelledByAdmin',
+            ]);
+        });
     }
 
     public function pickupPreview(User $user, CustomerOrder $order): array

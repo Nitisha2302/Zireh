@@ -19,6 +19,12 @@ class CustomerOrder extends Model
 
     public const PAYMENT_METHOD_ONLINE = 'online';
 
+    public const PAYMENT_STATUS_UNPAID = 'unpaid';
+
+    public const PAYMENT_STATUS_PAID = 'paid';
+
+    public const PAYMENT_STATUS_REFUNDED = 'refunded';
+
     public const PICKUP_PAYMENT_STATUS_PENDING = 'pending';
 
     public const PICKUP_PAYMENT_STATUS_PAID = 'paid';
@@ -85,6 +91,9 @@ class CustomerOrder extends Model
         'elim_detail_snapshot',
         'paid_at',
         'wallet_transaction_id',
+        'cancellation_refund_transaction_id',
+        'cancelled_by_admin_id',
+        'cancelled_at',
     ];
 
     protected function casts(): array
@@ -120,6 +129,7 @@ class CustomerOrder extends Model
             'elim_detail_snapshot' => 'array',
             'is_demo_order' => 'boolean',
             'paid_at' => 'datetime',
+            'cancelled_at' => 'datetime',
         ];
     }
 
@@ -175,12 +185,29 @@ class CustomerOrder extends Model
 
     public function isCancellable(): bool
     {
-        return $this->status === OrderStatus::CODE_PAID;
+        return $this->status === OrderStatus::CODE_PAID
+            && $this->cancellation_refund_transaction_id === null
+            && $this->cancelled_at === null;
+    }
+
+    public function hasBeenRefundedOnCancellation(): bool
+    {
+        return $this->cancellation_refund_transaction_id !== null;
     }
 
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function cancelledByAdmin(): BelongsTo
+    {
+        return $this->belongsTo(Admin::class, 'cancelled_by_admin_id');
+    }
+
+    public function cancellationRefundTransaction(): BelongsTo
+    {
+        return $this->belongsTo(WalletTransaction::class, 'cancellation_refund_transaction_id');
     }
 
     public function warehouse(): BelongsTo

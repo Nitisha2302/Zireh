@@ -138,18 +138,14 @@ it('syncs order status from elim', function () {
 
 it('cancels order via elim when status allows', function () {
     $user = User::factory()->create();
-    $order = makeCustomerOrder($user);
+    $order = makeCustomerOrder($user, [
+        'payment_status' => 'paid',
+        'payment_method' => CustomerOrder::PAYMENT_METHOD_ONLINE,
+    ]);
 
     Http::fake([
         'https://openapi.elim.asia/v1/orders/ORD0000000001/cancel' => Http::response([
             'success' => true,
-        ], 200),
-        'https://openapi.elim.asia/v1/orders/ORD0000000001' => Http::response([
-            'data' => [
-                'id' => 'ORD0000000001',
-                'status' => 'cancelled',
-                'payment_status' => 'unpaid',
-            ],
         ], 200),
     ]);
 
@@ -159,6 +155,13 @@ it('cancels order via elim when status allows', function () {
 
     $response->assertOk()
         ->assertJsonPath('data.status', OrderStatus::CODE_CANCELLED);
+
+    $order->refresh();
+
+    expect($order->status)->toBe(OrderStatus::CODE_CANCELLED)
+        ->and($order->payment_status)->toBe(CustomerOrder::PAYMENT_STATUS_REFUNDED)
+        ->and($order->cancellation_refund_transaction_id)->not->toBeNull()
+        ->and((float) app(WalletService::class)->getBalance($user))->toBe(118.0);
 });
 
 it('rejects cancel when order is not cancellable', function () {
@@ -168,6 +171,72 @@ it('rejects cancel when order is not cancellable', function () {
 
     $this->postJson("/api/v1/auth/orders/{$order->id}/cancel")
         ->assertUnprocessable();
+});
+
+it('refunds wallet payment amount once when cancelling a wallet-paid order', function () {
+    $user = User::factory()->create();
+    $admin = \App\Models\Admin::create([
+        'name' => 'Wallet Admin',
+        'username' => 'walletadmin',
+        'email' => 'walletadmin@test.com',
+        'password' => bcrypt('password'),
+        'email_verified_at' => now(),
+        'role' => \App\Models\Admin::ROLE_SUPER_ADMIN,
+    ]);
+
+    $walletService = app(WalletService::class);
+    $walletService->adminAddFunds($user, 200, 'Seed', $admin);
+
+    $order = makeCustomerOrder($user, [
+        'payment_status' => 'paid',
+        'payment_method' => CustomerOrder::PAYMENT_METHOD_WALLET,
+        'final_amount_tjs' => 80,
+        'customer_total_tjs' => 80,
+    ]);
+
+    $debit = $walletService->payForOrder($user, $order, 80, 'Order payment');
+    $order->update(['wallet_transaction_id' => $debit->id]);
+
+    Http::fake([
+        'https://openapi.elim.asia/v1/orders/ORD0000000001/cancel' => Http::response(['success' => true], 200),
+    ]);
+
+    Sanctum::actingAs($user);
+
+    $this->postJson("/api/v1/auth/orders/{$order->id}/cancel")->assertOk();
+
+    expect((float) $walletService->getBalance($user))->toBe(200.0)
+        ->and(WalletTransaction::query()->where('source', WalletTransaction::SOURCE_ORDER_REFUND)->count())->toBe(1);
+
+    $this->postJson("/api/v1/auth/orders/{$order->id}/cancel")->assertUnprocessable();
+
+    expect((float) $walletService->getBalance($user))->toBe(200.0)
+        ->and(WalletTransaction::query()->where('source', WalletTransaction::SOURCE_ORDER_REFUND)->count())->toBe(1);
+});
+
+it('does not refund when elim cancellation fails', function () {
+    $user = User::factory()->create();
+    $order = makeCustomerOrder($user, [
+        'payment_status' => 'paid',
+        'payment_method' => CustomerOrder::PAYMENT_METHOD_ONLINE,
+    ]);
+
+    Http::fake([
+        'https://openapi.elim.asia/v1/orders/ORD0000000001/cancel' => Http::response([
+            'message' => 'Cannot cancel',
+        ], 422),
+    ]);
+
+    Sanctum::actingAs($user);
+
+    $this->postJson("/api/v1/auth/orders/{$order->id}/cancel")->assertUnprocessable();
+
+    $order->refresh();
+
+    expect($order->status)->toBe(OrderStatus::CODE_PAID)
+        ->and($order->payment_status)->toBe('paid')
+        ->and($order->cancellation_refund_transaction_id)->toBeNull()
+        ->and((float) app(WalletService::class)->getBalance($user))->toBe(0.0);
 });
 
 it('fetches taobao logistics by package id', function () {

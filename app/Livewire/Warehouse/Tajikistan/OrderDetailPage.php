@@ -4,9 +4,10 @@ namespace App\Livewire\Warehouse\Tajikistan;
 
 use App\Models\Admin;
 use App\Models\CustomerOrder;
-use App\Models\OrderStatus;
 use App\Models\ShippingMethod;
+use App\Services\Order\CustomerOrderLifecycleService;
 use App\Services\Order\OrderPickupService;
+use App\Services\Order\OrderStatusService;
 use App\Services\Warehouse\WarehousePanelService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
@@ -124,7 +125,7 @@ class OrderDetailPage extends Component
         try {
             $this->order = $warehousePanelService->updateOrderStatus($this->order, $this->statusCode)
                 ->load(['user', 'items', 'orderStatus', 'warehouse', 'shippingMethod']);
-        } catch (\Illuminate\Validation\ValidationException $exception) {
+        } catch (ValidationException $exception) {
             $this->setErrorBag($exception->validator->getMessageBag());
 
             return;
@@ -133,11 +134,33 @@ class OrderDetailPage extends Component
         flash()->success(__('admin.order_status_changed'));
     }
 
-    public function render()
+    public function cancelOrder(
+        CustomerOrderLifecycleService $lifecycleService,
+        WarehousePanelService $warehousePanelService,
+    ): void {
+        /** @var Admin $admin */
+        $admin = Auth::guard('admin')->user();
+        $warehousePanelService->ensureTajikistanOrderAccessible($admin, $this->order);
+
+        try {
+            $this->order = $lifecycleService->cancelByStaff($admin, $this->order);
+            $this->statusCode = $this->order->status;
+        } catch (ValidationException $exception) {
+            $this->setErrorBag($exception->validator->getMessageBag());
+
+            return;
+        }
+
+        flash()->success(__('admin.order_cancelled_and_refunded'));
+    }
+
+    public function render(OrderStatusService $orderStatusService)
     {
         return view('livewire.warehouse.tajikistan.order-detail-page', [
             'canMeasure' => in_array($this->order->status, CustomerOrder::PRE_PICKUP_STATUSES, true),
             'isReadyForPickup' => $this->order->isReadyForPickup(),
+            'canCancelOrder' => $this->order->isCancellable(),
+            'statusOptions' => $orderStatusService->listActiveForManualUpdate(),
             'shippingMethods' => ShippingMethod::query()
                 ->where('is_active', true)
                 ->orderBy('name')

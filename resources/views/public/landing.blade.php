@@ -170,6 +170,19 @@
             background: #fff;
         }
 
+        .zc-footer-support a {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            text-decoration: none;
+            color: #475467;
+            transition: color 0.2s ease;
+        }
+
+        .zc-footer-support a:hover {
+            color: var(--zc-primary);
+        }
+
         @media (max-width: 991.98px) {
             .zc-hero {
                 min-height: auto;
@@ -198,6 +211,7 @@
                     <a class="nav-link" href="#how-it-works">How it works</a>
                     <a class="nav-link" href="#features">Benefits</a>
                     <a class="nav-link" href="#tracking">Tracking</a>
+                    <a class="nav-link" href="#support">Support</a>
                     <a class="btn btn-primary zc-btn-primary ms-lg-2 px-4" href="{{ route('login') }}">Login</a>
                 </div>
             </div>
@@ -414,6 +428,44 @@
             </div>
         </section>
 
+        <section id="support" class="zc-section bg-white">
+            <div class="container">
+                <div class="text-center mx-auto mb-5" style="max-width: 720px;">
+                    <h2 class="zc-section-title mb-3">Need support?</h2>
+                    <p class="zc-lead mx-auto">Contact the ZirehCargo team on Telegram or WhatsApp for order and shipping help.</p>
+                </div>
+
+                <div class="row g-4 justify-content-center">
+                    <div class="col-md-6 col-lg-5">
+                        <div class="zc-card h-100 p-4 p-lg-5 text-center">
+                            <span class="zc-icon mb-4"><i class="icon-base ti tabler-brand-telegram"></i></span>
+                            <h5 class="mb-2">Telegram</h5>
+                            <p class="text-body-secondary mb-4">Chat with us at <strong>@zirehcargo</strong></p>
+                            <a href="https://t.me/zirehcargo"
+                               class="btn btn-primary zc-btn-primary px-4"
+                               target="_blank"
+                               rel="noopener noreferrer">
+                                Open Telegram
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-5">
+                        <div class="zc-card h-100 p-4 p-lg-5 text-center">
+                            <span class="zc-icon mb-4"><i class="icon-base ti tabler-brand-whatsapp"></i></span>
+                            <h5 class="mb-2">WhatsApp</h5>
+                            <p class="text-body-secondary mb-4">Message us for quick support</p>
+                            <a href="https://wa.me/992066666753"
+                               class="btn btn-primary zc-btn-primary px-4"
+                               target="_blank"
+                               rel="noopener noreferrer">
+                                Open WhatsApp
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <section class="pb-5">
             <div class="container">
                 <div class="zc-card text-center p-5">
@@ -431,7 +483,15 @@
                 <div class="text-body-secondary">
                     © {{ now()->year }} ZirehCargo. All rights reserved.
                 </div>
-                <div class="d-flex gap-4">
+                <div class="zc-footer-support d-flex flex-wrap justify-content-center gap-3 gap-md-4">
+                    <a href="https://t.me/zirehcargo" target="_blank" rel="noopener noreferrer" aria-label="Telegram support @zirehcargo">
+                        <i class="icon-base ti tabler-brand-telegram"></i>
+                        <span>@zirehcargo</span>
+                    </a>
+                    <a href="https://wa.me/992066666753" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp support">
+                        <i class="icon-base ti tabler-brand-whatsapp"></i>
+                        <span>WhatsApp</span>
+                    </a>
                     <a href="{{ route('privacy-policy') }}" class="text-body-secondary">Privacy Policy</a>
                     <a href="{{ route('terms-conditions') }}" class="text-body-secondary">Terms & Conditions</a>
                 </div>

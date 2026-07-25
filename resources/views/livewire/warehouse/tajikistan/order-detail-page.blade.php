@@ -138,7 +138,7 @@
                 <form wire:submit="updateStatus">
                     <label class="form-label">{{ __('admin.change_order_status') }}</label>
                     <select class="form-select mb-2 @error('statusCode') is-invalid @enderror" wire:model="statusCode">
-                        @foreach (\App\Models\OrderStatus::query()->where('is_active', true)->orderBy('sort_order')->get() as $status)
+                        @foreach ($statusOptions as $status)
                             <option value="{{ $status->code }}">{{ $status->name }}</option>
                         @endforeach
                     </select>
@@ -148,4 +148,9 @@
             </div>
         </div>
     @endif
+
+    @include('livewire.admin.order.partials.cancel-order-card', [
+        'order' => $order,
+        'canCancelOrder' => $canCancelOrder ?? false,
+    ])
 </div>

@@ -103,6 +103,29 @@
                 </div>
             </div>
 
+            @php $tajikistanLoginUrl = route('tajikistan.login'); @endphp
+            <div class="card mb-4">
+                <div class="card-header"><h5 class="mb-0">{{ __('admin.tajikistan_warehouse_login_url') }}</h5></div>
+                <div class="card-body" x-data="{ copied: false }">
+                    <p class="text-body-secondary small mb-2">{{ __('admin.tajikistan_warehouse_login_url_hint') }}</p>
+                    <code class="d-block small mb-3 text-break">{{ $tajikistanLoginUrl }}</code>
+                    <div class="d-grid gap-2">
+                        <button
+                            type="button"
+                            class="btn btn-label-primary"
+                            @click="navigator.clipboard.writeText(@js($tajikistanLoginUrl)).then(() => { copied = true; setTimeout(() => copied = false, 2000) })"
+                        >
+                            <i class="icon-base ti tabler-copy me-1"></i>
+                            <span x-text="copied ? @js(__('admin.copied')) : @js(__('admin.copy_login_url'))"></span>
+                        </button>
+                        <a href="{{ $tajikistanLoginUrl }}" target="_blank" rel="noopener noreferrer" class="btn btn-label-secondary">
+                            <i class="icon-base ti tabler-external-link me-1"></i>
+                            {{ __('admin.open_login_page') }}
+                        </a>
+                    </div>
+                </div>
+            </div>
+
             <div class="card">
                 <div class="card-header"><h5 class="mb-0">{{ __('admin.status') }}</h5></div>
                 <div class="card-body">

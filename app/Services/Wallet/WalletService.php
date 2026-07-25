@@ -324,6 +324,55 @@ class WalletService
         });
     }
 
+    public function creditOrderCancellationRefund(
+        CustomerOrder $order,
+        float $amount,
+        string $description,
+        ?Admin $admin = null,
+    ): WalletTransaction {
+        $this->assertPositiveAmount($amount);
+
+        return DB::transaction(function () use ($order, $amount, $description, $admin): WalletTransaction {
+            $user = $order->user;
+
+            if (! $user) {
+                throw ValidationException::withMessages([
+                    'order' => [__('api.order_not_found')],
+                ]);
+            }
+
+            $wallet = UserWallet::query()
+                ->where('user_id', $user->id)
+                ->lockForUpdate()
+                ->first();
+
+            if (! $wallet) {
+                $wallet = $this->getOrCreateWallet($user);
+                $wallet = UserWallet::query()->whereKey($wallet->id)->lockForUpdate()->firstOrFail();
+            }
+
+            $balanceBefore = (float) $wallet->balance;
+            $balanceAfter = round($balanceBefore + $amount, 2);
+
+            $wallet->update(['balance' => $balanceAfter]);
+
+            return WalletTransaction::query()->create([
+                'user_id' => $user->id,
+                'admin_id' => $admin?->id,
+                'type' => WalletTransaction::TYPE_CREDIT,
+                'source' => WalletTransaction::SOURCE_ORDER_REFUND,
+                'amount' => $amount,
+                'balance_before' => $balanceBefore,
+                'balance_after' => $balanceAfter,
+                'currency' => $wallet->currency,
+                'status' => WalletTransaction::STATUS_COMPLETED,
+                'description' => $description,
+                'reference_type' => CustomerOrder::class,
+                'reference_id' => $order->id,
+            ]);
+        });
+    }
+
     public function depositFunds(
         User $user,
         float $amount,

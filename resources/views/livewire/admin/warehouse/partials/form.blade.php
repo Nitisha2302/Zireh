@@ -43,6 +43,21 @@
                 <small class="text-body-secondary">{{ __('admin.warehouse_panel_login_hint') }}</small>
             </div>
             <div class="card-body">
+                @php $tajikistanLoginUrl = route('tajikistan.login'); @endphp
+                <div class="alert alert-primary d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2 mb-4" x-data="{ copied: false }">
+                    <div>
+                        <div class="fw-semibold">{{ __('admin.tajikistan_warehouse_login_url') }}</div>
+                        <code class="small">{{ $tajikistanLoginUrl }}</code>
+                    </div>
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-primary text-nowrap"
+                        @click="navigator.clipboard.writeText(@js($tajikistanLoginUrl)).then(() => { copied = true; setTimeout(() => copied = false, 2000) })"
+                    >
+                        <i class="icon-base ti tabler-copy me-1"></i>
+                        <span x-text="copied ? @js(__('admin.copied')) : @js(__('admin.copy_login_url'))"></span>
+                    </button>
+                </div>
                 <div class="row g-4">
                     <div class="col-md-6">
                         <label class="form-label" for="login_username">{{ __('admin.login_username') }}</label>

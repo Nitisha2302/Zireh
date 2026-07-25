@@ -10,6 +10,33 @@
         </a>
     </div>
 
+    @php $tajikistanLoginUrl = route('tajikistan.login'); @endphp
+    <div class="card mb-4 border-primary border-opacity-25">
+        <div class="card-body py-3">
+            <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
+                <div>
+                    <div class="fw-semibold mb-1">{{ __('admin.tajikistan_warehouse_login_url') }}</div>
+                    <p class="mb-0 text-body-secondary small">{{ __('admin.tajikistan_warehouse_login_url_hint') }}</p>
+                </div>
+                <div class="d-flex flex-column flex-sm-row align-items-stretch align-items-sm-center gap-2" x-data="{ copied: false }">
+                    <code class="form-control bg-label-secondary border-0 text-body text-truncate" style="max-width: 420px;">{{ $tajikistanLoginUrl }}</code>
+                    <button
+                        type="button"
+                        class="btn btn-label-primary text-nowrap"
+                        @click="navigator.clipboard.writeText(@js($tajikistanLoginUrl)).then(() => { copied = true; setTimeout(() => copied = false, 2000) })"
+                    >
+                        <i class="icon-base ti tabler-copy me-1"></i>
+                        <span x-text="copied ? @js(__('admin.copied')) : @js(__('admin.copy_login_url'))"></span>
+                    </button>
+                    <a href="{{ $tajikistanLoginUrl }}" target="_blank" rel="noopener noreferrer" class="btn btn-label-secondary text-nowrap">
+                        <i class="icon-base ti tabler-external-link me-1"></i>
+                        {{ __('admin.open_login_page') }}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="row g-4 mb-4">
         <div class="col-sm-4">
             <div class="card h-100">

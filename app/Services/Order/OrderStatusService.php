@@ -138,6 +138,12 @@ class OrderStatusService
 
     public function updateOrderStatus(CustomerOrder $order, string $statusCode): CustomerOrder
     {
+        if ($statusCode === OrderStatus::CODE_CANCELLED) {
+            throw ValidationException::withMessages([
+                'status' => [__('admin.order_status_cancel_via_button_only')],
+            ]);
+        }
+
         $status = OrderStatus::query()
             ->where('code', $statusCode)
             ->where('is_active', true)
@@ -152,6 +158,13 @@ class OrderStatusService
         $order->update(['status' => $status->code]);
 
         return $order->fresh();
+    }
+
+    public function listActiveForManualUpdate(): Collection
+    {
+        return $this->listActive()
+            ->reject(fn (OrderStatus $status): bool => $status->code === OrderStatus::CODE_CANCELLED)
+            ->values();
     }
 
     public function clearCache(): void
