@@ -84,6 +84,19 @@ return [
         ],
     ],
 
+    'rapidapi' => [
+        'key' => env('RAPIDAPI_KEY'),
+        'host' => env('RAPIDAPI_HOST', 'china-e-commerce-data-api.p.rapidapi.com'),
+        'base_url' => env('RAPIDAPI_BASE_URL', 'https://china-e-commerce-data-api.p.rapidapi.com'),
+        'timeout' => env('RAPIDAPI_TIMEOUT', 20),
+        'retries' => env('RAPIDAPI_RETRIES', 2),
+        'retry_sleep' => env('RAPIDAPI_RETRY_SLEEP', 300),
+        'default_query' => env('RAPIDAPI_DEFAULT_QUERY', '手机'),
+        'cache' => [
+            'products_ttl' => env('RAPIDAPI_PRODUCTS_CACHE_TTL', 900),
+        ],
+    ],
+
     'exchange_rate' => [
         'api_url' => env('EXCHANGE_RATE_API_URL', 'https://open.er-api.com/v6/latest/{from}'),
         'api_key' => env('EXCHANGE_RATE_API_KEY'),

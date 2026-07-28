@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\V1\Content\LegalContentController;
 use App\Http\Controllers\Api\V1\ContentController;
 use App\Http\Controllers\Api\V1\Elim\Alibaba1688CatalogController;
 use App\Http\Controllers\Api\V1\Elim\TaobaoCatalogController;
+use App\Http\Controllers\Api\V1\Jd\JingdongCatalogController;
 use App\Http\Controllers\Api\V1\OrderStatusController;
 use App\Http\Controllers\Api\V1\PlatformCatalogController;
 use App\Http\Controllers\Api\V1\ShippingController;
@@ -42,5 +43,14 @@ return function (): void {
         Route::get('categories', [Alibaba1688CatalogController::class, 'categories']);
         Route::post('image-search', [Alibaba1688CatalogController::class, 'imageSearch']);
         Route::post('upload-image', [Alibaba1688CatalogController::class, 'uploadImage']);
+    });
+
+    Route::prefix('jd')->group(function () {
+        Route::get('products', [JingdongCatalogController::class, 'products']);
+        Route::get('search', [JingdongCatalogController::class, 'search']);
+        Route::get('products/{id}', [JingdongCatalogController::class, 'show']);
+        Route::get('categories', [JingdongCatalogController::class, 'categories']);
+        Route::post('image-search', [JingdongCatalogController::class, 'imageSearch']);
+        Route::post('upload-image', [JingdongCatalogController::class, 'uploadImage']);
     });
 };

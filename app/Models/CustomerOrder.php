@@ -15,6 +15,8 @@ class CustomerOrder extends Model
 
     public const PLATFORM_1688 = '1688';
 
+    public const PLATFORM_JD = 'jd';
+
     public const PAYMENT_METHOD_WALLET = 'wallet';
 
     public const PAYMENT_METHOD_ONLINE = 'online';

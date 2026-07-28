@@ -28,6 +28,12 @@ class CustomerOrderLifecycleService
     {
         $this->ensureOwnership($user, $order);
 
+        if ($order->platform === UserCartItem::PLATFORM_JD) {
+            throw ValidationException::withMessages([
+                'sync' => [__('api.jd_order_sync_unavailable')],
+            ]);
+        }
+
         if ($order->is_demo_order) {
             throw ValidationException::withMessages([
                 'sync' => [__('api.order_demo_sync_unavailable')],
@@ -291,6 +297,15 @@ class CustomerOrderLifecycleService
                 'platform' => UserCartItem::PLATFORM_1688,
                 'source' => 'order_detail',
                 'logistics' => $data['logistics'] ?? $data['logistics_info'] ?? [],
+            ];
+        }
+
+        if ($order->platform === UserCartItem::PLATFORM_JD) {
+            return [
+                'platform' => UserCartItem::PLATFORM_JD,
+                'source' => 'local',
+                'logistics' => [],
+                'message' => __('api.jd_order_logistics_unavailable'),
             ];
         }
 

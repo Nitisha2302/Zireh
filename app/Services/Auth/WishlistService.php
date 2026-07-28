@@ -3,11 +3,13 @@
 namespace App\Services\Auth;
 
 use App\Exceptions\Elim\ElimException;
+use App\Exceptions\RapidApi\RapidApiException;
 use App\Models\User;
 use App\Models\UserWishlistItem;
 use App\Services\Elim\Alibaba1688Service;
 use App\Services\Elim\Contracts\MarketplaceProductService;
 use App\Services\Elim\TaobaoService;
+use App\Services\RapidApi\JingdongService;
 use App\Support\Elim\ProductNormalizer;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Validation\ValidationException;
@@ -17,6 +19,7 @@ class WishlistService
     public function __construct(
         protected TaobaoService $taobaoService,
         protected Alibaba1688Service $alibaba1688Service,
+        protected JingdongService $jingdongService,
         protected ProductNormalizer $normalizer,
     ) {}
 
@@ -36,7 +39,7 @@ class WishlistService
 
         try {
             $detail = $this->resolveProductService($platform)->find($productId, $lang);
-        } catch (ElimException) {
+        } catch (ElimException|RapidApiException) {
             throw ValidationException::withMessages([
                 'product_id' => [__('api.wishlist_product_not_found')],
             ]);
@@ -86,6 +89,7 @@ class WishlistService
         return match ($platform) {
             UserWishlistItem::PLATFORM_TAOBAO => $this->taobaoService,
             UserWishlistItem::PLATFORM_1688 => $this->alibaba1688Service,
+            UserWishlistItem::PLATFORM_JD => $this->jingdongService,
             default => throw ValidationException::withMessages([
                 'platform' => [__('api.wishlist_invalid_platform')],
             ]),

@@ -86,7 +86,7 @@ class OrderCheckoutService
 
     public function callPreview(array $payload): array
     {
-        if ($this->isDemoMode()) {
+        if ($this->isDemoMode() || $this->isLocalCheckoutPlatform($payload)) {
             return $this->demoCheckout->preview($payload);
         }
 
@@ -101,7 +101,7 @@ class OrderCheckoutService
 
     public function callCreate(array $payload, array $parsedPreview): array
     {
-        if ($this->isDemoMode()) {
+        if ($this->isDemoMode() || $this->isLocalCheckoutPlatform($payload)) {
             return $this->demoCheckout->create($payload, $parsedPreview);
         }
 
@@ -134,6 +134,11 @@ class OrderCheckoutService
         }
 
         return $this->normalizeUnavailableItems($parsed['unavailable_items'] ?? []) !== [];
+    }
+
+    public function isLocalCheckoutPlatform(array $payload): bool
+    {
+        return ($payload['platform'] ?? null) === UserCartItem::PLATFORM_JD;
     }
 
     /**
@@ -246,7 +251,7 @@ class OrderCheckoutService
             'remark' => $options['remark'] ?? null,
             'elim_preview_snapshot' => $previewResponse,
             'elim_create_snapshot' => $createResponse,
-            'is_demo_order' => $this->isDemoMode(),
+            'is_demo_order' => $this->isDemoMode() || $platformCode === UserCartItem::PLATFORM_JD,
         ]);
 
         foreach ($items as $item) {
@@ -297,7 +302,7 @@ class OrderCheckoutService
             'Checkout payment for order '.($order->elim_order_id ?: '#'.$order->id)
         );
 
-        if ($this->isDemoMode() || $order->is_demo_order) {
+        if ($this->isDemoMode() || $order->is_demo_order || $order->platform === UserCartItem::PLATFORM_JD) {
             $order->update([
                 'payment_status' => 'paid',
                 'paid_at' => now(),
@@ -355,7 +360,7 @@ class OrderCheckoutService
                 $order = $this->processWalletPayment($user, $order);
             } elseif (
                 $order->payment_method === CustomerOrder::PAYMENT_METHOD_ONLINE
-                && ($this->isDemoMode() || $order->is_demo_order)
+                && ($this->isDemoMode() || $order->is_demo_order || $order->platform === UserCartItem::PLATFORM_JD)
             ) {
                 $order->update([
                     'payment_status' => 'paid',

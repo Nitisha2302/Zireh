@@ -45,7 +45,7 @@ class PlatformCategoryService
 
     public function clearCache(string|null $platformKey = null): void
     {
-        $platformKeys = $platformKey ? [$platformKey] : ['taobao', '1688'];
+        $platformKeys = $platformKey ? [$platformKey] : ['taobao', '1688', 'jd'];
 
         foreach ($platformKeys as $key) {
             foreach (['vi', 'en'] as $lang) {

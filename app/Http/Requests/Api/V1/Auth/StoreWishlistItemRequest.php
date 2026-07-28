@@ -14,6 +14,7 @@ class StoreWishlistItemRequest extends ApiRequest
             'platform' => ['required', 'string', Rule::in([
                 UserWishlistItem::PLATFORM_TAOBAO,
                 UserWishlistItem::PLATFORM_1688,
+                UserWishlistItem::PLATFORM_JD,
             ])],
             'product_id' => ['required', 'string', 'max:255'],
             'lang' => ['nullable', 'string', 'max:10'],

@@ -4,6 +4,8 @@ use App\Http\Controllers\Api\V1\Auth\CustomerAuthController;
 use App\Http\Controllers\Api\V1\Auth\UserAddressController;
 use App\Http\Controllers\Api\V1\Auth\WalletController;
 use App\Http\Controllers\Api\V1\Auth\WishlistController;
+use App\Http\Controllers\Api\V1\Cart\Jd\JdCartController;
+use App\Http\Controllers\Api\V1\Cart\Jd\JdCheckoutController;
 use App\Http\Controllers\Api\V1\Cart\Platform1688\Platform1688CartController;
 use App\Http\Controllers\Api\V1\Cart\Platform1688\Platform1688CheckoutController;
 use App\Http\Controllers\Api\V1\Cart\Taobao\TaobaoCartController;
@@ -90,6 +92,18 @@ Route::prefix('v1')->group(function () use ($publicCatalogRoutes) {
                 Route::post('cart/checkout', [Platform1688CheckoutController::class, 'checkout']);
                 Route::get('orders', [Platform1688CheckoutController::class, 'orders']);
                 Route::get('orders/{order}', [Platform1688CheckoutController::class, 'show']);
+            });
+
+            Route::prefix('jd')->group(function () {
+                Route::get('cart', [JdCartController::class, 'index']);
+                Route::post('cart/items', [JdCartController::class, 'store']);
+                Route::patch('cart/items/{cartItem}', [JdCartController::class, 'update']);
+                Route::delete('cart/items/{cartItem}', [JdCartController::class, 'destroy']);
+                Route::delete('cart', [JdCartController::class, 'clear']);
+                Route::post('cart/preview', [JdCheckoutController::class, 'preview']);
+                Route::post('cart/checkout', [JdCheckoutController::class, 'checkout']);
+                Route::get('orders', [JdCheckoutController::class, 'orders']);
+                Route::get('orders/{order}', [JdCheckoutController::class, 'show']);
             });
         });
     });

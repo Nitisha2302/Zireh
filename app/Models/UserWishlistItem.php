@@ -11,6 +11,8 @@ class UserWishlistItem extends Model
 
     public const PLATFORM_1688 = '1688';
 
+    public const PLATFORM_JD = 'jd';
+
     protected $fillable = [
         'user_id',
         'platform',
