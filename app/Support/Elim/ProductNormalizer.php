@@ -20,7 +20,7 @@ class ProductNormalizer
                 'size' => $response['paginate']['size'] ?? null,
             ],
             'items' => collect($response['items'] ?? [])
-                ->map(fn (array $item): array => $this->currencyPriceConverter->applyToProductListItem(
+                ->map(fn(array $item): array => $this->currencyPriceConverter->applyToProductListItem(
                     $this->listItem($item, $platform)
                 ))
                 ->values()
@@ -119,7 +119,7 @@ class ProductNormalizer
                 (string) ($sku['skuId'] ?? ''),
                 (string) ($sku['spec_id'] ?? ''),
                 (string) ($sku['mp_skuid'] ?? ''),
-            ], fn (string $value): bool => $value !== '');
+            ], fn(string $value): bool => $value !== '');
 
             if (in_array($skuId, $candidates, true)) {
                 return $sku;

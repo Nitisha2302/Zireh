@@ -41,7 +41,7 @@ class JingdongService implements MarketplaceProductService
         ];
 
         return Cache::remember($this->cacheKey('search', $payload), $this->productTtl(), function () use ($payload): array {
-            $response = $this->client->get('/china-ecommerce/jd-search', $payload);
+            $response = $this->client->get('/jd/product-search', $payload);
             $elimShaped = $this->mapper->toSearchResponse($response);
 
             return $this->normalizer->listResponse($elimShaped, $this->platform());
@@ -63,19 +63,31 @@ class JingdongService implements MarketplaceProductService
         $payload = ['itemId' => $id];
 
         return Cache::remember($this->cacheKey('detail', $payload), $this->productTtl(), function () use ($id): array {
-            $detailEnvelope = $this->client->get('/china-ecommerce/jd-detail', ['itemId' => $id]);
-            $detail = $this->mapper->firstDataItem($detailEnvelope);
+            $priceEnvelope = $this->client->get('/jd/product-price', ['itemId' => $id]);
+            $price = $this->mapper->firstDataItem($priceEnvelope);
 
-            if ($detail === null) {
+            if ($price === null) {
                 throw new RapidApiException(__('api.jd_product_not_found'), 404, context: [
                     'product_id' => [$id],
                 ]);
             }
 
-            $priceEnvelope = $this->client->get('/china-ecommerce/jd-price', ['itemId' => $id]);
-            $price = $this->mapper->firstDataItem($priceEnvelope);
+            $searchEnvelope = $this->client->get('/jd/product-search', [
+                'keyword' => $id,
+                'page' => 1,
+            ]);
+            $searchItem = $this->mapper->findExactSearchItem($searchEnvelope, $id);
 
-            $elimShaped = $this->mapper->toDetailResponse($detail, $price);
+            $commentsEnvelope = $this->client->get('/jd/product-comments', [
+                'itemId' => $id,
+                'page' => 1,
+            ]);
+
+            $elimShaped = $this->mapper->buildDetailFromPriceSearchComments(
+                $price,
+                $searchItem,
+                $commentsEnvelope,
+            );
 
             return $this->normalizer->detailResponse($elimShaped, $this->platform());
         });

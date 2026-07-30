@@ -39,6 +39,108 @@ class JdToElimMapper
     }
 
     /**
+     * Build a detail-shaped JD array from price + optional exact search match + comments.
+     * The new JD RapidAPI has no product-detail endpoint.
+     *
+     * @param  array<string, mixed>  $price
+     * @param  array<string, mixed>|null  $searchItem
+     * @param  array<string, mixed>  $commentsEnvelope
+     * @return array<string, mixed>
+     */
+    public function buildDetailFromPriceSearchComments(
+        array $price,
+        ?array $searchItem,
+        array $commentsEnvelope = [],
+    ): array {
+        $itemId = (string) ($price['itemId'] ?? $searchItem['itemId'] ?? '');
+
+        $comments = collect($commentsEnvelope['data'] ?? [])
+            ->filter(fn (mixed $item): bool => is_array($item));
+
+        $color = $searchItem['color'] ?? null;
+        $size = $searchItem['size'] ?? null;
+
+        if (($color === null || $color === '') || ($size === null || $size === '')) {
+            $firstComment = $comments->first();
+            if (is_array($firstComment)) {
+                $color = $color ?: ($firstComment['reviewProductColor'] ?? null);
+                $size = $size ?: ($firstComment['reviewProductSize'] ?? null);
+            }
+        }
+
+        $imgUrls = [];
+        $coverUrl = $searchItem['coverUrl'] ?? null;
+        if (is_string($coverUrl) && $coverUrl !== '') {
+            $imgUrls[] = $coverUrl;
+        }
+
+        foreach ($comments as $comment) {
+            $photos = $comment['reviewPhotos'] ?? [];
+            if (! is_array($photos)) {
+                continue;
+            }
+            foreach ($photos as $photo) {
+                if (is_string($photo) && $photo !== '' && ! in_array($photo, $imgUrls, true)) {
+                    $imgUrls[] = $photo;
+                }
+            }
+        }
+
+        $skuPairs = [];
+        foreach ($comments as $comment) {
+            $c = $comment['reviewProductColor'] ?? null;
+            $s = $comment['reviewProductSize'] ?? null;
+            if (($c === null || $c === '') && ($s === null || $s === '')) {
+                continue;
+            }
+            $key = (string) $c.'|'.(string) $s;
+            $skuPairs[$key] = ['color' => $c, 'size' => $s];
+        }
+
+        $detail = [
+            'itemId' => $itemId,
+            'productTitle' => $searchItem['productTitle'] ?? null,
+            'coverUrl' => $imgUrls[0] ?? null,
+            'imgUrls' => $imgUrls,
+            'price' => $price['price'] ?? ($searchItem['price'] ?? null),
+            'currency' => $price['currency'] ?? ($searchItem['currency'] ?? 'CNY'),
+            'itemUrl' => $price['itemUrl'] ?? ($searchItem['itemUrl'] ?? null),
+            'shopId' => $searchItem['shopId'] ?? null,
+            'shopName' => $searchItem['shopName'] ?? null,
+            'shopUrl' => $searchItem['shopUrl'] ?? null,
+            'sellerType' => $searchItem['sellerType'] ?? null,
+            'isJdSelf' => $searchItem['isJdSelf'] ?? null,
+            'categoryIds' => $searchItem['categoryIds'] ?? null,
+            'color' => $color,
+            'size' => $size,
+            'skuPairs' => array_values($skuPairs),
+            'status' => $price['status'] ?? ($searchItem['status'] ?? 'success'),
+        ];
+
+        return $this->toDetailResponse($detail, $price);
+    }
+
+    /**
+     * @param  array<string, mixed>  $envelope
+     * @param  string  $itemId
+     * @return array<string, mixed>|null
+     */
+    public function findExactSearchItem(array $envelope, string $itemId): ?array
+    {
+        foreach ($envelope['data'] ?? [] as $item) {
+            if (! is_array($item)) {
+                continue;
+            }
+
+            if ((string) ($item['itemId'] ?? '') === $itemId) {
+                return $item;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * @param  array<string, mixed>  $detail
      * @param  array<string, mixed>|null  $price
      * @return array<string, mixed>
@@ -67,19 +169,59 @@ class JdToElimMapper
             }
         }
 
-        $properties = array_filter([
-            'color' => $color,
-            'size' => $size,
-        ], fn (mixed $value): bool => $value !== null && $value !== '');
+        $imgUrls = [];
+        if (is_array($detail['imgUrls'] ?? null)) {
+            foreach ($detail['imgUrls'] as $url) {
+                if (is_string($url) && $url !== '') {
+                    $imgUrls[] = $url;
+                }
+            }
+        }
+        if ($imgUrls === [] && is_string($coverUrl) && $coverUrl !== '') {
+            $imgUrls = [$coverUrl];
+        }
 
-        $skus = [[
-            'id' => $itemId,
-            'sku_id' => $itemId,
-            'price' => $resolvedPrice,
-            'promotion_price' => $resolvedPrice,
-            'quantity' => $this->numericOrNull($detail['stockQuantity'] ?? null),
-            'properties' => $properties !== [] ? $properties : null,
-        ]];
+        $skuPairs = is_array($detail['skuPairs'] ?? null) ? $detail['skuPairs'] : [];
+        $skus = [];
+
+        if ($skuPairs !== []) {
+            foreach ($skuPairs as $index => $pair) {
+                if (! is_array($pair)) {
+                    continue;
+                }
+                $pairColor = $pair['color'] ?? null;
+                $pairSize = $pair['size'] ?? null;
+                $properties = array_filter([
+                    'color' => $pairColor,
+                    'size' => $pairSize,
+                ], fn (mixed $value): bool => $value !== null && $value !== '');
+
+                $skus[] = [
+                    'id' => $itemId.':'.($index + 1),
+                    'sku_id' => $itemId.':'.($index + 1),
+                    'price' => $resolvedPrice,
+                    'promotion_price' => $resolvedPrice,
+                    'quantity' => $this->numericOrNull($detail['stockQuantity'] ?? null),
+                    'properties' => $properties !== [] ? $properties : null,
+                ];
+            }
+        }
+
+        if ($skus === []) {
+            $properties = array_filter([
+                'color' => $color,
+                'size' => $size,
+            ], fn (mixed $value): bool => $value !== null && $value !== '');
+
+            $skus[] = [
+                'id' => $itemId,
+                'sku_id' => $itemId,
+                'price' => $resolvedPrice,
+                'promotion_price' => $resolvedPrice,
+                'quantity' => $this->numericOrNull($detail['stockQuantity'] ?? null),
+                'properties' => $properties !== [] ? $properties : null,
+            ];
+        }
 
         return [
             'id' => $itemId,
@@ -100,7 +242,7 @@ class JdToElimMapper
             'shop_name' => $detail['shopName'] ?? null,
             'seller_type' => $detail['sellerType'] ?? (isset($detail['isJdSelf']) ? ($detail['isJdSelf'] ? 'jd_self' : 'third_party') : null),
             'level' => null,
-            'img_urls' => $coverUrl ? [$coverUrl] : [],
+            'img_urls' => $imgUrls,
             'video_urls' => [],
             'sold' => null,
             'status' => $detail['status'] ?? 'success',
@@ -115,6 +257,7 @@ class JdToElimMapper
                 'shop_url' => $detail['shopUrl'] ?? null,
                 'vender_id' => $detail['venderId'] ?? null,
                 'price_available' => $price['available'] ?? null,
+                'unavailable_reason' => $price['unavailableReason'] ?? null,
             ],
             '_rapidapi_detail' => $detail,
             '_rapidapi_price' => $price,

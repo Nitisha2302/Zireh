@@ -86,8 +86,8 @@ return [
 
     'rapidapi' => [
         'key' => env('RAPIDAPI_KEY'),
-        'host' => env('RAPIDAPI_HOST', 'china-e-commerce-data-api.p.rapidapi.com'),
-        'base_url' => env('RAPIDAPI_BASE_URL', 'https://china-e-commerce-data-api.p.rapidapi.com'),
+        'host' => env('RAPIDAPI_HOST', 'jd-com-product-reviews-data-api.p.rapidapi.com'),
+        'base_url' => env('RAPIDAPI_BASE_URL', 'https://jd-com-product-reviews-data-api.p.rapidapi.com'),
         'timeout' => env('RAPIDAPI_TIMEOUT', 20),
         'retries' => env('RAPIDAPI_RETRIES', 2),
         'retry_sleep' => env('RAPIDAPI_RETRY_SLEEP', 300),

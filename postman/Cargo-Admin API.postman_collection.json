@@ -1103,7 +1103,7 @@
                                 "type": "text"
                             }
                         ],
-                        "description": "Merges RapidAPI jd-detail + jd-price. Price on detail alone is often masked.",
+                        "description": "Builds detail from RapidAPI product-price + optional product-search exact match + product-comments (no upstream product-detail endpoint).",
                         "url": {
                             "raw": "{{base_url}}/v1/jd/products/{{jd_product_id}}?lang={{elim_lang}}",
                             "host": [

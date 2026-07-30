@@ -21,6 +21,8 @@ use App\Livewire\Admin\Settings\CurrencyExchangeSettingsPage;
 use App\Livewire\Admin\Settings\ElimApiSettingsPage;
 use App\Livewire\Admin\Settings\ElimApiLogListPage;
 use App\Livewire\Admin\Settings\ElimApiLogDetailPage;
+use App\Livewire\Admin\Settings\RapidApiLogListPage;
+use App\Livewire\Admin\Settings\RapidApiLogDetailPage;
 use App\Livewire\Admin\Settings\ElimWarehouseSettingsPage;
 use App\Livewire\Admin\Settings\ChinaWarehouseLoginSettingsPage;
 use App\Livewire\Admin\Settings\CompanySettingsPage;
@@ -70,6 +72,8 @@ Route::prefix('admin')->name('admin.')->middleware(['is_auth:admin'])->group(fun
         Route::get('settings/elim-api', ElimApiSettingsPage::class)->name('settings.elim-api');
         Route::get('settings/elim-api/logs', ElimApiLogListPage::class)->name('settings.elim-api-logs.index');
         Route::get('settings/elim-api/logs/{log}', ElimApiLogDetailPage::class)->name('settings.elim-api-logs.show');
+        Route::get('settings/rapid-api/logs', RapidApiLogListPage::class)->name('settings.rapid-api-logs.index');
+        Route::get('settings/rapid-api/logs/{log}', RapidApiLogDetailPage::class)->name('settings.rapid-api-logs.show');
         Route::get('settings/elim-warehouse', ElimWarehouseSettingsPage::class)->name('settings.elim-warehouse');
         Route::get('settings/china-warehouse-login', ChinaWarehouseLoginSettingsPage::class)->name('settings.china-warehouse-login');
         Route::get('settings/company', CompanySettingsPage::class)->name('settings.company');

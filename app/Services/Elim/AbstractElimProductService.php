@@ -53,7 +53,7 @@ abstract class AbstractElimProductService implements MarketplaceProductService
 
         return Cache::remember($this->cacheKey('detail', $payload), $this->productTtl(), function () use ($payload): array {
             $response = $this->client->post('/v1/products/find', $payload);
-
+        
             return $this->normalizer->detailResponse($response, $this->platform());
         });
     }

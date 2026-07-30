@@ -21,8 +21,8 @@ beforeEach(function () {
 
     config([
         'services.rapidapi.key' => 'test-rapidapi-key',
-        'services.rapidapi.host' => 'china-e-commerce-data-api.p.rapidapi.com',
-        'services.rapidapi.base_url' => 'https://china-e-commerce-data-api.p.rapidapi.com',
+        'services.rapidapi.host' => 'jd-com-product-reviews-data-api.p.rapidapi.com',
+        'services.rapidapi.base_url' => 'https://jd-com-product-reviews-data-api.p.rapidapi.com',
         'services.exchange_rate.default_rate' => 1.5,
     ]);
 
@@ -54,30 +54,6 @@ beforeEach(function () {
     ]);
 });
 
-function jdDetailFakeBody(): array
-{
-    return [
-        'ok' => true,
-        'operation' => 'productDetail',
-        'count' => 1,
-        'data' => [[
-            'itemId' => '100256400499',
-            'productTitle' => 'HUAWEI Pura 90 Pro',
-            'coverUrl' => 'https://img.example/cover.jpg',
-            'priceMasked' => true,
-            'priceDisplay' => '6??9',
-            'stockQuantity' => '25',
-            'shopId' => '1000004259',
-            'shopName' => '华为京东自营旗舰店',
-            'color' => '桑果黑',
-            'size' => '16GB+512GB',
-            'categoryIds' => ['9987', '653', '655'],
-            'itemUrl' => 'https://item.jd.com/100256400499.html',
-            'status' => 'success',
-        ]],
-    ];
-}
-
 function jdPriceFakeBody(): array
 {
     return [
@@ -87,8 +63,12 @@ function jdPriceFakeBody(): array
         'data' => [[
             'itemId' => '100256400499',
             'price' => 6499,
+            'priceCents' => 649900,
             'currency' => 'CNY',
             'available' => true,
+            'unavailableReason' => null,
+            'itemUrl' => 'https://item.jd.com/100256400499.html',
+            'status' => 'success',
         ]],
     ];
 }
@@ -105,9 +85,11 @@ function jdSearchFakeBody(): array
             'coverUrl' => 'https://img.example/cover.jpg',
             'price' => 6499,
             'itemUrl' => 'https://item.jd.com/100256400499.html',
+            'shopId' => '1000004259',
             'shopName' => '华为京东自营旗舰店',
             'sellerType' => 1,
             'isJdSelf' => true,
+            'categoryIds' => ['9987', '653', '655'],
             'salesText' => '超千人购买',
             '_page' => 1,
             '_totalCount' => 10,
@@ -116,12 +98,28 @@ function jdSearchFakeBody(): array
     ];
 }
 
+function jdCommentsFakeBody(): array
+{
+    return [
+        'ok' => true,
+        'operation' => 'productComments',
+        'count' => 1,
+        'data' => [[
+            'reviewId' => '1',
+            'reviewProductColor' => '桑果黑',
+            'reviewProductSize' => '16GB+512GB',
+            'reviewPhotos' => [],
+            'status' => 'success',
+        ]],
+    ];
+}
+
 function fakeJdHttp(): void
 {
     Http::fake([
-        'china-e-commerce-data-api.p.rapidapi.com/china-ecommerce/jd-search*' => Http::response(jdSearchFakeBody(), 200),
-        'china-e-commerce-data-api.p.rapidapi.com/china-ecommerce/jd-detail*' => Http::response(jdDetailFakeBody(), 200),
-        'china-e-commerce-data-api.p.rapidapi.com/china-ecommerce/jd-price*' => Http::response(jdPriceFakeBody(), 200),
+        'jd-com-product-reviews-data-api.p.rapidapi.com/jd/product-search*' => Http::response(jdSearchFakeBody(), 200),
+        'jd-com-product-reviews-data-api.p.rapidapi.com/jd/product-price*' => Http::response(jdPriceFakeBody(), 200),
+        'jd-com-product-reviews-data-api.p.rapidapi.com/jd/product-comments*' => Http::response(jdCommentsFakeBody(), 200),
     ]);
 }
 
@@ -141,7 +139,8 @@ it('lists and shows jd products for guests via rapidapi', function () {
         ->assertJsonPath('data.id', '100256400499')
         ->assertJsonPath('data.price', 6499)
         ->assertJsonPath('data.images.0', 'https://img.example/cover.jpg')
-        ->assertJsonPath('data.skus.0.id', '100256400499');
+        ->assertJsonPath('data.skus.0.properties.color', '桑果黑')
+        ->assertJsonPath('data.title', 'HUAWEI Pura 90 Pro');
 });
 
 it('returns 501 for unsupported jd image search', function () {
@@ -232,7 +231,7 @@ it('adds jd cart item and places local checkout without elim http', function () 
     $cartItem = UserCartItem::query()->where('user_id', $user->id)->where('platform', 'jd')->first();
     expect($cartItem)->not->toBeNull();
 
-    Http::assertSent(fn ($request) => str_contains($request->url(), 'jd-detail'));
+    Http::assertSent(fn ($request) => str_contains($request->url(), '/jd/product-price'));
     Http::assertNotSent(fn ($request) => str_contains($request->url(), 'openapi.elim.asia'));
 
     $this->postJson('/api/v1/auth/jd/cart/preview', [
