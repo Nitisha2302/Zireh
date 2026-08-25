@@ -12,6 +12,7 @@ class ShippingRate extends Model
 
     protected $fillable = [
         'shipping_method_id',
+        'warehouse_id',
         'min_weight',
         'max_weight',
         'rate_per_kg',
@@ -31,6 +32,11 @@ class ShippingRate extends Model
     public function shippingMethod(): BelongsTo
     {
         return $this->belongsTo(ShippingMethod::class);
+    }
+
+    public function warehouse(): BelongsTo
+    {
+        return $this->belongsTo(Warehouse::class);
     }
 
     public function isActive(): bool

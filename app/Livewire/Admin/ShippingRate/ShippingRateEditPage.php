@@ -4,6 +4,7 @@ namespace App\Livewire\Admin\ShippingRate;
 
 use App\Models\ShippingMethod;
 use App\Models\ShippingRate;
+use App\Models\Warehouse;
 use App\Services\Shipping\ShippingRateService;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -15,6 +16,8 @@ class ShippingRateEditPage extends Component
 
     public string $shippingMethodId = '';
 
+    public string $warehouseId = '';
+
     public string $minWeight = '';
 
     public string $maxWeight = '';
@@ -25,8 +28,9 @@ class ShippingRateEditPage extends Component
 
     public function mount(ShippingRate $shippingRate): void
     {
-        $this->shippingRate = $shippingRate->load('shippingMethod');
+        $this->shippingRate = $shippingRate->load(['shippingMethod', 'warehouse']);
         $this->shippingMethodId = (string) $shippingRate->shipping_method_id;
+        $this->warehouseId = $shippingRate->warehouse_id !== null ? (string) $shippingRate->warehouse_id : '';
         $this->minWeight = (string) $shippingRate->min_weight;
         $this->maxWeight = (string) $shippingRate->max_weight;
         $this->ratePerKg = (string) $shippingRate->rate_per_kg;
@@ -37,6 +41,7 @@ class ShippingRateEditPage extends Component
     {
         return [
             'shippingMethodId' => ['required', 'integer', 'exists:shipping_methods,id'],
+            'warehouseId' => ['required', 'integer', 'exists:warehouses,id'],
             'minWeight' => ['required', 'numeric', 'min:0'],
             'maxWeight' => ['required', 'numeric', 'gt:minWeight'],
             'ratePerKg' => ['required', 'numeric', 'gt:0'],
@@ -48,6 +53,7 @@ class ShippingRateEditPage extends Component
     {
         return [
             'shippingMethodId' => __('admin.shipping_method'),
+            'warehouseId' => __('admin.warehouse'),
             'minWeight' => __('admin.shipping_min_weight'),
             'maxWeight' => __('admin.shipping_max_weight'),
             'ratePerKg' => __('admin.shipping_rate_per_kg'),
@@ -61,6 +67,7 @@ class ShippingRateEditPage extends Component
         try {
             $service->update($this->shippingRate, [
                 'shipping_method_id' => (int) $validated['shippingMethodId'],
+                'warehouse_id' => (int) $validated['warehouseId'],
                 'min_weight' => $validated['minWeight'],
                 'max_weight' => $validated['maxWeight'],
                 'rate_per_kg' => $validated['ratePerKg'],
@@ -79,6 +86,15 @@ class ShippingRateEditPage extends Component
     {
         return view('livewire.admin.shipping-rate.shipping-rate-edit-page', [
             'methods' => ShippingMethod::query()->orderBy('name')->get(),
+            'warehouses' => Warehouse::query()
+                ->where(function ($query): void {
+                    $query->where('status', Warehouse::STATUS_ACTIVE);
+                    if ($this->shippingRate->warehouse_id) {
+                        $query->orWhere('id', $this->shippingRate->warehouse_id);
+                    }
+                })
+                ->orderBy('warehouse_name')
+                ->get(),
         ])->title(__('admin.edit_shipping_rate'));
     }
 }

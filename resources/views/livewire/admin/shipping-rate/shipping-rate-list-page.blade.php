@@ -68,12 +68,21 @@
                         <input type="text" class="form-control" placeholder="{{ __('admin.shipping_rate_search_placeholder') }}" wire:model.live.debounce.500ms="search">
                     </div>
                 </div>
-                <div class="col-lg-3">
+                <div class="col-lg-2">
                     <label class="form-label mb-1">{{ __('admin.shipping_method') }}</label>
                     <select class="form-select" wire:model.live="methodFilter">
                         <option value="">{{ __('admin.all_shipping_methods') }}</option>
                         @foreach ($methods as $method)
                             <option value="{{ $method->id }}">{{ $method->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-lg-2">
+                    <label class="form-label mb-1">{{ __('admin.warehouse') }}</label>
+                    <select class="form-select" wire:model.live="warehouseFilter">
+                        <option value="">{{ __('admin.all_warehouses') }}</option>
+                        @foreach ($warehouses as $warehouse)
+                            <option value="{{ $warehouse->id }}">{{ $warehouse->warehouse_name }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -92,7 +101,7 @@
                         <span class="input-group-text">KG</span>
                     </div>
                 </div>
-                <div class="col-lg-2 d-flex flex-wrap align-items-center gap-2">
+                <div class="col-lg-1 d-flex flex-wrap align-items-center gap-2">
                     @if ($this->hasActiveFilters())
                         <button type="button" class="btn btn-label-secondary btn-sm" wire:click="clearFilters">
                             <i class="icon-base ti tabler-filter-off"></i>
@@ -109,6 +118,7 @@
                     <tr>
                         <th width="60">ID</th>
                         <th>{{ __('admin.shipping_method') }}</th>
+                        <th>{{ __('admin.warehouse') }}</th>
                         <th>{{ __('admin.shipping_weight_range') }}</th>
                         <th>{{ __('admin.shipping_rate_per_kg') }}</th>
                         <th>{{ __('admin.status') }}</th>
@@ -123,6 +133,14 @@
                             <td>
                                 <div class="fw-semibold">{{ $rate->shippingMethod?->name }}</div>
                                 <code class="small">{{ $rate->shippingMethod?->code }}</code>
+                            </td>
+                            <td>
+                                @if ($rate->warehouse)
+                                    <div class="fw-semibold">{{ $rate->warehouse->warehouse_name }}</div>
+                                    <code class="small">{{ $rate->warehouse->warehouse_code }}</code>
+                                @else
+                                    <span class="text-body-secondary">—</span>
+                                @endif
                             </td>
                             <td>{{ $rate->weightRangeLabel() }}</td>
                             <td class="fw-semibold">{{ number_format((float) $rate->rate_per_kg, 2) }} TJS/KG</td>
@@ -155,7 +173,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="text-center py-5 text-body-secondary">{{ __('admin.shipping_rates_empty') }}</td>
+                            <td colspan="8" class="text-center py-5 text-body-secondary">{{ __('admin.shipping_rates_empty') }}</td>
                         </tr>
                     @endforelse
                 </tbody>

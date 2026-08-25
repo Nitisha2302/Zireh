@@ -53,6 +53,11 @@ class Warehouse extends Model
         return $this->hasMany(CustomerOrder::class);
     }
 
+    public function shippingRates(): HasMany
+    {
+        return $this->hasMany(ShippingRate::class);
+    }
+
     public function admins(): HasMany
     {
         return $this->hasMany(Admin::class);

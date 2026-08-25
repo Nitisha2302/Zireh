@@ -29,6 +29,7 @@ class OrderPickupService
             (float) $measurements['package_length_cm'],
             (float) $measurements['package_width_cm'],
             (float) $measurements['package_height_cm'],
+            $order->warehouse_id !== null ? (int) $order->warehouse_id : null,
         );
     }
 

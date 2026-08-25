@@ -19,6 +19,7 @@ class CalculateShippingRequest extends FormRequest
             'length_cm' => ['nullable', 'numeric', 'min:0', 'required_with:width_cm,height_cm'],
             'width_cm' => ['nullable', 'numeric', 'min:0', 'required_with:length_cm,height_cm'],
             'height_cm' => ['nullable', 'numeric', 'min:0', 'required_with:length_cm,width_cm'],
+            'warehouse_id' => ['nullable', 'integer', 'exists:warehouses,id'],
         ];
     }
 }

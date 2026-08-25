@@ -3,6 +3,7 @@
 namespace App\Livewire\Admin\ShippingRate;
 
 use App\Models\ShippingMethod;
+use App\Models\Warehouse;
 use App\Services\Shipping\ShippingRateService;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -11,6 +12,8 @@ use Livewire\Component;
 class ShippingRateCreatePage extends Component
 {
     public string $shippingMethodId = '';
+
+    public string $warehouseId = '';
 
     public string $minWeight = '';
 
@@ -24,6 +27,7 @@ class ShippingRateCreatePage extends Component
     {
         return [
             'shippingMethodId' => ['required', 'integer', 'exists:shipping_methods,id'],
+            'warehouseId' => ['required', 'integer', 'exists:warehouses,id'],
             'minWeight' => ['required', 'numeric', 'min:0'],
             'maxWeight' => ['required', 'numeric', 'gt:minWeight'],
             'ratePerKg' => ['required', 'numeric', 'gt:0'],
@@ -35,6 +39,7 @@ class ShippingRateCreatePage extends Component
     {
         return [
             'shippingMethodId' => __('admin.shipping_method'),
+            'warehouseId' => __('admin.warehouse'),
             'minWeight' => __('admin.shipping_min_weight'),
             'maxWeight' => __('admin.shipping_max_weight'),
             'ratePerKg' => __('admin.shipping_rate_per_kg'),
@@ -48,6 +53,7 @@ class ShippingRateCreatePage extends Component
         try {
             $service->create([
                 'shipping_method_id' => (int) $validated['shippingMethodId'],
+                'warehouse_id' => (int) $validated['warehouseId'],
                 'min_weight' => $validated['minWeight'],
                 'max_weight' => $validated['maxWeight'],
                 'rate_per_kg' => $validated['ratePerKg'],
@@ -66,6 +72,10 @@ class ShippingRateCreatePage extends Component
     {
         return view('livewire.admin.shipping-rate.shipping-rate-create-page', [
             'methods' => ShippingMethod::query()->orderBy('name')->get(),
+            'warehouses' => Warehouse::query()
+                ->where('status', Warehouse::STATUS_ACTIVE)
+                ->orderBy('warehouse_name')
+                ->get(),
         ])->title(__('admin.add_shipping_rate'));
     }
 }

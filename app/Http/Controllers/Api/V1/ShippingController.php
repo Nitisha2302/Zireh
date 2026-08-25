@@ -28,6 +28,10 @@ class ShippingController extends ApiController
     {
         $validated = $request->validated();
 
+        $warehouseId = isset($validated['warehouse_id'])
+            ? (int) $validated['warehouse_id']
+            : ($request->user()?->warehouse_id !== null ? (int) $request->user()->warehouse_id : null);
+
         return $this->successResponse(
             $shippingRateService->calculate(
                 $validated['method'],
@@ -35,6 +39,7 @@ class ShippingController extends ApiController
                 isset($validated['length_cm']) ? (float) $validated['length_cm'] : null,
                 isset($validated['width_cm']) ? (float) $validated['width_cm'] : null,
                 isset($validated['height_cm']) ? (float) $validated['height_cm'] : null,
+                $warehouseId,
             ),
             __('api.shipping_cost_calculated')
         );

@@ -11,7 +11,7 @@
                 </div>
 
                 <div class="row g-3">
-                    <div class="col-12">
+                    <div class="col-md-6">
                         <label class="form-label">{{ __('admin.shipping_method') }}</label>
                         <select class="form-select @error('shippingMethodId') is-invalid @enderror" wire:model.blur="shippingMethodId">
                             <option value="">{{ __('admin.select_shipping_method') }}</option>
@@ -20,6 +20,16 @@
                             @endforeach
                         </select>
                         @error('shippingMethodId') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">{{ __('admin.warehouse') }}</label>
+                        <select class="form-select @error('warehouseId') is-invalid @enderror" wire:model.blur="warehouseId">
+                            <option value="">{{ __('admin.select_warehouse') }}</option>
+                            @foreach ($warehouses as $warehouse)
+                                <option value="{{ $warehouse->id }}">{{ $warehouse->warehouse_name }} ({{ $warehouse->warehouse_code }})</option>
+                            @endforeach
+                        </select>
+                        @error('warehouseId') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">{{ __('admin.shipping_min_weight') }}</label>

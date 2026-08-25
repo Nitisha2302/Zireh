@@ -5,17 +5,18 @@ namespace App\Repositories\Shipping;
 use App\Models\ShippingRate;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 
 class ShippingRateRepository
 {
     public function query(): Builder
     {
-        return ShippingRate::query()->with('shippingMethod');
+        return ShippingRate::query()->with(['shippingMethod', 'warehouse']);
     }
 
     public function findOrFail(int $id): ShippingRate
     {
-        return ShippingRate::query()->with('shippingMethod')->findOrFail($id);
+        return ShippingRate::query()->with(['shippingMethod', 'warehouse'])->findOrFail($id);
     }
 
     public function create(array $data): ShippingRate
@@ -27,7 +28,7 @@ class ShippingRateRepository
     {
         $rate->update($data);
 
-        return $rate->fresh(['shippingMethod']);
+        return $rate->fresh(['shippingMethod', 'warehouse']);
     }
 
     public function delete(ShippingRate $rate): void
@@ -38,6 +39,7 @@ class ShippingRateRepository
     public function paginate(
         ?string $search,
         ?int $methodFilter,
+        ?int $warehouseFilter,
         ?string $statusFilter,
         ?float $weightFilter,
         string $sortField,
@@ -46,6 +48,7 @@ class ShippingRateRepository
     ): LengthAwarePaginator {
         return $this->query()
             ->when($methodFilter, fn (Builder $query) => $query->where('shipping_method_id', $methodFilter))
+            ->when($warehouseFilter, fn (Builder $query) => $query->where('warehouse_id', $warehouseFilter))
             ->when($statusFilter === 'active', fn (Builder $query) => $query->where('is_active', true))
             ->when($statusFilter === 'inactive', fn (Builder $query) => $query->where('is_active', false))
             ->when($weightFilter !== null, function (Builder $query) use ($weightFilter): void {
@@ -57,6 +60,9 @@ class ShippingRateRepository
                     $query->whereHas('shippingMethod', function (Builder $query) use ($search): void {
                         $query->where('name', 'like', "%{$search}%")
                             ->orWhere('code', 'like', "%{$search}%");
+                    })->orWhereHas('warehouse', function (Builder $query) use ($search): void {
+                        $query->where('warehouse_name', 'like', "%{$search}%")
+                            ->orWhere('warehouse_code', 'like', "%{$search}%");
                     })->orWhere('rate_per_kg', 'like', "%{$search}%");
                 });
             })
@@ -74,25 +80,30 @@ class ShippingRateRepository
     }
 
     /**
-     * @return \Illuminate\Support\Collection<int, ShippingRate>
+     * @return Collection<int, ShippingRate>
      */
-    public function forMethod(int $methodId, ?int $ignoreId = null): \Illuminate\Support\Collection
+    public function forMethod(int $methodId, ?int $ignoreId = null, ?int $warehouseId = null): Collection
     {
         return ShippingRate::query()
             ->where('shipping_method_id', $methodId)
+            ->when(
+                $warehouseId === null,
+                fn (Builder $query) => $query->whereNull('warehouse_id'),
+                fn (Builder $query) => $query->where('warehouse_id', $warehouseId),
+            )
             ->when($ignoreId, fn (Builder $query) => $query->where('id', '!=', $ignoreId))
             ->get();
     }
 
-    public function findActiveForWeight(int $methodId, float $weight): ?ShippingRate
+    public function findActiveForWeight(int $methodId, float $weight, ?int $warehouseId = null): ?ShippingRate
     {
         $weight = max(0, $weight);
 
-        $rates = ShippingRate::query()
-            ->where('shipping_method_id', $methodId)
-            ->where('is_active', true)
-            ->orderBy('min_weight')
-            ->get();
+        $rates = $this->activeRatesForMethodAndWarehouse($methodId, $warehouseId);
+
+        if ($rates->isEmpty() && $warehouseId !== null) {
+            $rates = $this->activeRatesForMethodAndWarehouse($methodId, null);
+        }
 
         if ($rates->isEmpty()) {
             return null;
@@ -120,5 +131,22 @@ class ShippingRateRepository
             ->filter(fn (ShippingRate $rate) => (float) $rate->max_weight < $weight)
             ->sortByDesc(fn (ShippingRate $rate) => (float) $rate->max_weight)
             ->first() ?? $rates->last();
+    }
+
+    /**
+     * @return Collection<int, ShippingRate>
+     */
+    protected function activeRatesForMethodAndWarehouse(int $methodId, ?int $warehouseId): Collection
+    {
+        return ShippingRate::query()
+            ->where('shipping_method_id', $methodId)
+            ->where('is_active', true)
+            ->when(
+                $warehouseId === null,
+                fn (Builder $query) => $query->whereNull('warehouse_id'),
+                fn (Builder $query) => $query->where('warehouse_id', $warehouseId),
+            )
+            ->orderBy('min_weight')
+            ->get();
     }
 }

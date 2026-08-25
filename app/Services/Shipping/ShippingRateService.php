@@ -20,13 +20,15 @@ class ShippingRateService
         $this->assertValidRange(
             $validated['shipping_method_id'],
             $validated['min_weight'],
-            $validated['max_weight']
+            $validated['max_weight'],
+            null,
+            $validated['warehouse_id'] ?? null,
         );
 
         $rate = $this->repository->create($validated);
         $this->shippingMethodService->clearCache();
 
-        return $rate->load('shippingMethod');
+        return $rate->load(['shippingMethod', 'warehouse']);
     }
 
     public function update(ShippingRate $rate, array $data): ShippingRate
@@ -36,7 +38,8 @@ class ShippingRateService
             $validated['shipping_method_id'],
             $validated['min_weight'],
             $validated['max_weight'],
-            $rate->id
+            $rate->id,
+            $validated['warehouse_id'] ?? null,
         );
 
         $rate = $this->repository->update($rate, $validated);
@@ -65,7 +68,8 @@ class ShippingRateService
         int $methodId,
         float $minWeight,
         float $maxWeight,
-        ?int $ignoreId = null
+        ?int $ignoreId = null,
+        ?int $warehouseId = null,
     ): void {
         if ($minWeight >= $maxWeight) {
             throw ValidationException::withMessages([
@@ -73,7 +77,7 @@ class ShippingRateService
             ]);
         }
 
-        $existingRates = $this->repository->forMethod($methodId, $ignoreId);
+        $existingRates = $this->repository->forMethod($methodId, $ignoreId, $warehouseId);
 
         foreach ($existingRates as $rate) {
             if ($minWeight <= (float) $rate->max_weight && (float) $rate->min_weight <= $maxWeight) {
@@ -90,6 +94,7 @@ class ShippingRateService
         ?float $lengthCm = null,
         ?float $widthCm = null,
         ?float $heightCm = null,
+        ?int $warehouseId = null,
     ): array {
         $method = $this->shippingMethodService->findActiveByCode($methodCode);
 
@@ -107,7 +112,7 @@ class ShippingRateService
             ? max($actualWeight, $volumetricWeight)
             : $actualWeight;
 
-        $rate = $this->repository->findActiveForWeight($method->id, $chargeableWeight);
+        $rate = $this->repository->findActiveForWeight($method->id, $chargeableWeight, $warehouseId);
 
         if (! $rate) {
             throw ValidationException::withMessages([
@@ -136,6 +141,7 @@ class ShippingRateService
                 'min_weight' => (float) $rate->min_weight,
                 'max_weight' => (float) $rate->max_weight,
                 'rate_per_kg' => (float) $rate->rate_per_kg,
+                'warehouse_id' => $rate->warehouse_id,
             ],
             'minimum_charge' => (float) $method->minimum_charge,
             'calculated_cost' => $calculatedCost,
@@ -150,6 +156,7 @@ class ShippingRateService
         float $lengthCm,
         float $widthCm,
         float $heightCm,
+        ?int $warehouseId = null,
     ): array {
         $actualWeight = max(0, $weightKg);
         $volumeM3 = round(($lengthCm * $widthCm * $heightCm) / 1_000_000, 6);
@@ -158,8 +165,8 @@ class ShippingRateService
             2
         );
 
-        $weightCost = $this->costForChargeableWeight($method, $actualWeight);
-        $volumeCost = $this->costForChargeableWeight($method, $volumetricWeight);
+        $weightCost = $this->costForChargeableWeight($method, $actualWeight, $warehouseId);
+        $volumeCost = $this->costForChargeableWeight($method, $volumetricWeight, $warehouseId);
 
         $appliedMethod = $volumeCost['shipping_cost'] > $weightCost['shipping_cost']
             ? 'volume'
@@ -190,9 +197,12 @@ class ShippingRateService
         ];
     }
 
-    protected function costForChargeableWeight(ShippingMethod $method, float $chargeableWeight): array
-    {
-        $rate = $this->repository->findActiveForWeight($method->id, $chargeableWeight);
+    protected function costForChargeableWeight(
+        ShippingMethod $method,
+        float $chargeableWeight,
+        ?int $warehouseId = null,
+    ): array {
+        $rate = $this->repository->findActiveForWeight($method->id, $chargeableWeight, $warehouseId);
 
         if (! $rate) {
             throw ValidationException::withMessages([
@@ -210,6 +220,7 @@ class ShippingRateService
                 'min_weight' => (float) $rate->min_weight,
                 'max_weight' => (float) $rate->max_weight,
                 'rate_per_kg' => (float) $rate->rate_per_kg,
+                'warehouse_id' => $rate->warehouse_id,
             ],
             'minimum_charge' => (float) $method->minimum_charge,
             'calculated_cost' => $calculatedCost,
@@ -221,6 +232,7 @@ class ShippingRateService
     {
         return validator($data, [
             'shipping_method_id' => ['required', 'integer', 'exists:shipping_methods,id'],
+            'warehouse_id' => ['required', 'integer', 'exists:warehouses,id'],
             'min_weight' => ['required', 'numeric', 'min:0'],
             'max_weight' => ['required', 'numeric', 'gt:min_weight'],
             'rate_per_kg' => ['required', 'numeric', 'gt:0'],

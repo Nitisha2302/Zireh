@@ -4,6 +4,7 @@ namespace App\Livewire\Admin\ShippingRate;
 
 use App\Models\ShippingMethod;
 use App\Models\ShippingRate;
+use App\Models\Warehouse;
 use App\Repositories\Shipping\ShippingRateRepository;
 use App\Services\Shipping\ShippingRateService;
 use Livewire\Attributes\Layout;
@@ -19,6 +20,8 @@ class ShippingRateListPage extends Component
     public string $search = '';
 
     public string $methodFilter = '';
+
+    public string $warehouseFilter = '';
 
     public string $statusFilter = '';
 
@@ -40,6 +43,11 @@ class ShippingRateListPage extends Component
         $this->resetPage();
     }
 
+    public function updatingWarehouseFilter(): void
+    {
+        $this->resetPage();
+    }
+
     public function updatingStatusFilter(): void
     {
         $this->resetPage();
@@ -54,6 +62,7 @@ class ShippingRateListPage extends Component
     {
         $this->search = '';
         $this->methodFilter = '';
+        $this->warehouseFilter = '';
         $this->statusFilter = '';
         $this->weightFilter = '';
         $this->resetPage();
@@ -63,6 +72,7 @@ class ShippingRateListPage extends Component
     {
         return $this->search !== ''
             || $this->methodFilter !== ''
+            || $this->warehouseFilter !== ''
             || $this->statusFilter !== ''
             || $this->weightFilter !== '';
     }
@@ -124,12 +134,14 @@ class ShippingRateListPage extends Component
             'rates' => $repository->paginate(
                 $this->search ?: null,
                 $this->methodFilter !== '' ? (int) $this->methodFilter : null,
+                $this->warehouseFilter !== '' ? (int) $this->warehouseFilter : null,
                 $this->statusFilter ?: null,
                 $weight,
                 $this->sortField,
                 $this->sortDirection
             ),
             'methods' => ShippingMethod::query()->orderBy('name')->get(),
+            'warehouses' => Warehouse::query()->orderBy('warehouse_name')->get(),
             'stats' => $repository->countStats(),
         ])->title(__('admin.shipping_rates'));
     }
