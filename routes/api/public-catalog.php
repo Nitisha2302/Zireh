@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\V1\Jd\JingdongCatalogController;
 use App\Http\Controllers\Api\V1\OrderStatusController;
 use App\Http\Controllers\Api\V1\PlatformCatalogController;
 use App\Http\Controllers\Api\V1\ShippingController;
+use App\Http\Controllers\Api\V1\WarehouseController;
 use Illuminate\Support\Facades\Route;
 
 return function (): void {
@@ -21,6 +22,7 @@ return function (): void {
     Route::get('legal', [LegalContentController::class, 'index']);
     
     Route::get('china-warehouse', [ChinaWarehouseController::class, 'show']);
+    Route::get('warehouses', [WarehouseController::class, 'list']);
 
     Route::get('shipping/methods', [ShippingController::class, 'methods']);
     Route::post('shipping/calculate', [ShippingController::class, 'calculate']);

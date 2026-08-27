@@ -14,6 +14,15 @@ class WarehouseController extends ApiController
         protected WarehouseService $warehouseService,
     ) {}
 
+    public function list(): JsonResponse
+    {
+        $result = $this->warehouseService->listActive();
+
+        return $this->successResponse([
+            'warehouses' => WarehouseResource::collection($result['warehouses'])->resolve(),
+        ], __('api.warehouses_listed'));
+    }
+
     public function index(NearestWarehousesRequest $request): JsonResponse
     {
         if ($request->filled('address_id')) {
@@ -28,10 +37,6 @@ class WarehouseController extends ApiController
             ], __('api.warehouses_listed'));
         }
 
-        $result = $this->warehouseService->listActive();
-
-        return $this->successResponse([
-            'warehouses' => WarehouseResource::collection($result['warehouses'])->resolve(),
-        ], __('api.warehouses_listed'));
+        return $this->list();
     }
 }

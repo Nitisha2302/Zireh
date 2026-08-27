@@ -78,6 +78,48 @@ it('allows guest access to product listing and detail without token', function (
         ->assertJsonPath('data.id', '1001');
 });
 
+it('allows guest access to active warehouses without token', function () {
+    $active = \App\Models\Warehouse::create([
+        'warehouse_name' => 'Dushanbe Hub',
+        'warehouse_code' => 'DUS-01',
+        'contact_person' => 'Manager',
+        'contact_number' => '+992900000000',
+        'country' => 'Tajikistan',
+        'state' => 'Dushanbe',
+        'city' => 'Dushanbe',
+        'address' => 'Main Street 1',
+        'latitude' => 38.5598,
+        'longitude' => 68.7870,
+        'status' => \App\Models\Warehouse::STATUS_ACTIVE,
+    ]);
+
+    \App\Models\Warehouse::create([
+        'warehouse_name' => 'Closed Hub',
+        'warehouse_code' => 'CLS-01',
+        'contact_person' => 'Manager',
+        'contact_number' => '+992900000001',
+        'country' => 'Tajikistan',
+        'state' => 'Dushanbe',
+        'city' => 'Dushanbe',
+        'address' => 'Side Street 2',
+        'latitude' => 38.5600,
+        'longitude' => 68.7880,
+        'status' => \App\Models\Warehouse::STATUS_INACTIVE,
+    ]);
+
+    $this->getJson('/api/v1/warehouses')
+        ->assertOk()
+        ->assertJsonPath('success', true)
+        ->assertJsonCount(1, 'data.warehouses')
+        ->assertJsonPath('data.warehouses.0.id', $active->id)
+        ->assertJsonPath('data.warehouses.0.warehouse_code', 'DUS-01');
+
+    $this->getJson('/api/v1/public/warehouses')
+        ->assertOk()
+        ->assertJsonCount(1, 'data.warehouses')
+        ->assertJsonPath('data.warehouses.0.id', $active->id);
+});
+
 it('requires token for authenticated customer routes', function () {
     $this->getJson('/api/v1/auth/me')->assertUnauthorized();
     $this->getJson('/api/v1/auth/taobao/cart')->assertUnauthorized();
