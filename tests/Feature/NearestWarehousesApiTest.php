@@ -87,7 +87,7 @@ it('returns warehouses ordered by nearest distance to address', function () {
             'data' => [
                 'origin' => ['address_id', 'latitude', 'longitude'],
                 'warehouses' => [
-                    ['id', 'warehouse_name', 'warehouse_code', 'image', 'distance_km'],
+                    ['id', 'warehouse_name', 'warehouse_code', 'image', 'distance_km', 'is_open', 'working_hours'],
                 ],
             ],
         ]);

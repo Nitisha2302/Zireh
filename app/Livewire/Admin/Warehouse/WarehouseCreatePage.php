@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin\Warehouse;
 
+use App\Livewire\Admin\Warehouse\Concerns\ManagesWarehouseWorkingHours;
 use App\Models\Warehouse;
 use App\Services\Admin\WarehouseLoginAccountService;
 use App\Services\FileManager;
@@ -15,6 +16,7 @@ use Livewire\WithFileUploads;
 #[Layout('layouts::admin', ['title' => 'Add Warehouse'])]
 class WarehouseCreatePage extends Component
 {
+    use ManagesWarehouseWorkingHours;
     use WithFileUploads;
 
     public string $warehouse_name = '';
@@ -57,13 +59,16 @@ class WarehouseCreatePage extends Component
 
     protected function rules(): array
     {
-        return array_merge($this->warehouseRules(), $this->loginRules(isCreate: true));
+        return array_merge($this->warehouseRules(), $this->loginRules(isCreate: true), $this->workingHoursRules());
     }
 
     public function save(FileManager $fileManager, WarehouseLoginAccountService $loginAccounts): void
     {
         try {
-            $validated = $this->validate();
+            $this->normalizeWorkingHourTimes();
+            $validated = $this->withValidator(function ($validator): void {
+                $validator->after(fn ($validator) => $this->validateWorkingHoursConsistency($validator));
+            })->validate();
         } catch (ValidationException $exception) {
             $this->setErrorBag($exception->validator->getMessageBag());
             throw $exception;
@@ -77,6 +82,7 @@ class WarehouseCreatePage extends Component
 
         DB::transaction(function () use ($data, $loginAccounts): void {
             $warehouse = Warehouse::create($data);
+            $this->syncWorkingHours($warehouse);
 
             $loginAccounts->syncTajikistanAccount($warehouse, [
                 'login_username' => $this->login_username,

@@ -2,6 +2,8 @@
 
 namespace App\Http\Resources\Api\V1\Order;
 
+use App\Http\Resources\Api\V1\WarehouseResource;
+
 trait MapsCustomerOrderDetails
 {
     protected function customerOrderDetailFields(): array
@@ -9,15 +11,8 @@ trait MapsCustomerOrderDetails
         $warehouse = null;
 
         if ($this->relationLoaded('warehouse') && $this->warehouse) {
-            $warehouse = [
-                'id' => $this->warehouse->id,
-                'warehouse_name' => $this->warehouse->warehouse_name,
-                'warehouse_code' => $this->warehouse->warehouse_code,
-                'city' => $this->warehouse->city,
-                'address' => $this->warehouse->address,
-                'contact_person' => $this->warehouse->contact_person,
-                'contact_number' => $this->warehouse->contact_number,
-            ];
+            $this->warehouse->loadMissing('workingHours');
+            $warehouse = (new WarehouseResource($this->warehouse))->resolve();
         } elseif (is_array($this->warehouse_snapshot)) {
             $warehouse = $this->warehouse_snapshot;
         }

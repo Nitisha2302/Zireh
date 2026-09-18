@@ -27,6 +27,8 @@ class WarehouseResource extends JsonResource
             'longitude' => (float) $this->longitude,
             'status' => $this->status,
             'notes' => $this->notes,
+            'is_open' => $this->isOpenNow(),
+            'working_hours' => $this->workingHoursPayload(),
             'distance_km' => $this->when(
                 $this->distance_km !== null,
                 round((float) $this->distance_km, 2)

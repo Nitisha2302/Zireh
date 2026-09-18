@@ -43,5 +43,13 @@
                 </div>
             </div>
         </div>
+        @if ($admin->warehouse)
+            <div class="col-12">
+                @include('livewire.admin.warehouse.partials.working-hours-display', [
+                    'warehouse' => $admin->warehouse,
+                    'class' => 'mb-0',
+                ])
+            </div>
+        @endif
     </div>
 </div>

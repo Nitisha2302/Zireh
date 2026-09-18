@@ -107,6 +107,7 @@ class WarehouseListPage extends Component
     public function render()
     {
         $warehouses = Warehouse::query()
+            ->with('workingHours')
             ->when($this->search, function ($query): void {
                 $search = $this->search;
                 $query->where(function ($query) use ($search): void {

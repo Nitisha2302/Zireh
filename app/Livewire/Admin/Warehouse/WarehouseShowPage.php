@@ -13,7 +13,7 @@ class WarehouseShowPage extends Component
 
     public function mount(Warehouse $warehouse): void
     {
-        $this->warehouse = $warehouse;
+        $this->warehouse = $warehouse->load('workingHours');
     }
 
     public function render()

@@ -81,5 +81,7 @@ return [
     'address_not_found' => 'Address not found.',
     'default_address_updated' => 'Default address updated successfully.',
     'china_warehouse_fetched' => 'Данные китайского склада успешно получены.',
+    'warehouse_fetched' => 'Данные склада успешно получены.',
+    'warehouses_listed' => 'Список складов успешно получен.',
     'elim_warehouse_address_missing' => 'Адрес склада не настроен. Обратитесь в поддержку.',
 ];

@@ -112,7 +112,14 @@ it('allows guest access to active warehouses without token', function () {
         ->assertJsonPath('success', true)
         ->assertJsonCount(1, 'data.warehouses')
         ->assertJsonPath('data.warehouses.0.id', $active->id)
-        ->assertJsonPath('data.warehouses.0.warehouse_code', 'DUS-01');
+        ->assertJsonPath('data.warehouses.0.warehouse_code', 'DUS-01')
+        ->assertJsonStructure([
+            'data' => [
+                'warehouses' => [
+                    ['id', 'is_open', 'working_hours'],
+                ],
+            ],
+        ]);
 
     $this->getJson('/api/v1/public/warehouses')
         ->assertOk()

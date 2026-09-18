@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
 class Warehouse extends Model
 {
@@ -16,6 +18,8 @@ class Warehouse extends Model
     public const STATUS_INACTIVE = 'inactive';
 
     public const DEFAULT_COUNTRY = 'Tajikistan';
+
+    public const AVAILABILITY_TIMEZONE = 'Asia/Dushanbe';
 
     protected $fillable = [
         'warehouse_name',
@@ -46,6 +50,54 @@ class Warehouse extends Model
     public function isActive(): bool
     {
         return $this->status === self::STATUS_ACTIVE;
+    }
+
+    public function workingHours(): HasMany
+    {
+        return $this->hasMany(WarehouseWorkingHour::class)->orderBy('day_of_week');
+    }
+
+    public function isOpenNow(?CarbonInterface $at = null): bool
+    {
+        if (! $this->isActive()) {
+            return false;
+        }
+
+        $now = Carbon::parse($at ?? now())->timezone(self::AVAILABILITY_TIMEZONE);
+        $hours = $this->workingHoursForDay($now->isoWeekday());
+
+        return $hours?->isOpenAt($now) ?? false;
+    }
+
+    public function workingHoursForDay(int $dayOfWeek): ?WarehouseWorkingHour
+    {
+        if ($this->relationLoaded('workingHours')) {
+            return $this->workingHours->firstWhere('day_of_week', $dayOfWeek);
+        }
+
+        return $this->workingHours()->where('day_of_week', $dayOfWeek)->first();
+    }
+
+    public function workingHoursPayload(): array
+    {
+        $byDay = $this->workingHours->keyBy('day_of_week');
+        $payload = [];
+
+        foreach (WarehouseWorkingHour::dayNames() as $day => $name) {
+            $row = $byDay->get($day);
+
+            $payload[] = $row?->toPayload() ?? [
+                'day_of_week' => $day,
+                'day_name' => $name,
+                'is_closed' => true,
+                'opens_at' => null,
+                'closes_at' => null,
+                'break_starts_at' => null,
+                'break_ends_at' => null,
+            ];
+        }
+
+        return $payload;
     }
 
     public function customerOrders(): HasMany

@@ -26,6 +26,7 @@ class WarehouseService
         $longitude = (float) $address->longitude;
 
         $warehouses = Warehouse::query()
+            ->with('workingHours')
             ->where('status', Warehouse::STATUS_ACTIVE)
             ->get()
             ->map(function (Warehouse $warehouse) use ($latitude, $longitude): Warehouse {
@@ -61,10 +62,20 @@ class WarehouseService
     {
         return [
             'warehouses' => Warehouse::query()
+                ->with('workingHours')
                 ->where('status', Warehouse::STATUS_ACTIVE)
                 ->orderBy('warehouse_name')
                 ->get(),
         ];
+    }
+
+    public function findActive(Warehouse $warehouse): ?Warehouse
+    {
+        if (! $warehouse->isActive()) {
+            return null;
+        }
+
+        return $warehouse->loadMissing('workingHours');
     }
 
     protected function ensureAddressHasCoordinates(UserAddress $address): void

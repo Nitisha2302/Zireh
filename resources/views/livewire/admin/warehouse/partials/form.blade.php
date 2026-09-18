@@ -128,6 +128,63 @@
             </div>
         </div>
 
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-1">{{ __('admin.working_hours') }}</h5>
+                <small class="text-body-secondary">{{ __('admin.warehouse_working_hours_hint') }}</small>
+            </div>
+            <div class="card-body">
+                <div class="d-flex flex-column gap-3">
+                    @foreach ($workingHours as $day => $hours)
+                        <div class="border rounded p-3">
+                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                                <div class="fw-semibold">{{ $hours['day_name'] }}</div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="closed-{{ $day }}"
+                                        wire:model.live="workingHours.{{ $day }}.is_closed">
+                                    <label class="form-check-label" for="closed-{{ $day }}">{{ __('admin.closed') }}</label>
+                                </div>
+                            </div>
+                            <div class="row g-2">
+                                <div class="col-sm-3">
+                                    <label class="form-label small" for="opens-{{ $day }}">{{ __('admin.opening_time') }}</label>
+                                    <input id="opens-{{ $day }}" type="time"
+                                        class="form-control @error('workingHours.'.$day.'.opens_at') is-invalid @enderror"
+                                        wire:model="workingHours.{{ $day }}.opens_at"
+                                        @disabled($hours['is_closed'])>
+                                    @error('workingHours.'.$day.'.opens_at') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                </div>
+                                <div class="col-sm-3">
+                                    <label class="form-label small" for="closes-{{ $day }}">{{ __('admin.closing_time') }}</label>
+                                    <input id="closes-{{ $day }}" type="time"
+                                        class="form-control @error('workingHours.'.$day.'.closes_at') is-invalid @enderror"
+                                        wire:model="workingHours.{{ $day }}.closes_at"
+                                        @disabled($hours['is_closed'])>
+                                    @error('workingHours.'.$day.'.closes_at') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                </div>
+                                <div class="col-sm-3">
+                                    <label class="form-label small" for="break-start-{{ $day }}">{{ __('admin.break_starts_at') }}</label>
+                                    <input id="break-start-{{ $day }}" type="time"
+                                        class="form-control @error('workingHours.'.$day.'.break_starts_at') is-invalid @enderror"
+                                        wire:model="workingHours.{{ $day }}.break_starts_at"
+                                        @disabled($hours['is_closed'])>
+                                    @error('workingHours.'.$day.'.break_starts_at') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                </div>
+                                <div class="col-sm-3">
+                                    <label class="form-label small" for="break-end-{{ $day }}">{{ __('admin.break_ends_at') }}</label>
+                                    <input id="break-end-{{ $day }}" type="time"
+                                        class="form-control @error('workingHours.'.$day.'.break_ends_at') is-invalid @enderror"
+                                        wire:model="workingHours.{{ $day }}.break_ends_at"
+                                        @disabled($hours['is_closed'])>
+                                    @error('workingHours.'.$day.'.break_ends_at') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+
         <div class="card">
             <div class="card-header"><h5 class="mb-0">{{ __('admin.notes') }}</h5></div>
             <div class="card-body">

@@ -23,6 +23,7 @@ return function (): void {
     
     Route::get('china-warehouse', [ChinaWarehouseController::class, 'show']);
     Route::get('warehouses', [WarehouseController::class, 'list']);
+    Route::get('warehouses/{warehouse}', [WarehouseController::class, 'show']);
 
     Route::get('shipping/methods', [ShippingController::class, 'methods']);
     Route::post('shipping/calculate', [ShippingController::class, 'calculate']);

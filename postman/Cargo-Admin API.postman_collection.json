@@ -112,7 +112,42 @@
                                 "warehouses"
                             ]
                         },
-                        "description": "Active Tajikistan warehouses for guest selection. No Bearer token. Legacy path: GET /v1/warehouses."
+                        "description": "Active Tajikistan warehouses for guest selection. No Bearer token. Legacy path: GET /v1/warehouses. Includes is_open and working_hours."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Warehouse",
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Accept-Language",
+                                "value": "{{locale}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/v1/public/warehouses/{{warehouse_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "v1",
+                                "public",
+                                "warehouses",
+                                "{{warehouse_id}}"
+                            ]
+                        },
+                        "description": "Single active warehouse details including Open/Closed status, contact number, and working hours. Legacy path: GET /v1/warehouses/{id}."
                     },
                     "response": []
                 },
@@ -3997,7 +4032,49 @@
                                 "warehouses"
                             ]
                         },
-                        "description": "Returns all active Tajikistan warehouses for profile selection. Omit address_id."
+                        "description": "Returns all active Tajikistan warehouses for profile selection. Omit address_id. Includes is_open and working_hours."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Warehouse",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{customer_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Accept-Language",
+                                "value": "{{locale}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/v1/auth/warehouses/{{warehouse_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "v1",
+                                "auth",
+                                "warehouses",
+                                "{{warehouse_id}}"
+                            ]
+                        },
+                        "description": "Single active warehouse details including Open/Closed status, phone, and working hours."
                     },
                     "response": []
                 },

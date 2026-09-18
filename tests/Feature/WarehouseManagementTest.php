@@ -17,6 +17,7 @@ function makeWarehouseAdmin(): Admin
         'name' => 'Warehouse Admin',
         'username' => 'warehouseadmin',
         'email' => 'warehouse@example.com',
+        'role' => Admin::ROLE_SUPER_ADMIN,
         'password' => Hash::make('secret-password'),
         'email_verified_at' => now(),
     ]);
@@ -30,6 +31,10 @@ function validWarehousePayload(): array
         'contact_person' => 'Rustam Karimov',
         'contact_number' => '+992901234567',
         'email' => 'warehouse@example.com',
+        'login_username' => 'dus_tj_01',
+        'login_email' => 'login.dus@example.com',
+        'login_password' => 'password123',
+        'login_password_confirmation' => 'password123',
         'country' => 'Tajikistan',
         'state' => 'Districts of Republican Subordination',
         'city' => 'Dushanbe',
@@ -97,6 +102,10 @@ it('updates and toggles warehouse status', function () {
     Livewire::test(WarehouseEditPage::class, ['warehouse' => $warehouse])
         ->set('warehouse_name', 'Updated Warehouse')
         ->set('city', 'Khujand')
+        ->set('login_username', 'updated_wh')
+        ->set('login_email', 'updated.login@example.com')
+        ->set('login_password', 'password123')
+        ->set('login_password_confirmation', 'password123')
         ->call('update')
         ->assertRedirect(route('admin.warehouses.show', $warehouse));
 
@@ -133,4 +142,78 @@ it('shows warehouse details page', function () {
         ->assertSee('Dushanbe Central Warehouse')
         ->assertSee('DUS-TJ-01')
         ->assertSee('38.5598000');
+});
+
+it('persists default working hours when creating a warehouse', function () {
+    $admin = makeWarehouseAdmin();
+    $this->actingAs($admin, 'admin');
+
+    Livewire::test(WarehouseCreatePage::class)
+        ->set(validWarehousePayload())
+        ->call('save')
+        ->assertRedirect(route('admin.warehouses.index'));
+
+    $warehouse = Warehouse::query()->first();
+    $hours = $warehouse->workingHours()->orderBy('day_of_week')->get();
+
+    expect($hours)->toHaveCount(7)
+        ->and($hours->firstWhere('day_of_week', 1)->is_closed)->toBeFalse()
+        ->and($hours->firstWhere('day_of_week', 1)->opens_at)->toStartWith('09:00')
+        ->and($hours->firstWhere('day_of_week', 1)->closes_at)->toStartWith('19:00')
+        ->and($hours->firstWhere('day_of_week', 1)->break_starts_at)->toStartWith('12:40')
+        ->and($hours->firstWhere('day_of_week', 1)->break_ends_at)->toStartWith('14:00')
+        ->and($hours->firstWhere('day_of_week', 7)->is_closed)->toBeTrue();
+});
+
+it('updates working hours and shows them on the details page', function () {
+    $admin = makeWarehouseAdmin();
+    $this->actingAs($admin, 'admin');
+
+    Livewire::test(WarehouseCreatePage::class)
+        ->set(validWarehousePayload())
+        ->call('save');
+
+    $warehouse = Warehouse::query()->first();
+
+    $component = Livewire::test(WarehouseEditPage::class, ['warehouse' => $warehouse]);
+    $hours = $component->get('workingHours');
+
+    foreach ($hours as $key => $row) {
+        if ((int) $row['day_of_week'] === 1) {
+            $hours[$key]['opens_at'] = '08:30';
+            $hours[$key]['closes_at'] = '18:00';
+            $hours[$key]['break_starts_at'] = '13:00';
+            $hours[$key]['break_ends_at'] = '14:00';
+        }
+
+        if ((int) $row['day_of_week'] === 6) {
+            $hours[$key]['is_closed'] = true;
+            $hours[$key]['opens_at'] = '';
+            $hours[$key]['closes_at'] = '';
+            $hours[$key]['break_starts_at'] = '';
+            $hours[$key]['break_ends_at'] = '';
+        }
+    }
+
+    $component
+        ->set('workingHours', $hours)
+        ->call('update')
+        ->assertRedirect(route('admin.warehouses.show', $warehouse));
+
+    $monday = $warehouse->fresh()->workingHours()->where('day_of_week', 1)->first();
+    $saturday = $warehouse->fresh()->workingHours()->where('day_of_week', 6)->first();
+
+    expect($monday->opens_at)->toStartWith('08:30')
+        ->and($monday->closes_at)->toStartWith('18:00')
+        ->and($monday->break_starts_at)->toStartWith('13:00')
+        ->and($saturday->is_closed)->toBeTrue();
+
+    $this->actingAs($admin, 'admin')
+        ->get(route('admin.warehouses.show', $warehouse))
+        ->assertOk()
+        ->assertSee(__('admin.working_hours'))
+        ->assertSee('08:30')
+        ->assertSee('18:00')
+        ->assertSee(__('admin.break'))
+        ->assertSee('Sun: '.__('admin.closed'));
 });

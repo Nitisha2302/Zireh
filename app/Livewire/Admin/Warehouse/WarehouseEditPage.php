@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin\Warehouse;
 
+use App\Livewire\Admin\Warehouse\Concerns\ManagesWarehouseWorkingHours;
 use App\Models\Warehouse;
 use App\Services\Admin\WarehouseLoginAccountService;
 use App\Services\FileManager;
@@ -15,6 +16,7 @@ use Livewire\WithFileUploads;
 #[Layout('layouts::admin', ['title' => 'Edit Warehouse'])]
 class WarehouseEditPage extends Component
 {
+    use ManagesWarehouseWorkingHours;
     use WithFileUploads;
 
     public Warehouse $warehouse;
@@ -74,6 +76,7 @@ class WarehouseEditPage extends Component
         $this->longitude = (string) $warehouse->longitude;
         $this->status = $warehouse->status;
         $this->notes = $warehouse->notes ?? '';
+        $this->fillWorkingHoursFromWarehouse($warehouse);
 
         $account = $loginAccounts->findTajikistanAccount($warehouse);
 
@@ -90,13 +93,17 @@ class WarehouseEditPage extends Component
         return array_merge(
             $this->warehouseRules($this->warehouse->id),
             $this->loginRules(isCreate: false, ignoreAdminId: $account?->id),
+            $this->workingHoursRules(),
         );
     }
 
     public function update(FileManager $fileManager, WarehouseLoginAccountService $loginAccounts): void
     {
         try {
-            $validated = $this->validate();
+            $this->normalizeWorkingHourTimes();
+            $validated = $this->withValidator(function ($validator): void {
+                $validator->after(fn ($validator) => $this->validateWorkingHoursConsistency($validator));
+            })->validate();
         } catch (ValidationException $exception) {
             $this->setErrorBag($exception->validator->getMessageBag());
             throw $exception;
@@ -111,6 +118,7 @@ class WarehouseEditPage extends Component
 
         DB::transaction(function () use ($data, $loginAccounts): void {
             $this->warehouse->update($data);
+            $this->syncWorkingHours($this->warehouse);
 
             $loginAccounts->syncTajikistanAccount($this->warehouse->fresh(), [
                 'login_username' => $this->login_username,

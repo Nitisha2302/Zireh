@@ -42,7 +42,7 @@ trait ManagesWarehouseProfile
     protected function renderProfile(string $panelTitle)
     {
         return view('livewire.warehouse.profile-page', [
-            'admin' => Auth::guard('admin')->user()?->load('warehouse'),
+            'admin' => Auth::guard('admin')->user()?->load('warehouse.workingHours'),
             'roleLabel' => Admin::roles()[Auth::guard('admin')->user()?->role] ?? '',
             'panelTitle' => $panelTitle,
         ])->title(__('admin.my_profile'));

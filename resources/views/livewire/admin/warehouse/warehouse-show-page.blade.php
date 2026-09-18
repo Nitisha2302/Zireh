@@ -79,6 +79,8 @@
                 </div>
             </div>
 
+            @include('livewire.admin.warehouse.partials.working-hours-display', ['warehouse' => $warehouse])
+
             @if ($warehouse->notes)
                 <div class="card">
                     <div class="card-header"><h5 class="mb-0">{{ __('admin.notes') }}</h5></div>

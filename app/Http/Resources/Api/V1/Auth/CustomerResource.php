@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Api\V1\Auth;
 
+use App\Http\Resources\Api\V1\WarehouseResource;
 use App\Models\UserWallet;
 use App\Services\FileManager;
 use App\Services\Wallet\WalletService;
@@ -22,13 +23,14 @@ class CustomerResource extends JsonResource
             'preferred_language' => $this->preferred_language,
             'device_token' => $this->device_token,
             'warehouse_id' => $this->warehouse_id,
-            'warehouse' => $this->whenLoaded('warehouse', fn () => [
-                'id' => $this->warehouse->id,
-                'warehouse_name' => $this->warehouse->warehouse_name,
-                'warehouse_code' => $this->warehouse->warehouse_code,
-                'city' => $this->warehouse->city,
-                'address' => $this->warehouse->address,
-            ]),
+            'warehouse' => $this->when(
+                $this->relationLoaded('warehouse') && $this->warehouse,
+                function () {
+                    $this->warehouse->loadMissing('workingHours');
+
+                    return (new WarehouseResource($this->warehouse))->resolve();
+                }
+            ),
             'phone_verified_at' => $this->phone_verified_at,
             'email_verified_at' => $this->email_verified_at,
             'last_login_at' => $this->last_login_at,

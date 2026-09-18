@@ -239,6 +239,13 @@
                                         <i class="icon-base ti tabler-circle-x me-1"></i>{{ __('admin.inactive') }}
                                     </span>
                                 @endif
+                                <div class="mt-1">
+                                    @if ($warehouse->isOpenNow())
+                                        <span class="badge bg-label-success">{{ __('admin.open_status') }}</span>
+                                    @else
+                                        <span class="badge bg-label-danger">{{ __('admin.closed') }}</span>
+                                    @endif
+                                </div>
                             </td>
                             <td>
                                 <div>{{ $warehouse->created_at->format('d M Y') }}</div>

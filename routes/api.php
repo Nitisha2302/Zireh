@@ -51,6 +51,7 @@ Route::prefix('v1')->group(function () use ($publicCatalogRoutes) {
             Route::post('addresses/{address}/default', [UserAddressController::class, 'setDefault']);
 
             Route::get('warehouses', [WarehouseController::class, 'index']);
+            Route::get('warehouses/{warehouse}', [WarehouseController::class, 'show']);
 
             Route::get('wishlist', [WishlistController::class, 'index']);
             Route::post('wishlist', [WishlistController::class, 'store']);
