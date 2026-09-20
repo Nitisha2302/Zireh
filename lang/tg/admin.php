@@ -791,7 +791,7 @@ return [
     'warehouse_panel_login_hint' => 'Маълумоти вуруд барои /tajikistan/login. Email-и тамос дар боло ҷудост.',
     'warehouse_panels' => 'Панелҳои анбор',
     'warehouse_portal' => 'Портали анбор',
-    'warehouse_search_placeholder' => 'Search name, code, city, contact...',
+    'warehouse_search_placeholder' => 'Search name, email, address...',
     'warehouse_staff' => 'Warehouse Staff',
     'warehouse_staff_created' => 'Warehouse staff account created.',
     'warehouse_staff_delete_cancelled' => 'Deletion cancelled.',

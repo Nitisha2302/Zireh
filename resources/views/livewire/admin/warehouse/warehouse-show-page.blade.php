@@ -3,8 +3,9 @@
         <div>
             <h4 class="mb-1">{{ $warehouse->warehouse_name }}</h4>
             <p class="mb-0 text-body-secondary">
-                <code>{{ $warehouse->warehouse_code }}</code>
-                · {{ $warehouse->city }}, {{ $warehouse->country }}
+                @if ($warehouse->city || $warehouse->country)
+                    {{ trim(implode(', ', array_filter([$warehouse->city, $warehouse->country]))) }}
+                @endif
             </p>
         </div>
         <div class="d-flex gap-2">
@@ -24,20 +25,16 @@
                             <p class="mb-0 fw-medium">{{ $warehouse->warehouse_name }}</p>
                         </div>
                         <div class="col-md-6">
-                            <p class="text-body-secondary mb-1">{{ __('admin.warehouse_code') }}</p>
-                            <p class="mb-0"><code>{{ $warehouse->warehouse_code }}</code></p>
+                            <p class="text-body-secondary mb-1">{{ __('admin.email') }}</p>
+                            <p class="mb-0">{{ $warehouse->email ?: '—' }}</p>
                         </div>
                         <div class="col-md-6">
                             <p class="text-body-secondary mb-1">{{ __('admin.contact_person') }}</p>
-                            <p class="mb-0">{{ $warehouse->contact_person }}</p>
+                            <p class="mb-0">{{ $warehouse->contact_person ?: '—' }}</p>
                         </div>
                         <div class="col-md-6">
                             <p class="text-body-secondary mb-1">{{ __('admin.contact_number') }}</p>
-                            <p class="mb-0">{{ $warehouse->contact_number }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <p class="text-body-secondary mb-1">{{ __('admin.email') }}</p>
-                            <p class="mb-0">{{ $warehouse->email ?: '—' }}</p>
+                            <p class="mb-0">{{ $warehouse->contact_number ?: '—' }}</p>
                         </div>
                     </div>
                 </div>
@@ -49,15 +46,15 @@
                     <div class="row g-3">
                         <div class="col-md-4">
                             <p class="text-body-secondary mb-1">{{ __('admin.country') }}</p>
-                            <p class="mb-0">{{ $warehouse->country }}</p>
+                            <p class="mb-0">{{ $warehouse->country ?: '—' }}</p>
                         </div>
                         <div class="col-md-4">
                             <p class="text-body-secondary mb-1">{{ __('admin.state_region') }}</p>
-                            <p class="mb-0">{{ $warehouse->state }}</p>
+                            <p class="mb-0">{{ $warehouse->state ?: '—' }}</p>
                         </div>
                         <div class="col-md-4">
                             <p class="text-body-secondary mb-1">{{ __('admin.city') }}</p>
-                            <p class="mb-0">{{ $warehouse->city }}</p>
+                            <p class="mb-0">{{ $warehouse->city ?: '—' }}</p>
                         </div>
                         <div class="col-12">
                             <p class="text-body-secondary mb-1">{{ __('admin.full_address') }}</p>
@@ -69,11 +66,11 @@
                         </div>
                         <div class="col-md-4">
                             <p class="text-body-secondary mb-1">{{ __('admin.latitude') }}</p>
-                            <p class="mb-0">{{ $warehouse->latitude }}</p>
+                            <p class="mb-0">{{ $warehouse->latitude ?: '—' }}</p>
                         </div>
                         <div class="col-md-4">
                             <p class="text-body-secondary mb-1">{{ __('admin.longitude') }}</p>
-                            <p class="mb-0">{{ $warehouse->longitude }}</p>
+                            <p class="mb-0">{{ $warehouse->longitude ?: '—' }}</p>
                         </div>
                     </div>
                 </div>

@@ -292,7 +292,7 @@ return [
     'warehouse_hours_break_end_after_start' => 'Break end must be after break start.',
     'warehouse_hours_break_inside_hours' => 'Break must be within opening hours.',
     'warehouse_notes_placeholder' => 'Optional internal notes about this warehouse.',
-    'warehouse_search_placeholder' => 'Search name, code, city, contact...',
+    'warehouse_search_placeholder' => 'Search name, email, address...',
     'warehouse_created' => 'Warehouse created successfully.',
     'warehouse_updated' => 'Warehouse updated successfully.',
     'warehouse_deleted' => 'Warehouse deleted successfully.',

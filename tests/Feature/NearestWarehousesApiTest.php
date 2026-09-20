@@ -169,3 +169,27 @@ it('returns active warehouses when address_id is omitted', function () {
         ->assertJsonPath('data.warehouses.0.id', $active->id)
         ->assertJsonMissingPath('data.origin');
 });
+
+it('excludes warehouses without coordinates from nearest listing', function () {
+    $user = makeWarehouseUser();
+    $address = makeUserAddress($user);
+
+    $withCoords = makeActiveWarehouse([
+        'warehouse_name' => 'Mapped Warehouse',
+        'warehouse_code' => 'MAP-01',
+    ]);
+
+    makeActiveWarehouse([
+        'warehouse_name' => 'Unmapped Warehouse',
+        'warehouse_code' => 'UNMAP-01',
+        'latitude' => null,
+        'longitude' => null,
+    ]);
+
+    Sanctum::actingAs($user);
+
+    $this->getJson('/api/v1/auth/warehouses?address_id='.$address->id)
+        ->assertOk()
+        ->assertJsonCount(1, 'data.warehouses')
+        ->assertJsonPath('data.warehouses.0.id', $withCoords->id);
+});

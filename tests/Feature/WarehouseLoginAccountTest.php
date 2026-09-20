@@ -30,23 +30,13 @@ function validWarehousePayload(array $overrides = []): array
 {
     return array_merge([
         'warehouse_name' => 'Dushanbe Hub',
-        'warehouse_code' => 'DUS-TEST-01',
-        'contact_person' => 'Manager',
-        'contact_number' => '+992900000001',
         'email' => 'contact@warehouse.example.com',
         'login_username' => 'dushanbe_wh',
         'login_email' => 'login@warehouse.example.com',
         'login_password' => 'password123',
         'login_password_confirmation' => 'password123',
-        'country' => 'Tajikistan',
-        'state' => 'Dushanbe',
-        'city' => 'Dushanbe',
         'address' => 'Street 1',
-        'postal_code' => '',
-        'latitude' => '38.55',
-        'longitude' => '68.78',
         'status' => Warehouse::STATUS_ACTIVE,
-        'notes' => '',
     ], $overrides);
 }
 
@@ -59,7 +49,7 @@ it('creates warehouse with embedded tajikistan login account', function () {
         ->call('save')
         ->assertRedirect(route('admin.warehouses.index'));
 
-    $warehouse = Warehouse::query()->where('warehouse_code', 'DUS-TEST-01')->first();
+    $warehouse = Warehouse::query()->where('warehouse_name', 'Dushanbe Hub')->first();
     $account = app(WarehouseLoginAccountService::class)->findTajikistanAccount($warehouse);
 
     expect($warehouse)->not->toBeNull()
@@ -78,7 +68,7 @@ it('updates warehouse login credentials on edit', function () {
         ->set(validWarehousePayload())
         ->call('save');
 
-    $warehouse = Warehouse::query()->where('warehouse_code', 'DUS-TEST-01')->first();
+    $warehouse = Warehouse::query()->where('warehouse_name', 'Dushanbe Hub')->first();
 
     Livewire::test(WarehouseEditPage::class, ['warehouse' => $warehouse])
         ->set('login_username', 'dushanbe_updated')
@@ -120,7 +110,7 @@ it('deletes linked login account when warehouse is deleted', function () {
         ->set(validWarehousePayload())
         ->call('save');
 
-    $warehouse = Warehouse::query()->where('warehouse_code', 'DUS-TEST-01')->first();
+    $warehouse = Warehouse::query()->where('warehouse_name', 'Dushanbe Hub')->first();
     $accountId = app(WarehouseLoginAccountService::class)->findTajikistanAccount($warehouse)->id;
 
     Livewire::test(WarehouseListPage::class)

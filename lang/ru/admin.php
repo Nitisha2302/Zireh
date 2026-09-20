@@ -788,7 +788,7 @@ return [
     'warehouse_panel_login_hint' => 'Учётные данные для входа на /tajikistan/login. Контактный email выше — отдельно.',
     'warehouse_panels' => 'Панели складов',
     'warehouse_portal' => 'Портал склада',
-    'warehouse_search_placeholder' => 'Search name, code, city, contact...',
+    'warehouse_search_placeholder' => 'Search name, email, address...',
     'warehouse_staff' => 'Warehouse Staff',
     'warehouse_staff_created' => 'Warehouse staff account created.',
     'warehouse_staff_delete_cancelled' => 'Deletion cancelled.',

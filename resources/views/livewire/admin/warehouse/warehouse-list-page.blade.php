@@ -137,7 +137,7 @@
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
                     <tr>
-                        <th width="280">
+                        <th>
                             <button type="button" class="btn btn-sm btn-link p-0 text-body fw-semibold text-decoration-none" wire:click="sortBy('warehouse_name')">
                                 {{ __('admin.warehouse') }}
                                 @if ($sortField === 'warehouse_name')
@@ -145,16 +145,8 @@
                                 @endif
                             </button>
                         </th>
-                        <th>
-                            <button type="button" class="btn btn-sm btn-link p-0 text-body fw-semibold text-decoration-none" wire:click="sortBy('city')">
-                                {{ __('admin.location') }}
-                                @if ($sortField === 'city')
-                                    <i class="icon-base ti tabler-chevron-{{ $sortDirection === 'asc' ? 'up' : 'down' }}"></i>
-                                @endif
-                            </button>
-                        </th>
-                        <th width="180">{{ __('admin.coordinates') }}</th>
-                        <th width="200">{{ __('admin.contact') }}</th>
+                        <th>{{ __('admin.full_address') }}</th>
+                        <th width="220">{{ __('admin.email') }}</th>
                         <th width="110">
                             <button type="button" class="btn btn-sm btn-link p-0 text-body fw-semibold text-decoration-none" wire:click="sortBy('status')">
                                 {{ __('admin.status') }}
@@ -179,56 +171,20 @@
                         <tr>
                             <td>
                                 <div class="d-flex align-items-center gap-3">
-                                    @if ($warehouse->image)
-                                        <img src="{{ app(\App\Services\FileManager::class)->url($warehouse->image) }}" alt="{{ $warehouse->warehouse_name }}" class="rounded border object-fit-cover flex-shrink-0" style="width: 48px; height: 48px;">
-                                    @else
-                                        <div class="avatar avatar-sm flex-shrink-0">
-                                            <span class="avatar-initial rounded {{ $warehouse->isActive() ? 'bg-label-primary' : 'bg-label-secondary' }}">
-                                                <i class="icon-base ti tabler-building-warehouse"></i>
-                                            </span>
-                                        </div>
-                                    @endif
+                                    <div class="avatar avatar-sm flex-shrink-0">
+                                        <span class="avatar-initial rounded {{ $warehouse->isActive() ? 'bg-label-primary' : 'bg-label-secondary' }}">
+                                            <i class="icon-base ti tabler-building-warehouse"></i>
+                                        </span>
+                                    </div>
                                     <div class="min-w-0">
                                         <a href="{{ route('admin.warehouses.show', $warehouse) }}" class="fw-semibold text-body text-decoration-none d-block text-truncate">
                                             {{ $warehouse->warehouse_name }}
                                         </a>
-                                        <div class="d-flex align-items-center gap-2 mt-1">
-                                            <code class="small">{{ $warehouse->warehouse_code }}</code>
-                                        </div>
                                     </div>
                                 </div>
                             </td>
-                            <td>
-                                <div class="d-flex align-items-start gap-2">
-                                    <i class="icon-base ti tabler-map-pin text-primary mt-1"></i>
-                                    <div>
-                                        <div class="fw-medium">{{ $warehouse->city }}</div>
-                                        <small class="text-body-secondary d-block">{{ $warehouse->state }}</small>
-                                        <span class="badge bg-label-info mt-1">{{ $warehouse->country }}</span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="small">
-                                    <div><span class="text-body-secondary">{{ __('admin.latitude') }}:</span> {{ $warehouse->latitude }}</div>
-                                    <div><span class="text-body-secondary">{{ __('admin.longitude') }}:</span> {{ $warehouse->longitude }}</div>
-                                </div>
-                                <a href="https://www.google.com/maps?q={{ $warehouse->latitude }},{{ $warehouse->longitude }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-label-primary mt-2">
-                                    <i class="icon-base ti tabler-external-link me-1"></i>
-                                    {{ __('admin.view_on_map') }}
-                                </a>
-                            </td>
-                            <td>
-                                <div class="fw-medium">{{ $warehouse->contact_person }}</div>
-                                <a href="tel:{{ $warehouse->contact_number }}" class="small text-body-secondary text-decoration-none">
-                                    <i class="icon-base ti tabler-phone me-1"></i>{{ $warehouse->contact_number }}
-                                </a>
-                                @if ($warehouse->email)
-                                    <div class="small text-body-secondary text-truncate mt-1" title="{{ $warehouse->email }}">
-                                        <i class="icon-base ti tabler-mail me-1"></i>{{ $warehouse->email }}
-                                    </div>
-                                @endif
-                            </td>
+                            <td>{{ $warehouse->address }}</td>
+                            <td>{{ $warehouse->email ?: '—' }}</td>
                             <td>
                                 @if ($warehouse->isActive())
                                     <span class="badge bg-label-success">
@@ -283,7 +239,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="p-0">
+                            <td colspan="6" class="p-0">
                                 <div class="text-center py-5 px-3">
                                     <div class="avatar avatar-xl mx-auto mb-3">
                                         <span class="avatar-initial rounded-circle bg-label-secondary">

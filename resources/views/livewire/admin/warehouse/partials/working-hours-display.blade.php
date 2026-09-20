@@ -11,10 +11,12 @@
         @endif
     </div>
     <div class="card-body">
-        <p class="mb-4 d-flex align-items-center gap-2">
-            <i class="icon-base ti tabler-phone text-primary"></i>
-            <span class="fw-medium">{{ __('admin.phone') }}: {{ $warehouse->contact_number }}</span>
-        </p>
+        @if ($warehouse->contact_number)
+            <p class="mb-4 d-flex align-items-center gap-2">
+                <i class="icon-base ti tabler-phone text-primary"></i>
+                <span class="fw-medium">{{ __('admin.phone') }}: {{ $warehouse->contact_number }}</span>
+            </p>
+        @endif
         <div class="d-flex flex-column gap-2">
             @foreach ($warehouse->workingHoursPayload() as $hours)
                 <div class="d-flex align-items-start gap-3 border rounded px-3 py-2">

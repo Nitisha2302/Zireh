@@ -113,10 +113,8 @@ class WarehouseListPage extends Component
                 $query->where(function ($query) use ($search): void {
                     $query->where('warehouse_name', 'like', "%{$search}%")
                         ->orWhere('warehouse_code', 'like', "%{$search}%")
-                        ->orWhere('city', 'like', "%{$search}%")
-                        ->orWhere('state', 'like', "%{$search}%")
-                        ->orWhere('contact_person', 'like', "%{$search}%")
-                        ->orWhere('contact_number', 'like', "%{$search}%");
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('address', 'like', "%{$search}%");
                 });
             })
             ->when($this->statusFilter, fn ($query) => $query->where('status', $this->statusFilter))
@@ -138,10 +136,6 @@ class WarehouseListPage extends Component
     {
         return [
             'warehouse_name',
-            'warehouse_code',
-            'city',
-            'state',
-            'country',
             'status',
             'created_at',
         ];

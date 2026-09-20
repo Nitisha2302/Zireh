@@ -5,29 +5,18 @@ namespace App\Livewire\Admin\Warehouse;
 use App\Livewire\Admin\Warehouse\Concerns\ManagesWarehouseWorkingHours;
 use App\Models\Warehouse;
 use App\Services\Admin\WarehouseLoginAccountService;
-use App\Services\FileManager;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
-use Livewire\WithFileUploads;
 
 #[Layout('layouts::admin', ['title' => 'Add Warehouse'])]
 class WarehouseCreatePage extends Component
 {
     use ManagesWarehouseWorkingHours;
-    use WithFileUploads;
 
     public string $warehouse_name = '';
-
-    public string $warehouse_code = '';
-
-    public mixed $image = null;
-
-    public string $contact_person = '';
-
-    public string $contact_number = '';
 
     public string $email = '';
 
@@ -39,30 +28,16 @@ class WarehouseCreatePage extends Component
 
     public string $login_password_confirmation = '';
 
-    public string $country = Warehouse::DEFAULT_COUNTRY;
-
-    public string $state = '';
-
-    public string $city = '';
-
     public string $address = '';
 
-    public string $postal_code = '';
-
-    public string $latitude = '';
-
-    public string $longitude = '';
-
     public string $status = Warehouse::STATUS_ACTIVE;
-
-    public string $notes = '';
 
     protected function rules(): array
     {
         return array_merge($this->warehouseRules(), $this->loginRules(isCreate: true), $this->workingHoursRules());
     }
 
-    public function save(FileManager $fileManager, WarehouseLoginAccountService $loginAccounts): void
+    public function save(WarehouseLoginAccountService $loginAccounts): void
     {
         try {
             $this->normalizeWorkingHourTimes();
@@ -75,10 +50,7 @@ class WarehouseCreatePage extends Component
         }
 
         $data = $this->mapValidated($validated);
-
-        if ($this->image) {
-            $data['image'] = $fileManager->store($this->image, 'warehouses');
-        }
+        $data['warehouse_code'] = Warehouse::generateUniqueCode();
 
         DB::transaction(function () use ($data, $loginAccounts): void {
             $warehouse = Warehouse::create($data);
@@ -104,30 +76,13 @@ class WarehouseCreatePage extends Component
         ])->title(__('admin.add_warehouse'));
     }
 
-    protected function warehouseRules(?int $ignoreId = null): array
+    protected function warehouseRules(): array
     {
-        $codeRule = Rule::unique('warehouses', 'warehouse_code');
-
-        if ($ignoreId) {
-            $codeRule = $codeRule->ignore($ignoreId);
-        }
-
         return [
             'warehouse_name' => ['required', 'string', 'max:255'],
-            'warehouse_code' => ['required', 'string', 'max:50', 'regex:/^[A-Za-z0-9\-_]+$/', $codeRule],
-            'image' => ['nullable', 'image', 'max:4096'],
-            'contact_person' => ['required', 'string', 'max:255'],
-            'contact_number' => ['required', 'string', 'max:30'],
             'email' => ['nullable', 'email', 'max:255'],
-            'country' => ['required', 'string', 'max:120'],
-            'state' => ['required', 'string', 'max:120'],
-            'city' => ['required', 'string', 'max:120'],
             'address' => ['required', 'string', 'max:1000'],
-            'postal_code' => ['nullable', 'string', 'max:20'],
-            'latitude' => ['required', 'numeric', 'between:-90,90'],
-            'longitude' => ['required', 'numeric', 'between:-180,180'],
             'status' => ['required', Rule::in([Warehouse::STATUS_ACTIVE, Warehouse::STATUS_INACTIVE])],
-            'notes' => ['nullable', 'string', 'max:2000'],
         ];
     }
 
@@ -144,19 +99,9 @@ class WarehouseCreatePage extends Component
     {
         return [
             'warehouse_name' => $validated['warehouse_name'],
-            'warehouse_code' => strtoupper($validated['warehouse_code']),
-            'contact_person' => $validated['contact_person'],
-            'contact_number' => $validated['contact_number'],
             'email' => $validated['email'] ?: null,
-            'country' => $validated['country'],
-            'state' => $validated['state'],
-            'city' => $validated['city'],
             'address' => $validated['address'],
-            'postal_code' => $validated['postal_code'] ?: null,
-            'latitude' => $validated['latitude'],
-            'longitude' => $validated['longitude'],
             'status' => $validated['status'],
-            'notes' => $validated['notes'] ?: null,
         ];
     }
 }

@@ -120,6 +120,15 @@ class Warehouse extends Model
         return $this->hasOne(Admin::class)->where('role', Admin::ROLE_TAJIKISTAN_WAREHOUSE);
     }
 
+    public static function generateUniqueCode(): string
+    {
+        do {
+            $code = 'WH-'.strtoupper(bin2hex(random_bytes(4)));
+        } while (static::withTrashed()->where('warehouse_code', $code)->exists());
+
+        return $code;
+    }
+
     public static function statuses(): array
     {
         return [

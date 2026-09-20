@@ -27,14 +27,24 @@ function validWarehousePayload(): array
 {
     return [
         'warehouse_name' => 'Dushanbe Central Warehouse',
-        'warehouse_code' => 'DUS-TJ-01',
-        'contact_person' => 'Rustam Karimov',
-        'contact_number' => '+992901234567',
         'email' => 'warehouse@example.com',
         'login_username' => 'dus_tj_01',
         'login_email' => 'login.dus@example.com',
         'login_password' => 'password123',
         'login_password_confirmation' => 'password123',
+        'address' => '92 Rudaki Avenue',
+        'status' => Warehouse::STATUS_ACTIVE,
+    ];
+}
+
+function warehouseRecordPayload(array $overrides = []): array
+{
+    return array_merge([
+        'warehouse_name' => 'Dushanbe Central Warehouse',
+        'warehouse_code' => 'DUS-TJ-01',
+        'contact_person' => 'Rustam Karimov',
+        'contact_number' => '+992901234567',
+        'email' => 'warehouse@example.com',
         'country' => 'Tajikistan',
         'state' => 'Districts of Republican Subordination',
         'city' => 'Dushanbe',
@@ -44,7 +54,7 @@ function validWarehousePayload(): array
         'longitude' => '68.7870',
         'status' => Warehouse::STATUS_ACTIVE,
         'notes' => 'Main distribution hub',
-    ];
+    ], $overrides);
 }
 
 it('shows warehouse list page to authenticated admins', function () {
@@ -63,7 +73,7 @@ it('creates a warehouse with validation', function () {
     Livewire::test(WarehouseCreatePage::class)
         ->set('warehouse_name', '')
         ->call('save')
-        ->assertHasErrors(['warehouse_name', 'warehouse_code', 'contact_person', 'contact_number', 'latitude', 'longitude']);
+        ->assertHasErrors(['warehouse_name', 'address']);
 
     Livewire::test(WarehouseCreatePage::class)
         ->set(validWarehousePayload())
@@ -74,34 +84,49 @@ it('creates a warehouse with validation', function () {
 
     expect($warehouse)
         ->warehouse_name->toBe('Dushanbe Central Warehouse')
-        ->warehouse_code->toBe('DUS-TJ-01')
-        ->country->toBe('Tajikistan')
-        ->latitude->toBe('38.5598000')
-        ->longitude->toBe('68.7870000')
-        ->isActive()->toBeTrue();
+        ->address->toBe('92 Rudaki Avenue')
+        ->contact_person->toBeNull()
+        ->contact_number->toBeNull()
+        ->city->toBeNull()
+        ->latitude->toBeNull()
+        ->longitude->toBeNull()
+        ->isActive()->toBeTrue()
+        ->and($warehouse->warehouse_code)->toStartWith('WH-')
+        ->and(strlen($warehouse->warehouse_code))->toBe(11);
 });
 
-it('enforces unique warehouse codes', function () {
+it('generates unique warehouse codes automatically', function () {
     $admin = makeWarehouseAdmin();
-    Warehouse::create(validWarehousePayload());
-
     $this->actingAs($admin, 'admin');
 
     Livewire::test(WarehouseCreatePage::class)
         ->set(validWarehousePayload())
         ->call('save')
-        ->assertHasErrors(['warehouse_code']);
+        ->assertRedirect(route('admin.warehouses.index'));
+
+    Livewire::test(WarehouseCreatePage::class)
+        ->set(validWarehousePayload())
+        ->set('login_username', 'dus_tj_02')
+        ->set('login_email', 'login2.dus@example.com')
+        ->call('save')
+        ->assertRedirect(route('admin.warehouses.index'));
+
+    $codes = Warehouse::query()->pluck('warehouse_code');
+
+    expect($codes)->toHaveCount(2)
+        ->and($codes[0])->not->toBe($codes[1])
+        ->and($codes->every(fn (string $code) => str_starts_with($code, 'WH-')))->toBeTrue();
 });
 
 it('updates and toggles warehouse status', function () {
     $admin = makeWarehouseAdmin();
-    $warehouse = Warehouse::create(validWarehousePayload());
+    $warehouse = Warehouse::create(warehouseRecordPayload());
 
     $this->actingAs($admin, 'admin');
 
     Livewire::test(WarehouseEditPage::class, ['warehouse' => $warehouse])
         ->set('warehouse_name', 'Updated Warehouse')
-        ->set('city', 'Khujand')
+        ->set('address', 'Updated Street')
         ->set('login_username', 'updated_wh')
         ->set('login_email', 'updated.login@example.com')
         ->set('login_password', 'password123')
@@ -110,7 +135,10 @@ it('updates and toggles warehouse status', function () {
         ->assertRedirect(route('admin.warehouses.show', $warehouse));
 
     expect($warehouse->fresh()->warehouse_name)->toBe('Updated Warehouse')
-        ->and($warehouse->fresh()->city)->toBe('Khujand');
+        ->and($warehouse->fresh()->address)->toBe('Updated Street')
+        ->and($warehouse->fresh()->warehouse_code)->toBe('DUS-TJ-01')
+        ->and($warehouse->fresh()->city)->toBe('Dushanbe')
+        ->and($warehouse->fresh()->contact_person)->toBe('Rustam Karimov');
 
     Livewire::test(WarehouseListPage::class)
         ->call('toggleStatus', $warehouse->id);
@@ -120,7 +148,7 @@ it('updates and toggles warehouse status', function () {
 
 it('soft deletes a warehouse from the list page', function () {
     $admin = makeWarehouseAdmin();
-    $warehouse = Warehouse::create(validWarehousePayload());
+    $warehouse = Warehouse::create(warehouseRecordPayload());
 
     $this->actingAs($admin, 'admin');
 
@@ -134,13 +162,13 @@ it('soft deletes a warehouse from the list page', function () {
 
 it('shows warehouse details page', function () {
     $admin = makeWarehouseAdmin();
-    $warehouse = Warehouse::create(validWarehousePayload());
+    $warehouse = Warehouse::create(warehouseRecordPayload());
 
     $this->actingAs($admin, 'admin')
         ->get(route('admin.warehouses.show', $warehouse))
         ->assertOk()
         ->assertSee('Dushanbe Central Warehouse')
-        ->assertSee('DUS-TJ-01')
+        ->assertDontSee('DUS-TJ-01')
         ->assertSee('38.5598000');
 });
 

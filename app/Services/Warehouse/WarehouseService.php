@@ -28,6 +28,8 @@ class WarehouseService
         $warehouses = Warehouse::query()
             ->with('workingHours')
             ->where('status', Warehouse::STATUS_ACTIVE)
+            ->whereNotNull('latitude')
+            ->whereNotNull('longitude')
             ->get()
             ->map(function (Warehouse $warehouse) use ($latitude, $longitude): Warehouse {
                 $warehouse->setAttribute(
