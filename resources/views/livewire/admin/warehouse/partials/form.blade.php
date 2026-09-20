@@ -13,9 +13,9 @@
                         @error('warehouse_name') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label" for="email">{{ __('admin.email') }}</label>
-                        <input id="email" type="email" wire:model.blur="email" class="form-control @error('email') is-invalid @enderror">
-                        @error('email') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        <label class="form-label" for="contact_number">{{ __('admin.contact_number') }}</label>
+                        <input id="contact_number" type="text" wire:model.blur="contact_number" class="form-control @error('contact_number') is-invalid @enderror">
+                        @error('contact_number') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                     <div class="col-12">
                         <label class="form-label" for="address">{{ __('admin.full_address') }}</label>
@@ -81,7 +81,7 @@
                     @foreach ($workingHours as $day => $hours)
                         <div class="border rounded p-3">
                             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-                                <div class="fw-semibold">{{ $hours['day_name'] }}</div>
+                                <div class="fw-semibold">{{ __('admin.weekday_'.$hours['day_of_week']) }}</div>
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" id="closed-{{ $day }}"
                                         wire:model.live="workingHours.{{ $day }}.is_closed">

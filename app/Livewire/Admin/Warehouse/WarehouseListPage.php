@@ -113,7 +113,7 @@ class WarehouseListPage extends Component
                 $query->where(function ($query) use ($search): void {
                     $query->where('warehouse_name', 'like', "%{$search}%")
                         ->orWhere('warehouse_code', 'like', "%{$search}%")
-                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('contact_number', 'like', "%{$search}%")
                         ->orWhere('address', 'like', "%{$search}%");
                 });
             })

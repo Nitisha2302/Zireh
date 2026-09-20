@@ -30,7 +30,7 @@ function validWarehousePayload(array $overrides = []): array
 {
     return array_merge([
         'warehouse_name' => 'Dushanbe Hub',
-        'email' => 'contact@warehouse.example.com',
+        'contact_number' => '+992900000001',
         'login_username' => 'dushanbe_wh',
         'login_email' => 'login@warehouse.example.com',
         'login_password' => 'password123',

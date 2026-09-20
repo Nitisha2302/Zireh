@@ -18,7 +18,7 @@ class WarehouseCreatePage extends Component
 
     public string $warehouse_name = '';
 
-    public string $email = '';
+    public string $contact_number = '';
 
     public string $login_username = '';
 
@@ -80,7 +80,7 @@ class WarehouseCreatePage extends Component
     {
         return [
             'warehouse_name' => ['required', 'string', 'max:255'],
-            'email' => ['nullable', 'email', 'max:255'],
+            'contact_number' => ['required', 'string', 'max:30'],
             'address' => ['required', 'string', 'max:1000'],
             'status' => ['required', Rule::in([Warehouse::STATUS_ACTIVE, Warehouse::STATUS_INACTIVE])],
         ];
@@ -99,7 +99,7 @@ class WarehouseCreatePage extends Component
     {
         return [
             'warehouse_name' => $validated['warehouse_name'],
-            'email' => $validated['email'] ?: null,
+            'contact_number' => $validated['contact_number'],
             'address' => $validated['address'],
             'status' => $validated['status'],
         ];

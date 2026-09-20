@@ -132,8 +132,8 @@ class Warehouse extends Model
     public static function statuses(): array
     {
         return [
-            self::STATUS_ACTIVE => 'Active',
-            self::STATUS_INACTIVE => 'Inactive',
+            self::STATUS_ACTIVE => __('admin.active'),
+            self::STATUS_INACTIVE => __('admin.inactive'),
         ];
     }
 }

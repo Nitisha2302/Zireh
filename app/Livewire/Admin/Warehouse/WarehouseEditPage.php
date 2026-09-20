@@ -20,7 +20,7 @@ class WarehouseEditPage extends Component
 
     public string $warehouse_name = '';
 
-    public string $email = '';
+    public string $contact_number = '';
 
     public string $login_username = '';
 
@@ -38,7 +38,7 @@ class WarehouseEditPage extends Component
     {
         $this->warehouse = $warehouse;
         $this->warehouse_name = $warehouse->warehouse_name;
-        $this->email = $warehouse->email ?? '';
+        $this->contact_number = $warehouse->contact_number ?? '';
         $this->address = $warehouse->address;
         $this->status = $warehouse->status;
         $this->fillWorkingHoursFromWarehouse($warehouse);
@@ -104,7 +104,7 @@ class WarehouseEditPage extends Component
     {
         return [
             'warehouse_name' => ['required', 'string', 'max:255'],
-            'email' => ['nullable', 'email', 'max:255'],
+            'contact_number' => ['required', 'string', 'max:30'],
             'address' => ['required', 'string', 'max:1000'],
             'status' => ['required', Rule::in([Warehouse::STATUS_ACTIVE, Warehouse::STATUS_INACTIVE])],
         ];
@@ -123,7 +123,7 @@ class WarehouseEditPage extends Component
     {
         return [
             'warehouse_name' => $validated['warehouse_name'],
-            'email' => $validated['email'] ?: null,
+            'contact_number' => $validated['contact_number'],
             'address' => $validated['address'],
             'status' => $validated['status'],
         ];

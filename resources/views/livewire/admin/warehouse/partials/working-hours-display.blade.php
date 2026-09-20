@@ -24,9 +24,9 @@
                     <div class="flex-grow-1">
                         <div class="fw-semibold">
                             @if ($hours['is_closed'])
-                                {{ $hours['day_name'] }}: {{ __('admin.closed') }}
+                                {{ __('admin.weekday_'.$hours['day_of_week']) }}: {{ __('admin.closed') }}
                             @else
-                                {{ $hours['day_name'] }}: {{ $hours['opens_at'] }}–{{ $hours['closes_at'] }}
+                                {{ __('admin.weekday_'.$hours['day_of_week']) }}: {{ $hours['opens_at'] }}–{{ $hours['closes_at'] }}
                             @endif
                         </div>
                         @if (! $hours['is_closed'] && $hours['break_starts_at'] && $hours['break_ends_at'])

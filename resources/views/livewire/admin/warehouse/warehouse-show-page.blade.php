@@ -25,16 +25,12 @@
                             <p class="mb-0 fw-medium">{{ $warehouse->warehouse_name }}</p>
                         </div>
                         <div class="col-md-6">
-                            <p class="text-body-secondary mb-1">{{ __('admin.email') }}</p>
-                            <p class="mb-0">{{ $warehouse->email ?: '—' }}</p>
+                            <p class="text-body-secondary mb-1">{{ __('admin.contact_number') }}</p>
+                            <p class="mb-0">{{ $warehouse->contact_number ?: '—' }}</p>
                         </div>
                         <div class="col-md-6">
                             <p class="text-body-secondary mb-1">{{ __('admin.contact_person') }}</p>
                             <p class="mb-0">{{ $warehouse->contact_person ?: '—' }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <p class="text-body-secondary mb-1">{{ __('admin.contact_number') }}</p>
-                            <p class="mb-0">{{ $warehouse->contact_number ?: '—' }}</p>
                         </div>
                     </div>
                 </div>

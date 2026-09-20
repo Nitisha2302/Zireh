@@ -146,7 +146,7 @@
                             </button>
                         </th>
                         <th>{{ __('admin.full_address') }}</th>
-                        <th width="220">{{ __('admin.email') }}</th>
+                        <th width="180">{{ __('admin.contact_number') }}</th>
                         <th width="110">
                             <button type="button" class="btn btn-sm btn-link p-0 text-body fw-semibold text-decoration-none" wire:click="sortBy('status')">
                                 {{ __('admin.status') }}
@@ -184,7 +184,7 @@
                                 </div>
                             </td>
                             <td>{{ $warehouse->address }}</td>
-                            <td>{{ $warehouse->email ?: '—' }}</td>
+                            <td>{{ $warehouse->contact_number ?: '—' }}</td>
                             <td>
                                 @if ($warehouse->isActive())
                                     <span class="badge bg-label-success">

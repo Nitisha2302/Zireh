@@ -27,7 +27,7 @@ function validWarehousePayload(): array
 {
     return [
         'warehouse_name' => 'Dushanbe Central Warehouse',
-        'email' => 'warehouse@example.com',
+        'contact_number' => '+992901234567',
         'login_username' => 'dus_tj_01',
         'login_email' => 'login.dus@example.com',
         'login_password' => 'password123',
@@ -73,7 +73,7 @@ it('creates a warehouse with validation', function () {
     Livewire::test(WarehouseCreatePage::class)
         ->set('warehouse_name', '')
         ->call('save')
-        ->assertHasErrors(['warehouse_name', 'address']);
+        ->assertHasErrors(['warehouse_name', 'contact_number', 'address']);
 
     Livewire::test(WarehouseCreatePage::class)
         ->set(validWarehousePayload())
@@ -86,7 +86,8 @@ it('creates a warehouse with validation', function () {
         ->warehouse_name->toBe('Dushanbe Central Warehouse')
         ->address->toBe('92 Rudaki Avenue')
         ->contact_person->toBeNull()
-        ->contact_number->toBeNull()
+        ->contact_number->toBe('+992901234567')
+        ->email->toBeNull()
         ->city->toBeNull()
         ->latitude->toBeNull()
         ->longitude->toBeNull()
@@ -137,6 +138,8 @@ it('updates and toggles warehouse status', function () {
     expect($warehouse->fresh()->warehouse_name)->toBe('Updated Warehouse')
         ->and($warehouse->fresh()->address)->toBe('Updated Street')
         ->and($warehouse->fresh()->warehouse_code)->toBe('DUS-TJ-01')
+        ->and($warehouse->fresh()->contact_number)->toBe('+992901234567')
+        ->and($warehouse->fresh()->email)->toBe('warehouse@example.com')
         ->and($warehouse->fresh()->city)->toBe('Dushanbe')
         ->and($warehouse->fresh()->contact_person)->toBe('Rustam Karimov');
 
@@ -243,5 +246,5 @@ it('updates working hours and shows them on the details page', function () {
         ->assertSee('08:30')
         ->assertSee('18:00')
         ->assertSee(__('admin.break'))
-        ->assertSee('Sun: '.__('admin.closed'));
+        ->assertSee(__('admin.weekday_7').': '.__('admin.closed'));
 });
