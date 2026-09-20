@@ -267,6 +267,7 @@ return [
     'cache_cleared' => 'Cache cleared successfully.',
     'warehouse_management' => 'Warehouse Management',
     'warehouse_list' => 'Warehouse List',
+    'warehouse_details' => 'Warehouse Details',
     'warehouse_list_description' => 'Manage Tajikistan warehouses with location coordinates for logistics and shipping.',
     'add_warehouse' => 'Add Warehouse',
     'edit_warehouse' => 'Edit Warehouse',
