@@ -2,6 +2,8 @@
 
 use App\Models\CustomerOrder;
 use App\Models\CustomerOrderItem;
+use App\Models\Platform;
+use App\Models\PlatformCommissionSlab;
 use App\Models\User;
 use App\Services\Currency\CurrencyExchangeService;
 use App\Services\Order\OrderProfitAnalytics;
@@ -86,4 +88,53 @@ it('falls back to the live exchange rate when the order has none stored', functi
 
     expect($analytics['rate'])->toBe($liveRate)
         ->and($analytics['goods_cost_tjs'])->toBe(round(10 * $liveRate, 2));
+});
+
+it('detects the matching commission slab and percentage from goods cny', function () {
+    $user = User::factory()->create();
+    $platform = Platform::create([
+        'code' => 'taobao',
+        'name' => ['en' => 'Taobao'],
+        'logo' => [],
+        'is_available' => true,
+    ]);
+
+    $slab = PlatformCommissionSlab::create([
+        'platform_id' => $platform->id,
+        'min_amount' => 0,
+        'max_amount' => 100,
+        'commission_percentage' => 5,
+        'is_active' => true,
+    ]);
+
+    $order = CustomerOrder::query()->create([
+        'user_id' => $user->id,
+        'platform_id' => $platform->id,
+        'platform' => 'taobao',
+        'status' => 'paid',
+        'payment_status' => 'paid',
+        'payment_method' => 'online',
+        'goods_subtotal_cny' => 20,
+        'shipping_fee_cny' => 0,
+        'exchange_rate' => 1.5,
+        'final_amount_tjs' => 50,
+        'commission_slab_id' => null,
+        'commission_percentage' => 0,
+    ]);
+
+    CustomerOrderItem::query()->create([
+        'customer_order_id' => $order->id,
+        'product_id' => 'p1',
+        'quantity' => 1,
+        'unit_price' => 20,
+        'line_subtotal' => 20,
+        'final_amount_tjs' => 50,
+        'product_snapshot' => ['title' => 'Test'],
+    ]);
+
+    $analytics = app(OrderProfitAnalytics::class)->forOrder($order->load('items'));
+
+    expect($analytics['commission_slab_id'])->toBe($slab->id)
+        ->and($analytics['commission_percentage'])->toBe(5.0)
+        ->and($analytics['commission_range_label'])->toBe('0.00–100.00 CNY');
 });

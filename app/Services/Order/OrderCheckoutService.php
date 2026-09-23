@@ -15,6 +15,7 @@ use App\Services\Currency\CurrencyExchangeService;
 use App\Services\Elim\ElimApiClient;
 use App\Services\Elim\ElimDemoCheckoutService;
 use App\Services\Elim\ElimOrderApiService;
+use App\Services\PlatformCommissionService;
 use App\Services\Shipping\ShippingRateService;
 use App\Services\Wallet\WalletService;
 use App\Support\Elim\ElimWarehouseAddress;
@@ -31,6 +32,7 @@ class OrderCheckoutService
         private readonly ElimDemoCheckoutService $demoCheckout,
         private readonly ElimOrderApiService $elimOrders,
         private readonly WalletService $walletService,
+        private readonly PlatformCommissionService $platformCommissionService,
     ) {}
 
     public function isDemoMode(): bool
@@ -222,6 +224,13 @@ class OrderCheckoutService
             ]);
         }
 
+        $goodsSubtotalCny = (float) $parsed['goods_subtotal_cny'];
+        $slab = $this->platformCommissionService->findActiveSlabOrNull($platform, $goodsSubtotalCny);
+        $commissionPercentage = $slab ? (float) $slab->commission_percentage : 0;
+        $commissionAmount = $slab
+            ? round($goodsSubtotalCny * ($commissionPercentage / 100), 2)
+            : 0;
+
         $order = CustomerOrder::query()->create([
             'user_id' => $user->id,
             'warehouse_id' => $context->warehouse->id,
@@ -233,14 +242,14 @@ class OrderCheckoutService
             'status' => OrderStatus::CODE_PAID,
             'payment_status' => (string) ($orderData['payment_status'] ?? 'unpaid'),
             'payment_method' => $context->paymentMethod,
-            'goods_subtotal_cny' => $parsed['goods_subtotal_cny'],
+            'goods_subtotal_cny' => $goodsSubtotalCny,
             'shipping_fee_cny' => $parsed['shipping_fee_cny'],
             'cargo_shipping_fee_tjs' => 0,
             'cargo_shipping_fee_cny' => 0,
             'elim_service_fee_cny' => $parsed['service_fee_cny'],
-            'commission_slab_id' => null,
-            'commission_percentage' => 0,
-            'commission_amount' => 0,
+            'commission_slab_id' => $slab?->id,
+            'commission_percentage' => $commissionPercentage,
+            'commission_amount' => $commissionAmount,
             'customer_total_cny' => 0,
             'exchange_rate' => $this->currencyExchangeService->getRate(),
             'customer_total_tjs' => $finalAmountTjs,

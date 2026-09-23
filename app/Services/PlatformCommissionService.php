@@ -68,9 +68,22 @@ class PlatformCommissionService
 
     public function findActiveSlab(Platform|int $platform, float $amount): PlatformCommissionSlab
     {
+        $slab = $this->findActiveSlabOrNull($platform, $amount);
+
+        if (! $slab) {
+            throw ValidationException::withMessages([
+                'amount' => [__('api.commission_slab_not_found')],
+            ]);
+        }
+
+        return $slab;
+    }
+
+    public function findActiveSlabOrNull(Platform|int $platform, float $amount): ?PlatformCommissionSlab
+    {
         $platformId = $platform instanceof Platform ? $platform->id : $platform;
 
-        $slab = PlatformCommissionSlab::query()
+        return PlatformCommissionSlab::query()
             ->where('platform_id', $platformId)
             ->where('is_active', true)
             ->where('min_amount', '<=', $amount)
@@ -80,14 +93,6 @@ class PlatformCommissionService
             })
             ->orderByDesc('min_amount')
             ->first();
-
-        if (! $slab) {
-            throw ValidationException::withMessages([
-                'amount' => [__('api.commission_slab_not_found')],
-            ]);
-        }
-
-        return $slab;
     }
 
     public function calculate(Platform|int $platform, float $amount): array

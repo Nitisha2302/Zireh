@@ -174,6 +174,8 @@ it('places demo checkout with wallet payment and stores warehouse from profile',
         ->and((float) $order->cargo_shipping_fee_tjs)->toBe(0.0)
         ->and((float) $order->final_amount_tjs)->toBe(350.0)
         ->and((float) $order->exchange_rate)->toBe((float) app(\App\Services\Currency\CurrencyExchangeService::class)->getRate())
+        ->and($order->commission_slab_id)->not->toBeNull()
+        ->and((float) $order->commission_percentage)->toBe(5.0)
         ->and(\App\Models\UserCartItem::query()->where('user_id', $user->id)->count())->toBe(0);
 
     Http::assertNothingSent();
