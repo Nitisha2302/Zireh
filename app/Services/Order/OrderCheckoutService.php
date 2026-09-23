@@ -242,7 +242,7 @@ class OrderCheckoutService
             'commission_percentage' => 0,
             'commission_amount' => 0,
             'customer_total_cny' => 0,
-            'exchange_rate' => null,
+            'exchange_rate' => $this->currencyExchangeService->getRate(),
             'customer_total_tjs' => $finalAmountTjs,
             'final_amount_tjs' => $finalAmountTjs,
             'receiver_address' => $receiverAddress,

@@ -62,7 +62,13 @@
             <div class="card h-100">
                 <div class="card-header"><h5 class="mb-0">{{ __('admin.final_amount') }} (TJS)</h5></div>
                 <div class="card-body">
-                    <p class="mb-0 fw-semibold fs-4">{{ number_format($order->paymentAmountTjs(), 2) }} TJS</p>
+                    <p class="mb-0 fw-semibold fs-4">{{ number_format($profit['revenue_tjs'], 2) }} TJS</p>
+                    <p class="mb-1 mt-3 text-body-secondary">{{ __('admin.customer_paid') }}: {{ number_format($profit['revenue_tjs'], 2) }} TJS</p>
+                    <p class="mb-1 text-body-secondary">{{ __('admin.goods_cost') }}: {{ number_format($profit['goods_cost_tjs'], 2) }} TJS</p>
+                    <p class="mb-1 text-body-secondary">{{ __('admin.china_fees') }}: {{ number_format($profit['fee_cost_tjs'], 2) }} TJS</p>
+                    <p class="mb-1 mt-2 fw-semibold">{{ __('admin.profit') }}: {{ number_format($profit['profit_tjs'], 2) }} TJS</p>
+                    <p class="mb-0 text-body-secondary">{{ __('admin.profit_margin') }}: {{ number_format($profit['margin_percent'], 2) }}%</p>
+                    <p class="mb-0 mt-2 small text-body-secondary">{{ __('admin.exchange_rate_used') }}: {{ $profit['rate'] }}</p>
                     @if ($order->cargo_shipping_fee_tjs)
                         <p class="mb-0 mt-2 text-body-secondary"><strong>{{ __('admin.cargo_shipping') }}:</strong> {{ number_format((float) $order->cargo_shipping_fee_tjs, 2) }} TJS</p>
                     @endif
@@ -119,10 +125,15 @@
                         <th>{{ __('admin.qty') }}</th>
                         <th>{{ __('admin.unit_price') }}</th>
                         <th>{{ __('admin.line_subtotal') }}</th>
+                        <th>{{ __('admin.sell_price') }}</th>
+                        <th>{{ __('admin.cost_tjs') }}</th>
+                        <th>{{ __('admin.profit') }}</th>
+                        <th>{{ __('admin.profit_margin') }}</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach ($order->items as $item)
+                        @php $line = $profit['items'][$item->id] ?? null; @endphp
                         <tr>
                             <td>
                                 <div class="d-flex align-items-center gap-3">
@@ -138,7 +149,11 @@
                             <td>{{ $item->sku_id ?: '—' }}</td>
                             <td>{{ $item->quantity }}</td>
                             <td>¥{{ number_format((float) $item->unit_price, 2) }}</td>
-                            <td class="fw-semibold">¥{{ number_format((float) $item->line_subtotal, 2) }}</td>
+                            <td>¥{{ number_format((float) $item->line_subtotal, 2) }}</td>
+                            <td>{{ $line ? number_format($line['sell_tjs'], 2).' TJS' : '—' }}</td>
+                            <td>{{ $line ? number_format($line['cost_tjs'], 2).' TJS' : '—' }}</td>
+                            <td class="fw-semibold">{{ $line ? number_format($line['profit_tjs'], 2).' TJS' : '—' }}</td>
+                            <td>{{ $line ? number_format($line['margin_percent'], 2).'%' : '—' }}</td>
                         </tr>
                     @endforeach
                 </tbody>

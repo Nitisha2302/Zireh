@@ -5,6 +5,7 @@ namespace App\Livewire\Admin\Order;
 use App\Models\Admin;
 use App\Models\CustomerOrder;
 use App\Services\Order\CustomerOrderLifecycleService;
+use App\Services\Order\OrderProfitAnalytics;
 use App\Services\Order\OrderStatusService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
@@ -59,11 +60,12 @@ class OrderDetailPage extends Component
         flash()->success(__('admin.order_cancelled_and_refunded'));
     }
 
-    public function render(OrderStatusService $orderStatusService)
+    public function render(OrderStatusService $orderStatusService, OrderProfitAnalytics $profitAnalytics)
     {
         return view('livewire.admin.order.order-detail-page', [
             'statusOptions' => $orderStatusService->listActiveForManualUpdate(),
             'canCancelOrder' => $this->order->isCancellable(),
+            'profit' => $profitAnalytics->forOrder($this->order),
         ])->title('Order #'.$this->order->id);
     }
 }
