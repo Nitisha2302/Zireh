@@ -26,7 +26,10 @@ class WalletTransaction extends Model
 
     public const SOURCE_ORDER_REFUND = 'order_refund';
 
+    /** @deprecated Kept so historical rows keep rendering; new top-ups use SOURCE_ALIF_DEPOSIT. */
     public const SOURCE_WALLET_DEPOSIT = 'wallet_deposit';
+
+    public const SOURCE_ALIF_DEPOSIT = 'alif_deposit';
 
     public const STATUS_COMPLETED = 'completed';
 

@@ -1,10 +1,14 @@
 <?php
 
 use App\Models\Admin;
+use App\Models\AlifPayment;
 use App\Models\User;
 use App\Models\WalletTransaction;
+use App\Services\Alif\Contracts\AlifWalletCreditorInterface;
 use App\Services\Wallet\WalletService;
+use App\Support\Alif\Money;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\Sanctum;
 
@@ -91,23 +95,15 @@ it('rejects revert when balance is insufficient', function () {
         ->toThrow(Illuminate\Validation\ValidationException::class);
 });
 
-it('allows customer to deposit funds via api', function () {
+it('no longer exposes a customer-triggered wallet deposit endpoint', function () {
     $user = User::factory()->create();
 
     Sanctum::actingAs($user);
 
-    $this->postJson('/api/v1/auth/wallet/deposit', [
-        'amount' => 50.25,
-        'description' => 'Mobile top-up',
-        'payment_reference' => 'PAY-12345',
-    ])
-        ->assertCreated()
-        ->assertJsonPath('data.wallet.balance', 50.25)
-        ->assertJsonPath('data.transaction.type', WalletTransaction::TYPE_CREDIT)
-        ->assertJsonPath('data.transaction.source', WalletTransaction::SOURCE_WALLET_DEPOSIT)
-        ->assertJsonPath('data.transaction.amount', 50.25);
+    $this->postJson('/api/v1/auth/wallet/deposit', ['amount' => 50.25])
+        ->assertNotFound();
 
-    expect(app(WalletService::class)->getBalance($user))->toBe(50.25);
+    expect(app(WalletService::class)->getBalance($user))->toBe(0.0);
 });
 
 it('filters wallet transactions via api query parameters', function () {
@@ -116,14 +112,24 @@ it('filters wallet transactions via api query parameters', function () {
     $service = app(WalletService::class);
 
     $service->adminAddFunds($user, 100, 'Admin deposit', $admin);
-    $service->depositFunds($user, 25, 'Customer deposit', 'REF-1');
+
+    $payment = AlifPayment::create([
+        'payment_id' => 'ALIF-WALLET-FILTER-1',
+        'account' => (string) $user->phone,
+        'user_id' => $user->id,
+        'amount' => '25.00',
+        'status' => AlifPayment::STATUS_PENDING,
+    ]);
+
+    DB::transaction(fn () => app(AlifWalletCreditorInterface::class)
+        ->credit($user, $payment, Money::of('25.00')));
 
     Sanctum::actingAs($user);
 
-    $this->getJson('/api/v1/auth/wallet/transactions?type=credit&source=wallet_deposit')
+    $this->getJson('/api/v1/auth/wallet/transactions?type=credit&source=alif_deposit')
         ->assertOk()
         ->assertJsonCount(1, 'data')
-        ->assertJsonPath('data.0.source', WalletTransaction::SOURCE_WALLET_DEPOSIT);
+        ->assertJsonPath('data.0.source', WalletTransaction::SOURCE_ALIF_DEPOSIT);
 });
 
 it('returns wallet balance and transactions for authenticated customer', function () {

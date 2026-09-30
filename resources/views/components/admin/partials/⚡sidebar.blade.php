@@ -168,6 +168,16 @@ new class extends Component {
                             <div>{{ __('admin.rapid_api_logs') }}</div>
                         </a>
                     </li>
+                    <li class="menu-item {{ request()->routeIs('admin.settings.alif') ? 'active' : '' }}">
+                        <a href="{{ route('admin.settings.alif') }}" class="menu-link">
+                            <div>{{ __('admin.alif_api_settings') }}</div>
+                        </a>
+                    </li>
+                    <li class="menu-item {{ request()->routeIs('admin.settings.alif-api-logs.*') ? 'active' : '' }}">
+                        <a href="{{ route('admin.settings.alif-api-logs.index') }}" class="menu-link">
+                            <div>{{ __('admin.alif_api_logs') }}</div>
+                        </a>
+                    </li>
                     <li class="menu-item {{ request()->routeIs('admin.settings.elim-warehouse') ? 'active' : '' }}">
                         <a href="{{ route('admin.settings.elim-warehouse') }}" class="menu-link">
                             <div>{{ __('admin.elim_warehouse') }}</div>

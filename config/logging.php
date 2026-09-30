@@ -118,6 +118,14 @@ return [
             'replace_placeholders' => true,
         ],
 
+        'alif' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/alif.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => env('ALIF_LOG_DAILY_DAYS', 14),
+            'replace_placeholders' => true,
+        ],
+
         'null' => [
             'driver' => 'monolog',
             'handler' => NullHandler::class,

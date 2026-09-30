@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Alif\AlifProviderController;
 use App\Http\Controllers\Api\V1\Auth\CustomerAuthController;
 use App\Http\Controllers\Api\V1\Auth\UserAddressController;
 use App\Http\Controllers\Api\V1\Auth\WalletController;
@@ -15,6 +16,13 @@ use App\Http\Controllers\Api\V1\WarehouseController;
 use Illuminate\Support\Facades\Route;
 
 $publicCatalogRoutes = require __DIR__ . '/api/public-catalog.php';
+
+// Alif provider protocol. One endpoint; the request type lives in the body's
+// `action` field. Kept outside the v1 group so it stays off the Sanctum stack
+// and out of the generated customer API docs.
+Route::post('alif', AlifProviderController::class)
+    ->middleware(['alif.log', 'alif.auth'])
+    ->name('alif.provider');
 
 Route::prefix('v1')->group(function () use ($publicCatalogRoutes) {
     // Guest browsing — no Bearer token required.
@@ -58,7 +66,6 @@ Route::prefix('v1')->group(function () use ($publicCatalogRoutes) {
             Route::delete('wishlist/{wishlist}', [WishlistController::class, 'destroy']);
 
             Route::get('wallet', [WalletController::class, 'show']);
-            Route::post('wallet/deposit', [WalletController::class, 'deposit']);
             Route::get('wallet/transactions', [WalletController::class, 'transactions']);
 
             Route::get('orders/elim/purchasing-wallet', [CustomerOrderController::class, 'elimPurchasingWallet']);
