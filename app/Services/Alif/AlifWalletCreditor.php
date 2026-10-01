@@ -41,7 +41,7 @@ class AlifWalletCreditor implements AlifWalletCreditorInterface
             'balance_after' => $balanceAfter->value(),
             'currency' => $wallet->currency,
             'status' => WalletTransaction::STATUS_COMPLETED,
-            'description' => 'Alif top-up | Payment: '.$payment->payment_id,
+            'description' => 'Alif top-up | Order: '.$payment->order_id,
             'reference_type' => AlifPayment::class,
             'reference_id' => $payment->id,
         ]);

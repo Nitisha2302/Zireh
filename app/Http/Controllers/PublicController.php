@@ -32,4 +32,9 @@ class PublicController extends Controller
             'content' => $deleteAccountInfo,
         ]);
     }
+
+    public function alifReturn()
+    {
+        return view('public.alif-return');
+    }
 }

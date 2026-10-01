@@ -3,23 +3,12 @@
 namespace App\Services\Alif;
 
 use App\Models\AlifApiLog;
-use App\Support\Alif\AlifResponseCode;
-use App\Support\Alif\AlifResult;
 use App\Support\Alif\Money;
 use App\Support\Logging\SensitiveKeyRedactor;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
 
-/**
- * Persists every inbound Alif provider request so it can be inspected from the
- * admin panel.
- *
- * Mirrors the outbound RapidAPI logger, with two differences that follow from
- * the direction of the call: the row records the caller's IP and whether
- * authorization passed, and success is derived from the protocol code rather
- * than the HTTP status, because every Alif answer is HTTP 200 by design.
- */
 class AlifApiLogger
 {
     private const MAX_RESPONSE_BYTES = 65536;
@@ -28,35 +17,43 @@ class AlifApiLogger
         private readonly SensitiveKeyRedactor $redactor,
     ) {}
 
-    public function log(
-        array $payload,
-        ?AlifResult $result,
+    /**
+     * @param  array<string, mixed>  $requestPayload
+     */
+    public function record(
+        string $action,
+        array $requestPayload,
         mixed $responseBody,
         ?int $httpStatus,
-        bool $authorized,
-        ?float $durationMs,
-        ?string $ipAddress,
+        bool $successful,
+        ?float $durationMs = null,
+        ?string $orderId = null,
+        ?string $account = null,
+        ?string $amount = null,
+        ?int $responseCode = null,
+        bool $authorized = true,
+        ?string $ipAddress = null,
         ?string $errorMessage = null,
+        ?int $alifPaymentId = null,
     ): AlifApiLog {
         [$body, $truncated] = $this->prepareBody($responseBody);
-        $action = $this->normalizedAction($payload['action'] ?? null);
 
         return AlifApiLog::query()->create([
-            'action' => $action,
-            'payment_id' => $this->scalarString($payload['id'] ?? null, 64),
-            'account' => $this->scalarString($payload['account'] ?? null, 64),
-            'amount' => Money::tryParse($payload['amount'] ?? null)?->value(),
-            'response_code' => $result?->code->value,
+            'action' => $this->normalizedAction($action),
+            'payment_id' => $this->scalarString($orderId ?? ($requestPayload['order_id'] ?? $requestPayload['orderId'] ?? null), 64),
+            'account' => $this->scalarString($account, 64),
+            'amount' => Money::tryParse($amount ?? ($requestPayload['amount'] ?? null))?->value(),
+            'response_code' => $responseCode ?? $httpStatus,
             'http_status' => $httpStatus,
             'authorized' => $authorized,
-            'is_successful' => $this->isSuccessful($action, $result?->code),
+            'is_successful' => $successful,
             'duration_ms' => $durationMs,
             'ip_address' => $ipAddress,
-            'request_payload' => $this->redactor->redact($payload),
+            'request_payload' => $this->redactor->redact($requestPayload),
             'response_body' => $body,
             'response_truncated' => $truncated,
-            'error_message' => $errorMessage ?? $result?->errorMessage,
-            'alif_payment_id' => $result?->alifPaymentId,
+            'error_message' => $errorMessage,
+            'alif_payment_id' => $alifPaymentId,
         ]);
     }
 
@@ -91,24 +88,6 @@ class AlifApiLogger
             })
             ->when(! empty($filters['date_from']), fn (Builder $q) => $q->whereDate('created_at', '>=', $filters['date_from']))
             ->when(! empty($filters['date_to']), fn (Builder $q) => $q->whereDate('created_at', '<=', $filters['date_to']));
-    }
-
-    protected function isSuccessful(?string $action, ?AlifResponseCode $code): bool
-    {
-        if (! $code) {
-            return false;
-        }
-
-        return match ($action) {
-            AlifPaymentService::ACTION_CHECK => $code === AlifResponseCode::ACCOUNT_FOUND,
-            AlifPaymentService::ACTION_PAY => in_array(
-                $code,
-                [AlifResponseCode::SUCCESS, AlifResponseCode::DUPLICATE_SUCCESS],
-                true
-            ),
-            AlifPaymentService::ACTION_STATUS => $code === AlifResponseCode::SUCCESS,
-            default => false,
-        };
     }
 
     protected function normalizedAction(mixed $action): ?string

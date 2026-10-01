@@ -2,9 +2,8 @@
 
 namespace App\Livewire\Admin\Settings;
 
+use App\Services\Alif\AlifAcquiringService;
 use App\Services\Alif\AlifApiLogger;
-use App\Services\Alif\AlifPaymentService;
-use App\Support\Alif\AlifResponseCode;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -59,9 +58,9 @@ class AlifApiLogListPage extends Component
         return view('livewire.admin.settings.alif-api-log-list-page', [
             'logs' => $logger->listForAdmin($this->filters(), 20),
             'actions' => [
-                AlifPaymentService::ACTION_CHECK => __('admin.alif_action_check'),
-                AlifPaymentService::ACTION_PAY => __('admin.alif_action_pay'),
-                AlifPaymentService::ACTION_STATUS => __('admin.alif_action_status'),
+                AlifAcquiringService::ACTION_INIT => __('admin.alif_action_init'),
+                AlifAcquiringService::ACTION_CALLBACK => __('admin.alif_action_callback'),
+                AlifAcquiringService::ACTION_CHECKTXN => __('admin.alif_action_checktxn'),
             ],
             'codes' => $this->codeOptions(),
             'retentionDays' => $this->retentionDays(),
@@ -70,15 +69,12 @@ class AlifApiLogListPage extends Component
 
     protected function codeOptions(): array
     {
-        $options = [];
-
-        foreach (AlifResponseCode::cases() as $case) {
-            $options[$case->value] = $case->value.' — '.$case->label();
-        }
-
-        ksort($options);
-
-        return $options;
+        return [
+            200 => '200',
+            400 => '400',
+            422 => '422',
+            502 => '502',
+        ];
     }
 
     protected function retentionDays(): int

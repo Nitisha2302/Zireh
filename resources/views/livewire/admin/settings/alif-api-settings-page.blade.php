@@ -12,52 +12,66 @@
             </div>
         </div>
         <div class="card-body">
-            <div class="alert alert-info" role="alert">
-                <div class="fw-semibold mb-1">{{ __('admin.alif_api_endpoint_label') }}</div>
-                <code>{{ url('/api/alif') }}</code>
-                <div class="small mt-2 mb-0">{{ __('admin.alif_api_endpoint_hint') }}</div>
-            </div>
             <form wire:submit="save">
                 <div class="row g-4">
                     <div class="col-md-6">
-                        <label class="form-label">{{ __('admin.alif_api_login') }}</label>
-                        <input type="text" class="form-control @error('alif_login') is-invalid @enderror" wire:model="alif_login" autocomplete="off">
-                        @error('alif_login') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        <label class="form-label">{{ __('admin.alif_api_terminal_key') }}</label>
+                        <input type="text" class="form-control @error('alif_terminal_key') is-invalid @enderror" wire:model="alif_terminal_key" autocomplete="off">
+                        @error('alif_terminal_key') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">{{ __('admin.alif_api_password') }}</label>
+                        <label class="form-label">{{ __('admin.alif_api_terminal_password') }}</label>
                         <input
                             type="password"
-                            class="form-control @error('alif_password') is-invalid @enderror"
-                            wire:model="alif_password"
+                            class="form-control @error('alif_terminal_password') is-invalid @enderror"
+                            wire:model="alif_terminal_password"
                             placeholder="{{ $passwordConfigured ? __('admin.alif_api_password_placeholder') : '' }}"
                             autocomplete="new-password"
                         >
-                        @error('alif_password') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        @error('alif_terminal_password') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         @if ($passwordConfigured)
                             <div class="form-text">{{ __('admin.alif_api_password_hint') }}</div>
                         @endif
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">{{ __('admin.alif_api_srv_id') }}</label>
-                        <input type="text" class="form-control @error('alif_srv_id') is-invalid @enderror" wire:model="alif_srv_id" autocomplete="off">
-                        @error('alif_srv_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                        <div class="form-text">{{ __('admin.alif_api_srv_id_hint') }}</div>
+                        <label class="form-label">{{ __('admin.alif_api_base_url') }}</label>
+                        <input type="url" class="form-control @error('alif_base_url') is-invalid @enderror" wire:model="alif_base_url" autocomplete="off">
+                        @error('alif_base_url') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        <div class="form-text">{{ __('admin.alif_api_base_url_hint') }}</div>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">{{ __('admin.alif_api_currency') }}</label>
-                        <input type="text" class="form-control @error('alif_currency') is-invalid @enderror" wire:model="alif_currency" maxlength="3" autocomplete="off">
-                        @error('alif_currency') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        <label class="form-label">{{ __('admin.alif_api_gate') }}</label>
+                        <select class="form-select @error('alif_gate') is-invalid @enderror" wire:model="alif_gate">
+                            <option value="korti_milli">korti_milli</option>
+                            <option value="wallet">wallet</option>
+                        </select>
+                        @error('alif_gate') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        <div class="form-text">{{ __('admin.alif_api_gate_hint') }}</div>
                     </div>
                     <div class="col-md-6">
+                        <label class="form-label">{{ __('admin.alif_api_callback_url') }}</label>
+                        <input type="url" class="form-control @error('alif_callback_url') is-invalid @enderror" wire:model="alif_callback_url" autocomplete="off">
+                        @error('alif_callback_url') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">{{ __('admin.alif_api_return_url') }}</label>
+                        <input type="url" class="form-control @error('alif_return_url') is-invalid @enderror" wire:model="alif_return_url" autocomplete="off">
+                        @error('alif_return_url') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+                    <div class="col-md-4">
                         <label class="form-label">{{ __('admin.alif_api_min_amount') }}</label>
                         <input type="text" class="form-control @error('alif_min_amount') is-invalid @enderror" wire:model="alif_min_amount" autocomplete="off">
                         @error('alif_min_amount') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <label class="form-label">{{ __('admin.alif_api_max_amount') }}</label>
                         <input type="text" class="form-control @error('alif_max_amount') is-invalid @enderror" wire:model="alif_max_amount" autocomplete="off">
                         @error('alif_max_amount') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">{{ __('admin.alif_api_currency') }}</label>
+                        <input type="text" class="form-control @error('alif_currency') is-invalid @enderror" wire:model="alif_currency" maxlength="3" autocomplete="off">
+                        @error('alif_currency') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                 </div>
                 <div class="mt-4">

@@ -12,31 +12,31 @@ class AlifPayment extends Model
 
     public const STATUS_PAID = 'paid';
 
-    public const STATUS_REJECTED = 'rejected';
+    public const STATUS_FAILED = 'failed';
+
+    public const PURPOSE_WALLET_TOPUP = 'wallet_topup';
 
     protected $fillable = [
-        'payment_id',
-        'response_id',
-        'account',
         'user_id',
+        'order_id',
+        'purpose',
         'amount',
         'currency',
         'status',
-        'code',
-        'srv_id',
-        'is_commercial',
+        'gate',
+        'payment_url',
+        'alif_transaction_id',
+        'callback_payload',
         'paid_at',
         'wallet_transaction_id',
-        'request_payload',
     ];
 
     protected function casts(): array
     {
         return [
             'amount' => 'decimal:2',
-            'is_commercial' => 'boolean',
+            'callback_payload' => 'array',
             'paid_at' => 'datetime',
-            'request_payload' => 'array',
         ];
     }
 
@@ -50,12 +50,9 @@ class AlifPayment extends Model
         return $this->belongsTo(WalletTransaction::class);
     }
 
-    /**
-     * Every Alif call made against this payment id, so retries are visible together.
-     */
     public function logs(): HasMany
     {
-        return $this->hasMany(AlifApiLog::class, 'payment_id', 'payment_id');
+        return $this->hasMany(AlifApiLog::class);
     }
 
     public function isPaid(): bool
@@ -68,16 +65,16 @@ class AlifPayment extends Model
         return $this->status === self::STATUS_PENDING;
     }
 
-    public function isRejected(): bool
+    public function isFailed(): bool
     {
-        return $this->status === self::STATUS_REJECTED;
+        return $this->status === self::STATUS_FAILED;
     }
 
     public function statusBadgeClass(): string
     {
         return match ($this->status) {
             self::STATUS_PAID => 'success',
-            self::STATUS_REJECTED => 'danger',
+            self::STATUS_FAILED => 'danger',
             default => 'warning',
         };
     }

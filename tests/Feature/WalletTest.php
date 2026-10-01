@@ -10,6 +10,7 @@ use App\Support\Alif\Money;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
 use Laravel\Sanctum\Sanctum;
 
 uses(RefreshDatabase::class);
@@ -80,7 +81,7 @@ it('rejects deduct when balance is insufficient', function () {
     $service->adminAddFunds($user, 20, null, $admin);
 
     expect(fn () => $service->adminDeductFunds($user, 50, null, $admin))
-        ->toThrow(Illuminate\Validation\ValidationException::class);
+        ->toThrow(ValidationException::class);
 });
 
 it('rejects revert when balance is insufficient', function () {
@@ -92,7 +93,7 @@ it('rejects revert when balance is insufficient', function () {
     $service->adminRevertTransaction($deposit->fresh(), $admin);
 
     expect(fn () => $service->adminRevertTransaction($deposit->fresh(), $admin))
-        ->toThrow(Illuminate\Validation\ValidationException::class);
+        ->toThrow(ValidationException::class);
 });
 
 it('no longer exposes a customer-triggered wallet deposit endpoint', function () {
@@ -114,9 +115,8 @@ it('filters wallet transactions via api query parameters', function () {
     $service->adminAddFunds($user, 100, 'Admin deposit', $admin);
 
     $payment = AlifPayment::create([
-        'payment_id' => 'ALIF-WALLET-FILTER-1',
-        'account' => (string) $user->phone,
         'user_id' => $user->id,
+        'order_id' => 'WU-WALLET-FILTER-1',
         'amount' => '25.00',
         'status' => AlifPayment::STATUS_PENDING,
     ]);

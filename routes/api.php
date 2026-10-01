@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\Alif\AlifProviderController;
+use App\Http\Controllers\Api\V1\Auth\AlifWalletPaymentController;
 use App\Http\Controllers\Api\V1\Auth\CustomerAuthController;
 use App\Http\Controllers\Api\V1\Auth\UserAddressController;
 use App\Http\Controllers\Api\V1\Auth\WalletController;
@@ -15,14 +15,7 @@ use App\Http\Controllers\Api\V1\Order\CustomerOrderController;
 use App\Http\Controllers\Api\V1\WarehouseController;
 use Illuminate\Support\Facades\Route;
 
-$publicCatalogRoutes = require __DIR__ . '/api/public-catalog.php';
-
-// Alif provider protocol. One endpoint; the request type lives in the body's
-// `action` field. Kept outside the v1 group so it stays off the Sanctum stack
-// and out of the generated customer API docs.
-Route::post('alif', AlifProviderController::class)
-    ->middleware(['alif.log', 'alif.auth'])
-    ->name('alif.provider');
+$publicCatalogRoutes = require __DIR__.'/api/public-catalog.php';
 
 Route::prefix('v1')->group(function () use ($publicCatalogRoutes) {
     // Guest browsing — no Bearer token required.
@@ -30,6 +23,9 @@ Route::prefix('v1')->group(function () use ($publicCatalogRoutes) {
 
     // Preferred prefix for mobile guest mode.
     Route::prefix('public')->group($publicCatalogRoutes);
+
+    Route::post('payments/alif/callback', [AlifWalletPaymentController::class, 'callback'])
+        ->name('payments.alif.callback');
 
     Route::prefix('auth')->group(function () {
         Route::prefix('register')->group(function () {
@@ -67,6 +63,8 @@ Route::prefix('v1')->group(function () use ($publicCatalogRoutes) {
 
             Route::get('wallet', [WalletController::class, 'show']);
             Route::get('wallet/transactions', [WalletController::class, 'transactions']);
+            Route::post('wallet/alif/init', [AlifWalletPaymentController::class, 'init']);
+            Route::get('wallet/alif/status/{orderId}', [AlifWalletPaymentController::class, 'status']);
 
             Route::get('orders/elim/purchasing-wallet', [CustomerOrderController::class, 'elimPurchasingWallet']);
             Route::get('orders/elim/exchange-rates', [CustomerOrderController::class, 'elimExchangeRates']);

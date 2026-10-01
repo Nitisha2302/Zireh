@@ -2,9 +2,7 @@
 
 use App\Http\Middleware\AdminAuthMiddleware;
 use App\Http\Middleware\EnsureAdminRole;
-use App\Http\Middleware\EnsureAlifProviderIsAuthorized;
 use App\Http\Middleware\EnsureCustomerIsActive;
-use App\Http\Middleware\LogAlifProviderRequest;
 use App\Http\Middleware\SetApplicationLocale;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -26,8 +24,6 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin.role' => EnsureAdminRole::class,
             'set_locale' => SetApplicationLocale::class,
             'customer.active' => EnsureCustomerIsActive::class,
-            'alif.log' => LogAlifProviderRequest::class,
-            'alif.auth' => EnsureAlifProviderIsAuthorized::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

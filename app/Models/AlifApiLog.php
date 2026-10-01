@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Support\Alif\AlifResponseCode;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -44,21 +43,23 @@ class AlifApiLog extends Model
         return $this->belongsTo(AlifPayment::class, 'alif_payment_id');
     }
 
-    public function responseCode(): ?AlifResponseCode
+    public function responseCode(): ?int
     {
-        return $this->response_code === null
-            ? null
-            : AlifResponseCode::tryFrom((int) $this->response_code);
+        return $this->response_code === null ? null : (int) $this->response_code;
     }
 
     public function codeLabel(): ?string
     {
-        return $this->responseCode()?->label();
+        if ($this->is_successful) {
+            return __('admin.success');
+        }
+
+        return $this->error_message ?: __('admin.failed');
     }
 
     public function codeBadgeClass(): string
     {
-        return $this->responseCode()?->badgeClass() ?? 'secondary';
+        return $this->is_successful ? 'success' : 'danger';
     }
 
     /**

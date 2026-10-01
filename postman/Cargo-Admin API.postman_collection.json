@@ -2,7 +2,7 @@
     "info": {
         "_postman_id": "6cb07bb2-aa25-43bd-8416-9b7bc36e1e92",
         "name": "Cargo-Admin API",
-        "description": "Laravel public API collection generated from routes/api.php. Set collection variables before running requests.\n\n**Guest / public browsing (no Bearer token):**\n- `GET /v1/public/platforms` — platforms + sliders\n- `GET /v1/public/platform-sliders` — homepage banners\n- `GET /v1/public/warehouses` — active Tajikistan warehouses\n- `GET /v1/public/taobao/products` — product listing\n- `GET /v1/public/taobao/products/{id}` — product detail\n- `GET /v1/public/1688/products` — same for 1688\n- `GET /v1/public/jd/products` — JD.com via RapidAPI\n- `GET /v1/public/jd/products/{id}` — JD product detail\n\nLegacy paths without `/public` prefix still work (`/v1/taobao/products`, etc.).\n\n**Authenticated routes** (`/v1/auth/*`) require `Authorization: Bearer {{customer_token}}`.\n\nCheckout flow: select a Tajikistan warehouse on the user profile (`PATCH /v1/auth/profile` with `warehouse_id`), then call cart preview/checkout without `warehouse_id`, `address_id`, or package dimensions in the body. Checkout pays goods only.\n\nPickup flow (Tajikistan cargo shipping):\n1. Warehouse staff measure package and confirm → order becomes `ready_for_pickup`\n2. Mobile app reads `pickup` from order list/detail (`GET /v1/auth/taobao/orders`, `/v1/auth/1688/orders`, or `/v1/auth/jd/orders`)\n3. Build customer QR from `pickup.qr.payload` (format: `cargo-pickup:{token}`)\n4. Optional: `GET /v1/auth/orders/{order}/pickup` for wallet balance + `can_pay`\n5. Pay cargo shipping: `POST /v1/auth/orders/{order}/pickup/pay` with `payment_method`: `wallet` or `online`\n\n**Wallet top-up (Alif Provider — folder 08):**\nThe customer app never posts a deposit. Alif Bank calls `POST /alif` (`{{base_url}}/alif`). Auth is `Authorization: BASE64(alif_login:alif_password)` (no `Basic ` prefix required). HTTP is always 200; read JSON `code`.\n1. `POST /alif` `{ action: check }` — phone exists? `code` 302 found / 404 not found. Wallet unchanged.\n2. Customer pays at an Alif terminal or in the Alif app (outside this API).\n3. `POST /alif` `{ action: pay }` — credits the TJS wallet once per `id`. `code` 200 success / 108 already credited.\n4. `POST /alif` `{ action: status }` — settlement lookup. `code` 200 paid / 104 unknown.\n5. Customer token: `GET /v1/auth/wallet` then `GET /v1/auth/wallet/transactions?source=alif_deposit`.\nSet `alif_login`, `alif_password`, and `alif_account` (active customer phone). Check generates a unique `alif_payment_id` for Pay/Status.",
+        "description": "Laravel public API collection generated from routes/api.php. Set collection variables before running requests.\n\n**Guest / public browsing (no Bearer token):**\n- `GET /v1/public/platforms` — platforms + sliders\n- `GET /v1/public/platform-sliders` — homepage banners\n- `GET /v1/public/warehouses` — active Tajikistan warehouses\n- `GET /v1/public/taobao/products` — product listing\n- `GET /v1/public/taobao/products/{id}` — product detail\n- `GET /v1/public/1688/products` — same for 1688\n- `GET /v1/public/jd/products` — JD.com via RapidAPI\n- `GET /v1/public/jd/products/{id}` — JD product detail\n\nLegacy paths without `/public` prefix still work (`/v1/taobao/products`, etc.).\n\n**Authenticated routes** (`/v1/auth/*`) require `Authorization: Bearer {{customer_token}}`.\n\nCheckout flow: select a Tajikistan warehouse on the user profile (`PATCH /v1/auth/profile` with `warehouse_id`), then call cart preview/checkout without `warehouse_id`, `address_id`, or package dimensions in the body. Checkout pays goods only.\n\nPickup flow (Tajikistan cargo shipping):\n1. Warehouse staff measure package and confirm → order becomes `ready_for_pickup`\n2. Mobile app reads `pickup` from order list/detail (`GET /v1/auth/taobao/orders`, `/v1/auth/1688/orders`, or `/v1/auth/jd/orders`)\n3. Build customer QR from `pickup.qr.payload` (format: `cargo-pickup:{token}`)\n4. Optional: `GET /v1/auth/orders/{order}/pickup` for wallet balance + `can_pay`\n5. Pay cargo shipping: `POST /v1/auth/orders/{order}/pickup/pay` with `payment_method`: `wallet` or `online`\n\n**Wallet top-up (Alif Acquiring — folder 08):**\nThe customer app calls `POST /v1/auth/wallet/alif/init` with a Bearer token and amount. This app calls Alif; Flutter opens `payment_url`. After pay, Alif POSTs `/v1/payments/alif/callback` (HMAC token). Poll `GET /v1/auth/wallet/alif/status/{order_id}`. Then `GET /v1/auth/wallet`. Configure terminal key/password in Admin Alif Settings.",
         "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
         "_exporter_id": "29209019"
     },
@@ -2477,57 +2477,35 @@
             ]
         },
         {
-            "name": "08 - Alif Provider (Add Wallet Money)",
-            "description": "Alif Bank is the client. This app is the provider. Run **in this order** (folder runner works).\n\n1. **Check** — Alif asks if `alif_account` (customer phone) exists. Wallet is not changed. `code` 302 = found.\n2. Customer pays at Alif (not this API).\n3. **Pay** — Alif notifies us the money was taken. This is the only request that credits `user_wallets`. Same `id` twice returns `code` 108 and does not double-credit.\n4. **Status** — Alif asks whether that `id` settled. `code` 200 = paid.\n5. **Get Wallet Balance** / **List Alif Top-ups** — customer Bearer token; confirm the new TJS balance (`source=alif_deposit`).\n\nAuth for steps 1–4: `Authorization` header = Base64(`alif_login`:`alif_password`) from `.env` (`ALIF_LOGIN` / `ALIF_PASSWORD`). Do not send the customer Sanctum token on `/alif`.\n\n`account` accepts `901234567`, `992901234567`, or `+992901234567` for the same user. Amount range defaults to 1.00–20000.00 TJS.",
+            "name": "08 - Alif Acquiring (Add Wallet Money)",
+            "description": "Flutter top-up. Run Init, open payment_url, then Status.\n\n1. **Init** — Sanctum token. Returns order_id + payment_url.\n2. **Status** — poll until paid.\n3. **Get Wallet** / **List Alif top-ups**.\n4. **Callback** — Alif server HMAC; local tests only.",
             "auth": {
-                "type": "noauth"
-            },
-            "event": [
-                {
-                    "listen": "prerequest",
-                    "script": {
-                        "type": "text/javascript",
-                        "exec": [
-                            "const login = pm.collectionVariables.get('alif_login') || '';",
-                            "const password = pm.collectionVariables.get('alif_password') || '';",
-                            "pm.collectionVariables.set('alif_authorization', btoa(login + ':' + password));"
-                        ]
+                "type": "bearer",
+                "bearer": [
+                    {
+                        "key": "token",
+                        "value": "{{customer_token}}",
+                        "type": "string"
                     }
-                }
-            ],
+                ]
+            },
             "item": [
                 {
-                    "name": "1. Check account",
+                    "name": "1. Init Alif checkout",
                     "event": [
-                        {
-                            "listen": "prerequest",
-                            "script": {
-                                "type": "text/javascript",
-                                "exec": [
-                                    "pm.collectionVariables.set('alif_payment_id', String(Date.now()));"
-                                ]
-                            }
-                        },
                         {
                             "listen": "test",
                             "script": {
                                 "type": "text/javascript",
                                 "exec": [
-                                    "pm.test('HTTP is 200 (Alif reads JSON code, not HTTP status)', function () {",
-                                    "  pm.response.to.have.status(200);",
-                                    "});",
                                     "const json = pm.response.json();",
-                                    "pm.test('Check returns found (302), not found (404), or unauthorized (401)', function () {",
-                                    "  pm.expect(json.code).to.be.oneOf([302, 404, 401, 400]);",
-                                    "});"
+                                    "if (json?.data?.order_id) pm.collectionVariables.set(\"alif_order_id\", json.data.order_id);",
+                                    "pm.test(\"Init succeeded\", function () { pm.expect(pm.response.code).to.eql(200); pm.expect(json.success).to.be.true; });"
                                 ]
                             }
                         }
                     ],
                     "request": {
-                        "auth": {
-                            "type": "noauth"
-                        },
                         "method": "POST",
                         "header": [
                             {
@@ -2539,16 +2517,11 @@
                                 "key": "Content-Type",
                                 "value": "application/json",
                                 "type": "text"
-                            },
-                            {
-                                "key": "Authorization",
-                                "value": "{{alif_authorization}}",
-                                "type": "text"
                             }
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"id\": {{alif_payment_id}},\n  \"action\": \"check\",\n  \"account\": \"{{alif_account}}\"\n}",
+                            "raw": "{\n  \"amount\": \"{{alif_amount}}\",\n  \"description\": \"Wallet top-up\"\n}",
                             "options": {
                                 "raw": {
                                     "language": "json"
@@ -2556,377 +2529,59 @@
                             }
                         },
                         "url": {
-                            "raw": "{{base_url}}/alif",
+                            "raw": "{{base_url}}/v1/auth/wallet/alif/init",
                             "host": [
                                 "{{base_url}}"
                             ],
                             "path": [
-                                "alif"
+                                "v1",
+                                "auth",
+                                "wallet",
+                                "alif",
+                                "init"
                             ]
                         },
-                        "description": "Step 1. Alif looks up the subscriber before collecting money. Read-only.\n\nExpected `code`: **302** (found, `info_for_client` has name + balance) or **404** (no active customer for that phone).\n\nGenerates a new `alif_payment_id` so Pay/Status in this folder share the same id."
+                        "description": "Creates a pending Alif payment and returns the hosted checkout URL. Requires customer_token."
                     },
-                    "response": [
-                        {
-                            "name": "Subscriber found (302)",
-                            "originalRequest": {
-                                "method": "POST",
-                                "header": [
-                                    {
-                                        "key": "Content-Type",
-                                        "value": "application/json"
-                                    }
-                                ],
-                                "body": {
-                                    "mode": "raw",
-                                    "raw": "{\n  \"id\": 1001,\n  \"action\": \"check\",\n  \"account\": \"992901234567\"\n}"
-                                },
-                                "url": {
-                                    "raw": "{{base_url}}/alif",
-                                    "host": [
-                                        "{{base_url}}"
-                                    ],
-                                    "path": [
-                                        "alif"
-                                    ]
-                                }
-                            },
-                            "status": "OK",
-                            "code": 200,
-                            "_postman_previewlanguage": "json",
-                            "header": [
-                                {
-                                    "key": "Content-Type",
-                                    "value": "application/json"
-                                }
-                            ],
-                            "body": "{\n  \"code\": 302,\n  \"id\": 1001,\n  \"info_for_client\": \"Клиент: Farhod\\nБаланс: 0.00 с.\"\n}"
-                        }
-                    ]
+                    "response": []
                 },
                 {
-                    "name": "2. Pay (credit wallet)",
-                    "event": [
-                        {
-                            "listen": "test",
-                            "script": {
-                                "type": "text/javascript",
-                                "exec": [
-                                    "pm.test('HTTP is 200 (Alif reads JSON code, not HTTP status)', function () {",
-                                    "  pm.response.to.have.status(200);",
-                                    "});",
-                                    "const json = pm.response.json();",
-                                    "if (json.response_id) {",
-                                    "  pm.collectionVariables.set('alif_response_id', String(json.response_id));",
-                                    "}",
-                                    "pm.test('Pay returns success (200), duplicate (108), or a protocol error', function () {",
-                                    "  pm.expect(json.code).to.be.oneOf([200, 108, 404, 405, 400, 401, 520]);",
-                                    "});"
-                                ]
-                            }
-                        }
-                    ],
+                    "name": "2. Payment status",
                     "request": {
-                        "auth": {
-                            "type": "noauth"
-                        },
-                        "method": "POST",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json",
-                                "type": "text"
-                            },
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json",
-                                "type": "text"
-                            },
-                            {
-                                "key": "Authorization",
-                                "value": "{{alif_authorization}}",
-                                "type": "text"
-                            }
-                        ],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n  \"id\": {{alif_payment_id}},\n  \"action\": \"pay\",\n  \"account\": \"{{alif_account}}\",\n  \"amount\": \"{{alif_amount}}\"\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        },
-                        "url": {
-                            "raw": "{{base_url}}/alif",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "alif"
-                            ]
-                        },
-                        "description": "Step 2 (after the customer has paid Alif). This is the **only** API that adds wallet balance.\n\nUses the `id` from Check. Run Check first, or set `alif_payment_id` yourself (must be unique).\n\nExpected `code`: **200** (credited, `response_id` is the wallet transaction id) or **108** if this `id` was already paid.\n\nAmount must be within `ALIF_MIN_AMOUNT`–`ALIF_MAX_AMOUNT` (default 1.00–20000.00 TJS)."
-                    },
-                    "response": [
-                        {
-                            "name": "Paid (200)",
-                            "originalRequest": {
-                                "method": "POST",
-                                "header": [
-                                    {
-                                        "key": "Content-Type",
-                                        "value": "application/json"
-                                    }
-                                ],
-                                "body": {
-                                    "mode": "raw",
-                                    "raw": "{\n  \"id\": 1001,\n  \"action\": \"pay\",\n  \"account\": \"992901234567\",\n  \"amount\": \"50.00\"\n}"
-                                },
-                                "url": {
-                                    "raw": "{{base_url}}/alif",
-                                    "host": [
-                                        "{{base_url}}"
-                                    ],
-                                    "path": [
-                                        "alif"
-                                    ]
-                                }
-                            },
-                            "status": "OK",
-                            "code": 200,
-                            "_postman_previewlanguage": "json",
-                            "header": [
-                                {
-                                    "key": "Content-Type",
-                                    "value": "application/json"
-                                }
-                            ],
-                            "body": "{\n  \"code\": 200,\n  \"id\": 1001,\n  \"response_id\": \"42\"\n}"
-                        }
-                    ]
-                },
-                {
-                    "name": "2b. Pay again (duplicate, code 108)",
-                    "event": [
-                        {
-                            "listen": "test",
-                            "script": {
-                                "type": "text/javascript",
-                                "exec": [
-                                    "pm.test('HTTP is 200', function () {",
-                                    "  pm.response.to.have.status(200);",
-                                    "});",
-                                    "const json = pm.response.json();",
-                                    "pm.test('Replay of a settled id returns 108 (or 200 if Pay was not run yet)', function () {",
-                                    "  pm.expect(json.code).to.be.oneOf([108, 200, 404, 401, 400]);",
-                                    "});"
-                                ]
-                            }
-                        }
-                    ],
-                    "request": {
-                        "auth": {
-                            "type": "noauth"
-                        },
-                        "method": "POST",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json",
-                                "type": "text"
-                            },
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json",
-                                "type": "text"
-                            },
-                            {
-                                "key": "Authorization",
-                                "value": "{{alif_authorization}}",
-                                "type": "text"
-                            }
-                        ],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n  \"id\": {{alif_payment_id}},\n  \"action\": \"pay\",\n  \"account\": \"{{alif_account}}\",\n  \"amount\": \"{{alif_amount}}\"\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        },
-                        "url": {
-                            "raw": "{{base_url}}/alif",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "alif"
-                            ]
-                        },
-                        "description": "Optional. Same body as Pay. After a successful Pay, Alif retries must return **108** and must **not** add the amount a second time. Skip this when you only want a single top-up."
-                    },
-                    "response": [
-                        {
-                            "name": "Duplicate success (108)",
-                            "originalRequest": {
-                                "method": "POST",
-                                "header": [
-                                    {
-                                        "key": "Content-Type",
-                                        "value": "application/json"
-                                    }
-                                ],
-                                "body": {
-                                    "mode": "raw",
-                                    "raw": "{\n  \"id\": 1001,\n  \"action\": \"pay\",\n  \"account\": \"992901234567\",\n  \"amount\": \"50.00\"\n}"
-                                },
-                                "url": {
-                                    "raw": "{{base_url}}/alif",
-                                    "host": [
-                                        "{{base_url}}"
-                                    ],
-                                    "path": [
-                                        "alif"
-                                    ]
-                                }
-                            },
-                            "status": "OK",
-                            "code": 200,
-                            "_postman_previewlanguage": "json",
-                            "header": [
-                                {
-                                    "key": "Content-Type",
-                                    "value": "application/json"
-                                }
-                            ],
-                            "body": "{\n  \"code\": 108,\n  \"id\": 1001,\n  \"response_id\": \"42\"\n}"
-                        }
-                    ]
-                },
-                {
-                    "name": "3. Status",
-                    "event": [
-                        {
-                            "listen": "test",
-                            "script": {
-                                "type": "text/javascript",
-                                "exec": [
-                                    "pm.test('HTTP is 200', function () {",
-                                    "  pm.response.to.have.status(200);",
-                                    "});",
-                                    "const json = pm.response.json();",
-                                    "pm.test('Status returns paid (200), missing (104), or processing (201)', function () {",
-                                    "  pm.expect(json.code).to.be.oneOf([200, 104, 201, 203, 401, 400]);",
-                                    "});"
-                                ]
-                            }
-                        }
-                    ],
-                    "request": {
-                        "auth": {
-                            "type": "noauth"
-                        },
-                        "method": "POST",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json",
-                                "type": "text"
-                            },
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json",
-                                "type": "text"
-                            },
-                            {
-                                "key": "Authorization",
-                                "value": "{{alif_authorization}}",
-                                "type": "text"
-                            }
-                        ],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n  \"id\": {{alif_payment_id}},\n  \"action\": \"status\"\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        },
-                        "url": {
-                            "raw": "{{base_url}}/alif",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "alif"
-                            ]
-                        },
-                        "description": "Step 3. Alif confirms whether payment `id` settled. Read-only; does not change the wallet.\n\nExpected `code`: **200** after Pay, **104** if Check ran but Pay never did (this app does not store check-only ids)."
-                    },
-                    "response": [
-                        {
-                            "name": "Paid (200)",
-                            "originalRequest": {
-                                "method": "POST",
-                                "header": [
-                                    {
-                                        "key": "Content-Type",
-                                        "value": "application/json"
-                                    }
-                                ],
-                                "body": {
-                                    "mode": "raw",
-                                    "raw": "{\n  \"id\": 1001,\n  \"action\": \"status\"\n}"
-                                },
-                                "url": {
-                                    "raw": "{{base_url}}/alif",
-                                    "host": [
-                                        "{{base_url}}"
-                                    ],
-                                    "path": [
-                                        "alif"
-                                    ]
-                                }
-                            },
-                            "status": "OK",
-                            "code": 200,
-                            "_postman_previewlanguage": "json",
-                            "header": [
-                                {
-                                    "key": "Content-Type",
-                                    "value": "application/json"
-                                }
-                            ],
-                            "body": "{\n  \"code\": 200,\n  \"id\": 1001,\n  \"response_id\": \"42\"\n}"
-                        }
-                    ]
-                },
-                {
-                    "name": "4. Get Wallet Balance (customer)",
-                    "request": {
-                        "auth": {
-                            "type": "bearer",
-                            "bearer": [
-                                {
-                                    "key": "token",
-                                    "value": "{{customer_token}}",
-                                    "type": "string"
-                                }
-                            ]
-                        },
                         "method": "GET",
                         "header": [
                             {
                                 "key": "Accept",
                                 "value": "application/json",
                                 "type": "text"
-                            },
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/v1/auth/wallet/alif/status/{{alif_order_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "v1",
+                                "auth",
+                                "wallet",
+                                "alif",
+                                "status",
+                                "{{alif_order_id}}"
+                            ]
+                        },
+                        "description": "Owner-only. If still pending, this app asks Alif checktxn and may credit the wallet."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "3. Get Wallet Balance (customer)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
                             {
-                                "key": "Accept-Language",
-                                "value": "{{locale}}",
+                                "key": "Accept",
+                                "value": "application/json",
                                 "type": "text"
                             }
                         ],
@@ -2940,34 +2595,18 @@
                                 "auth",
                                 "wallet"
                             ]
-                        },
-                        "description": "Step 4. Customer app (Sanctum `customer_token`). Does not add money — reads the balance after Alif Pay. Login as the same phone as `alif_account`."
+                        }
                     },
                     "response": []
                 },
                 {
-                    "name": "5. List Alif top-ups (customer)",
+                    "name": "4. List Alif top-ups (customer)",
                     "request": {
-                        "auth": {
-                            "type": "bearer",
-                            "bearer": [
-                                {
-                                    "key": "token",
-                                    "value": "{{customer_token}}",
-                                    "type": "string"
-                                }
-                            ]
-                        },
                         "method": "GET",
                         "header": [
                             {
                                 "key": "Accept",
                                 "value": "application/json",
-                                "type": "text"
-                            },
-                            {
-                                "key": "Accept-Language",
-                                "value": "{{locale}}",
                                 "type": "text"
                             }
                         ],
@@ -2989,12 +2628,54 @@
                                 },
                                 {
                                     "key": "source",
-                                    "value": "alif_deposit",
-                                    "description": "Alif top-ups only"
+                                    "value": "alif_deposit"
                                 }
                             ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "5. Callback (Alif server)",
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
                         },
-                        "description": "Step 5. Same customer token. Filter `source=alif_deposit` to see credits created by Pay."
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"orderId\": \"{{alif_order_id}}\",\n  \"status\": \"ok\",\n  \"transactionId\": \"TXN-TEST\",\n  \"token\": \"replace-with-hmac\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/v1/payments/alif/callback",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "v1",
+                                "payments",
+                                "alif",
+                                "callback"
+                            ]
+                        },
+                        "description": "Called by Alif, not the mobile app. Token is HMAC-SHA256 per docs.acquiring.alif.tj."
                     },
                     "response": []
                 }
@@ -3002,7 +2683,7 @@
         },
         {
             "name": "09 - Wallet",
-            "description": "Customer Sanctum token. Read-only. Adding money is **08 - Alif Provider** (`POST /alif` action=pay), not a customer deposit endpoint.",
+            "description": "Customer Sanctum token. Read-only. Adding money is **08 - Alif Acquiring** (init + Alif callback), not a customer deposit endpoint.",
             "item": [
                 {
                     "name": "Get Wallet Balance",
@@ -5211,32 +4892,8 @@
             "value": "1"
         },
         {
-            "key": "alif_login",
-            "value": ""
-        },
-        {
-            "key": "alif_password",
-            "value": ""
-        },
-        {
-            "key": "alif_authorization",
-            "value": ""
-        },
-        {
-            "key": "alif_account",
-            "value": "992901234567"
-        },
-        {
-            "key": "alif_payment_id",
-            "value": "1001"
-        },
-        {
             "key": "alif_amount",
             "value": "50.00"
-        },
-        {
-            "key": "alif_response_id",
-            "value": ""
         },
         {
             "key": "wallet_balance",
@@ -5269,6 +4926,10 @@
         {
             "key": "jd_sku_id",
             "value": "100256400499"
+        },
+        {
+            "key": "alif_order_id",
+            "value": ""
         }
     ]
 }

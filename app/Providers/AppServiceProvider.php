@@ -2,16 +2,9 @@
 
 namespace App\Providers;
 
-use App\Repositories\Alif\AlifPaymentRepository;
-use App\Services\Alif\AlifPaymentService;
 use App\Services\Alif\AlifWalletCreditor;
-use App\Services\Alif\Contracts\AlifAccountResolverInterface;
-use App\Services\Alif\Contracts\AlifPaymentRepositoryInterface;
-use App\Services\Alif\Contracts\AlifPaymentServiceInterface;
 use App\Services\Alif\Contracts\AlifWalletCreditorInterface;
-use App\Services\Alif\PhoneAlifAccountResolver;
 use App\Services\FileManager;
-use App\Support\Alif\AlifRequestContext;
 use Dedoc\Scramble\Scramble;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Routing\Route;
@@ -30,15 +23,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(FileManager::class);
-
-        $this->app->bind(AlifAccountResolverInterface::class, PhoneAlifAccountResolver::class);
-        $this->app->bind(AlifPaymentRepositoryInterface::class, AlifPaymentRepository::class);
         $this->app->bind(AlifWalletCreditorInterface::class, AlifWalletCreditor::class);
-        $this->app->bind(AlifPaymentServiceInterface::class, AlifPaymentService::class);
-
-        // One instance per request, so the response builder and the request
-        // logger are looking at the same result.
-        $this->app->scoped(AlifRequestContext::class);
     }
 
     /**
