@@ -43,22 +43,22 @@ abstract class AbstractElimProductService implements MarketplaceProductService
         ]);
     }
 
-    public function find(string $id, string|null $lang = null): array
+    public function find(string $id, ?string $lang = null): array
     {
         $payload = [
-            'id' => $id,
+            'id' => $this->findIdentifier($id),
             'platform' => $this->elimPlatform(),
             'lang' => $this->lang($lang),
         ];
 
         return Cache::remember($this->cacheKey('detail', $payload), $this->productTtl(), function () use ($payload): array {
             $response = $this->client->post('/v1/products/find', $payload);
-        
+
             return $this->normalizer->detailResponse($response, $this->platform());
         });
     }
 
-    public function categories(string|null $lang = null): array
+    public function categories(?string $lang = null): array
     {
         return app(PlatformCategoryService::class)->listForPlatformKey($this->platform(), $lang);
     }
@@ -93,7 +93,7 @@ abstract class AbstractElimProductService implements MarketplaceProductService
             'filter' => $filters['filter'] ?? null,
             'page' => (int) ($filters['page'] ?? 1),
             'size' => (int) ($filters['size'] ?? 20),
-        ], fn(mixed $value): bool => $value !== null && $value !== '');
+        ], fn (mixed $value): bool => $value !== null && $value !== '');
     }
 
     protected function filtersWithCategory(array $filters): array
@@ -121,7 +121,7 @@ abstract class AbstractElimProductService implements MarketplaceProductService
         return $filters;
     }
 
-    protected function lang(string|null $lang): string
+    protected function lang(?string $lang): string
     {
         return in_array($lang, ['vi', 'en'], true) ? $lang : $this->config->defaultLang();
     }
@@ -129,6 +129,11 @@ abstract class AbstractElimProductService implements MarketplaceProductService
     protected function elimPlatform(): string
     {
         return $this->platform() === '1688' ? 'alibaba' : $this->platform();
+    }
+
+    protected function findIdentifier(string $id): string
+    {
+        return trim(urldecode($id));
     }
 
     protected function cacheKey(string $scope, array $payload): string

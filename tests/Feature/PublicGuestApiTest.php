@@ -2,6 +2,7 @@
 
 use App\Models\Platform;
 use App\Models\PlatformSlider;
+use App\Models\Warehouse;
 use Database\Seeders\OrderStatusSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
@@ -76,10 +77,21 @@ it('allows guest access to product listing and detail without token', function (
     $this->getJson('/api/v1/public/taobao/products/1001?lang=en')
         ->assertOk()
         ->assertJsonPath('data.id', '1001');
+
+    Http::assertSent(function ($request): bool {
+        if (! str_ends_with($request->url(), '/v1/products/find')) {
+            return false;
+        }
+
+        $payload = $request->data();
+
+        return ($payload['id'] ?? null) === 'https://item.taobao.com/item.htm?id=1001'
+            && ($payload['platform'] ?? null) === 'taobao';
+    });
 });
 
 it('allows guest access to active warehouses without token', function () {
-    $active = \App\Models\Warehouse::create([
+    $active = Warehouse::create([
         'warehouse_name' => 'Dushanbe Hub',
         'warehouse_code' => 'DUS-01',
         'contact_person' => 'Manager',
@@ -90,10 +102,10 @@ it('allows guest access to active warehouses without token', function () {
         'address' => 'Main Street 1',
         'latitude' => 38.5598,
         'longitude' => 68.7870,
-        'status' => \App\Models\Warehouse::STATUS_ACTIVE,
+        'status' => Warehouse::STATUS_ACTIVE,
     ]);
 
-    \App\Models\Warehouse::create([
+    Warehouse::create([
         'warehouse_name' => 'Closed Hub',
         'warehouse_code' => 'CLS-01',
         'contact_person' => 'Manager',
@@ -104,7 +116,7 @@ it('allows guest access to active warehouses without token', function () {
         'address' => 'Side Street 2',
         'latitude' => 38.5600,
         'longitude' => 68.7880,
-        'status' => \App\Models\Warehouse::STATUS_INACTIVE,
+        'status' => Warehouse::STATUS_INACTIVE,
     ]);
 
     $this->getJson('/api/v1/warehouses')
