@@ -205,6 +205,24 @@ it('shows the alif log detail page', function () {
         ->assertSee('WU-DETAIL');
 });
 
+it('shows the raw gateway body on the alif log detail page', function () {
+    $this->actingAs(alifLogAdmin(), 'admin');
+
+    $log = AlifApiLog::create([
+        'action' => AlifAcquiringService::ACTION_INIT,
+        'payment_id' => 'WU-RAW',
+        'response_code' => 502,
+        'http_status' => 502,
+        'is_successful' => false,
+        'error_message' => 'Invalid Alif response',
+        'response_body' => ['_raw' => '<html>Bad Gateway from Alif</html>'],
+    ]);
+
+    Livewire::test(AlifApiLogDetailPage::class, ['log' => $log])
+        ->assertSee('<html>Bad Gateway from Alif</html>')
+        ->assertDontSee('"_raw"');
+});
+
 it('allows an admin to purge old alif logs', function () {
     $this->actingAs(alifLogAdmin(), 'admin');
 

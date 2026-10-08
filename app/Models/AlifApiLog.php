@@ -76,4 +76,21 @@ class AlifApiLog extends Model
 
         return ($value === '' ? '0' : $value).' ms';
     }
+
+    public function formattedResponseBody(): ?string
+    {
+        $body = $this->response_body;
+
+        if ($body === null) {
+            return null;
+        }
+
+        if (is_array($body) && array_key_exists('_raw', $body) && count($body) === 1) {
+            return (string) $body['_raw'];
+        }
+
+        $encoded = json_encode($body, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+        return $encoded === false ? null : $encoded;
+    }
 }

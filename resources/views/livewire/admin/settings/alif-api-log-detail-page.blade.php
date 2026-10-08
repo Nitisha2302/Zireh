@@ -94,8 +94,8 @@
           <h5 class="mb-0">{{ __('admin.alif_api_log_response') }}</h5>
         </div>
         <div class="card-body">
-          @if ($log->response_body)
-            <pre class="bg-lighter rounded p-3 mb-0 small overflow-auto" style="max-height: 520px;">{{ json_encode($log->response_body, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) }}</pre>
+          @if ($log->formattedResponseBody() !== null)
+            <pre class="bg-lighter rounded p-3 mb-0 small overflow-auto" style="max-height: 520px;">{{ $log->formattedResponseBody() }}</pre>
           @else
             <p class="mb-0 text-body-secondary">{{ __('admin.alif_api_log_no_response_body') }}</p>
           @endif

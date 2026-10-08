@@ -1,6 +1,7 @@
 <?php
 
 use App\Helpers\SettingHelper;
+use App\Models\AlifApiLog;
 use App\Models\AlifPayment;
 use App\Models\Setting;
 use App\Models\User;
@@ -208,4 +209,79 @@ it('signs callbacks with admin-saved terminal credentials instead of env', funct
     ])->assertOk()->assertJsonPath('ok', true);
 
     expect(AlifPayment::query()->first()->isPaid())->toBeTrue();
+});
+
+it('stores the raw alif html error body on init failure', function () {
+    Http::fake([
+        'https://test-web.alif.tj/v2/' => Http::response('<html>Bad Gateway from Alif</html>', 502, [
+            'Content-Type' => 'text/html',
+        ]),
+    ]);
+
+    Sanctum::actingAs(alifAcquiringCustomer());
+
+    $this->postJson('/api/v1/auth/wallet/alif/init', ['amount' => '100.00'])
+        ->assertStatus(502);
+
+    $log = AlifApiLog::query()->firstOrFail();
+
+    expect($log->is_successful)->toBeFalse()
+        ->and($log->http_status)->toBe(502)
+        ->and($log->response_code)->toBe(502)
+        ->and($log->error_message)->toBe('Invalid Alif response')
+        ->and($log->response_body['_raw'] ?? null)->toContain('Bad Gateway from Alif')
+        ->and($log->formattedResponseBody())->toContain('Bad Gateway from Alif');
+});
+
+it('stores the full alif json error body on init failure', function () {
+    Http::fake([
+        'https://test-web.alif.tj/v2/' => Http::response([
+            'code' => 400,
+            'message' => 'Invalid token',
+            'details' => ['reason' => 'signature mismatch'],
+        ], 400),
+    ]);
+
+    Sanctum::actingAs(alifAcquiringCustomer());
+
+    $this->postJson('/api/v1/auth/wallet/alif/init', ['amount' => '100.00'])
+        ->assertStatus(502)
+        ->assertJsonPath('message', 'Invalid token');
+
+    $log = AlifApiLog::query()->firstOrFail();
+
+    expect($log->is_successful)->toBeFalse()
+        ->and($log->http_status)->toBe(400)
+        ->and($log->response_code)->toBe(400)
+        ->and($log->error_message)->toBe('Invalid token')
+        ->and($log->response_body['message'] ?? null)->toBe('Invalid token')
+        ->and($log->response_body['details'] ?? null)->toBe(['reason' => 'signature mismatch']);
+});
+
+it('stores the raw alif status error body on checktxn failure', function () {
+    Http::fake([
+        'https://test-web.alif.tj/v2/' => Http::response([
+            'code' => 200,
+            'url' => 'https://pay.alif.test/checkout',
+            'message' => 'ok',
+        ], 200),
+        'https://test-web.alif.tj/checktxn' => Http::response('<html>status down</html>', 500, [
+            'Content-Type' => 'text/html',
+        ]),
+    ]);
+
+    $user = alifAcquiringCustomer();
+    Sanctum::actingAs($user);
+
+    $orderId = $this->postJson('/api/v1/auth/wallet/alif/init', ['amount' => '25.00'])
+        ->json('data.order_id');
+
+    $this->getJson('/api/v1/auth/wallet/alif/status/'.$orderId)
+        ->assertOk();
+
+    $log = AlifApiLog::query()->where('action', AlifAcquiringService::ACTION_CHECKTXN)->firstOrFail();
+
+    expect($log->is_successful)->toBeFalse()
+        ->and($log->http_status)->toBe(500)
+        ->and($log->response_body['_raw'] ?? null)->toContain('status down');
 });

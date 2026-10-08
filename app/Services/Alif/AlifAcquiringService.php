@@ -3,8 +3,8 @@
 namespace App\Services\Alif;
 
 use App\Support\Alif\AlifAcquiringConfig;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
-use RuntimeException;
 
 class AlifAcquiringService
 {
@@ -64,17 +64,11 @@ class AlifAcquiringService
             ])
             ->post($this->config->baseUrl().'/v2/', $body);
 
-        $json = $response->json();
-
-        if (! is_array($json)) {
-            throw new RuntimeException('Invalid Alif response');
-        }
-
-        if ($response->status() !== 200 || (int) ($json['code'] ?? 0) !== 200) {
-            throw new RuntimeException((string) ($json['message'] ?? 'Alif payment init failed'));
-        }
-
-        return $json;
+        return $this->jsonOrFail(
+            $response,
+            'Invalid Alif response',
+            requireInitSuccess: true,
+        );
     }
 
     /**
@@ -96,13 +90,7 @@ class AlifAcquiringService
                 'token' => $token,
             ]);
 
-        $json = $response->json();
-
-        if (! is_array($json)) {
-            throw new RuntimeException('Invalid Alif status response');
-        }
-
-        return $json;
+        return $this->jsonOrFail($response, 'Invalid Alif status response');
     }
 
     public function verifyPaymentCallbackToken(
@@ -129,5 +117,39 @@ class AlifAcquiringService
         }
 
         return $digits;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function jsonOrFail(Response $response, string $invalidMessage, bool $requireInitSuccess = false): array
+    {
+        $status = $response->status();
+        $raw = $response->body();
+        $json = $response->json();
+
+        if (! is_array($json)) {
+            throw new AlifGatewayException($invalidMessage, $status, $raw, $raw);
+        }
+
+        if ($requireInitSuccess && ($status !== 200 || (int) ($json['code'] ?? 0) !== 200)) {
+            throw new AlifGatewayException(
+                (string) ($json['message'] ?? 'Alif payment init failed'),
+                $status,
+                $json,
+                $raw,
+            );
+        }
+
+        if (! $requireInitSuccess && ! $response->successful()) {
+            throw new AlifGatewayException(
+                (string) ($json['message'] ?? $invalidMessage),
+                $status,
+                $json,
+                $raw,
+            );
+        }
+
+        return $json;
     }
 }

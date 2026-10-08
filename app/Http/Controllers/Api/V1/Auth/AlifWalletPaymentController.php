@@ -7,6 +7,7 @@ use App\Models\AlifPayment;
 use App\Models\User;
 use App\Services\Alif\AlifAcquiringService;
 use App\Services\Alif\AlifApiLogger;
+use App\Services\Alif\AlifGatewayException;
 use App\Services\Alif\AlifPaymentSettler;
 use App\Support\Alif\AlifAcquiringConfig;
 use App\Support\Alif\Money;
@@ -77,23 +78,28 @@ class AlifWalletPaymentController extends ApiController
                 info: $info,
             );
         } catch (Throwable $exception) {
+            $logFields = $this->logFieldsFromException($exception);
+
             $this->logSafely(
                 action: AlifAcquiringService::ACTION_INIT,
                 requestPayload: $requestPayload,
-                responseBody: ['message' => $exception->getMessage()],
-                httpStatus: 502,
+                responseBody: $logFields['responseBody'],
+                httpStatus: $logFields['httpStatus'],
                 successful: false,
                 durationMs: $this->elapsedMs($startedAt),
                 orderId: $orderId,
                 account: $phone,
                 amount: $amount->value(),
-                responseCode: 502,
+                responseCode: $logFields['responseCode'],
                 ipAddress: $request->ip(),
-                errorMessage: $exception->getMessage(),
+                errorMessage: $logFields['errorMessage'],
             );
 
             Log::channel((string) config('alif.log_channel', 'alif'))
-                ->error('Alif init failed', ['message' => $exception->getMessage()]);
+                ->error('Alif init failed', [
+                    'message' => $exception->getMessage(),
+                    'http_status' => $logFields['httpStatus'],
+                ]);
 
             return $this->errorResponse($exception->getMessage(), [], 502);
         }
@@ -268,17 +274,20 @@ class AlifWalletPaymentController extends ApiController
                 alifPaymentId: $payment->id,
             );
         } catch (Throwable $exception) {
+            $logFields = $this->logFieldsFromException($exception);
+
             $this->logSafely(
                 action: AlifAcquiringService::ACTION_CHECKTXN,
                 requestPayload: ['order_id' => $payment->order_id],
-                responseBody: ['message' => $exception->getMessage()],
-                httpStatus: 502,
+                responseBody: $logFields['responseBody'],
+                httpStatus: $logFields['httpStatus'],
                 successful: false,
                 durationMs: $this->elapsedMs($startedAt),
                 orderId: $payment->order_id,
                 amount: $payment->amount,
+                responseCode: $logFields['responseCode'],
                 ipAddress: $request->ip(),
-                errorMessage: $exception->getMessage(),
+                errorMessage: $logFields['errorMessage'],
                 alifPaymentId: $payment->id,
             );
 
@@ -286,6 +295,7 @@ class AlifWalletPaymentController extends ApiController
                 ->warning('Alif status check failed', [
                     'order_id' => $payment->order_id,
                     'message' => $exception->getMessage(),
+                    'http_status' => $logFields['httpStatus'],
                 ]);
         }
     }
@@ -306,6 +316,28 @@ class AlifWalletPaymentController extends ApiController
     protected function elapsedMs(int $startedAt): float
     {
         return round((hrtime(true) - $startedAt) / 1_000_000, 3);
+    }
+
+    /**
+     * @return array{responseBody: mixed, httpStatus: int, responseCode: int, errorMessage: string}
+     */
+    protected function logFieldsFromException(Throwable $exception): array
+    {
+        if ($exception instanceof AlifGatewayException) {
+            return [
+                'responseBody' => $exception->body,
+                'httpStatus' => $exception->httpStatusForLog(),
+                'responseCode' => $exception->responseCodeForLog(),
+                'errorMessage' => $exception->getMessage(),
+            ];
+        }
+
+        return [
+            'responseBody' => ['message' => $exception->getMessage()],
+            'httpStatus' => 502,
+            'responseCode' => 502,
+            'errorMessage' => $exception->getMessage(),
+        ];
     }
 
     protected function logSafely(
