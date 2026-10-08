@@ -302,6 +302,8 @@ return [
     'alif_api_log_duration' => 'Время обработки',
     'alif_api_log_ip' => 'IP-адрес источника',
     'alif_api_log_request' => 'Тело запроса',
+    'alif_api_log_curl' => 'cURL',
+    'alif_api_log_copy_curl' => 'Копировать cURL',
     'alif_api_log_response' => 'Тело ответа',
     'alif_api_log_no_request_body' => 'Тело запроса отсутствует.',
     'alif_api_log_no_response_body' => 'Тело ответа отсутствует.',

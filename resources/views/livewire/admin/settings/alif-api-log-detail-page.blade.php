@@ -89,13 +89,33 @@
         </div>
       </div>
 
+      @if ($log->formattedCurl())
+        <div class="card mb-4" x-data="{ copied: false }">
+          <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <h5 class="mb-0">{{ __('admin.alif_api_log_curl') }}</h5>
+            <button
+              type="button"
+              class="btn btn-sm btn-label-primary"
+              @click="navigator.clipboard.writeText($refs.curl.textContent).then(() => { copied = true; setTimeout(() => copied = false, 2000) })"
+            >
+              <i class="icon-base ti tabler-copy me-1"></i>
+              <span x-text="copied ? @js(__('admin.copied')) : @js(__('admin.alif_api_log_copy_curl'))"></span>
+            </button>
+          </div>
+          <div class="card-body">
+            <pre x-ref="curl" class="bg-lighter rounded p-3 mb-0 small overflow-auto" style="max-height: 640px;">{{ $log->formattedCurl() }}</pre>
+          </div>
+        </div>
+      @endif
+
       <div class="card">
         <div class="card-header">
           <h5 class="mb-0">{{ __('admin.alif_api_log_response') }}</h5>
         </div>
         <div class="card-body">
-          @if ($log->formattedResponseBody() !== null)
-            <pre class="bg-lighter rounded p-3 mb-0 small overflow-auto" style="max-height: 520px;">{{ $log->formattedResponseBody() }}</pre>
+          @php($formattedResponse = $log->formattedResponseBody())
+          @if ($formattedResponse !== null && trim($formattedResponse) !== '')
+            <pre class="bg-lighter rounded p-3 mb-0 small overflow-auto" style="max-height: 520px;">{{ $formattedResponse }}</pre>
           @else
             <p class="mb-0 text-body-secondary">{{ __('admin.alif_api_log_no_response_body') }}</p>
           @endif

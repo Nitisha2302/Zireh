@@ -58,15 +58,14 @@ class AlifWalletPaymentController extends ApiController
         $orderId = 'WU-'.now()->format('YmdHis').'-'.Str::upper(Str::random(6));
         $info = $validated['description'] ?? 'Wallet top-up';
         $startedAt = hrtime(true);
-        $requestPayload = [
-            'order_id' => $orderId,
-            'amount' => $amount->value(),
-            'phone' => $phone,
-            'gate' => $this->config->gate(),
-            'callback_url' => $this->config->callbackUrl(),
-            'return_url' => $this->config->returnUrl(),
-            'info' => $info,
-        ];
+        $requestPayload = $this->alif->prepareInitRequest(
+            orderId: $orderId,
+            amount: $amount->value(),
+            callbackUrl: $this->config->callbackUrl(),
+            returnUrl: $this->config->returnUrl(),
+            phone: $phone,
+            info: $info,
+        );
 
         try {
             $alifResponse = $this->alif->initiatePayment(
@@ -250,6 +249,7 @@ class AlifWalletPaymentController extends ApiController
     protected function refreshFromAlif(AlifPayment $payment, Request $request): void
     {
         $startedAt = hrtime(true);
+        $requestPayload = $this->alif->prepareChecktxnRequest($payment->order_id);
 
         try {
             $remote = $this->alif->checkTransactionStatus($payment->order_id);
@@ -263,7 +263,7 @@ class AlifWalletPaymentController extends ApiController
 
             $this->logSafely(
                 action: AlifAcquiringService::ACTION_CHECKTXN,
-                requestPayload: ['order_id' => $payment->order_id],
+                requestPayload: $requestPayload,
                 responseBody: $remote,
                 httpStatus: 200,
                 successful: $remoteStatus === 'ok',
@@ -278,7 +278,7 @@ class AlifWalletPaymentController extends ApiController
 
             $this->logSafely(
                 action: AlifAcquiringService::ACTION_CHECKTXN,
-                requestPayload: ['order_id' => $payment->order_id],
+                requestPayload: $requestPayload,
                 responseBody: $logFields['responseBody'],
                 httpStatus: $logFields['httpStatus'],
                 successful: false,

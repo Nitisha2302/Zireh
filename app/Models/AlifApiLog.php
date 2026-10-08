@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\Alif\AlifAcquiringConfig;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -81,16 +82,122 @@ class AlifApiLog extends Model
     {
         $body = $this->response_body;
 
-        if ($body === null) {
-            return null;
+        if (is_array($body) && array_key_exists('_raw', $body) && count($body) === 1) {
+            $raw = (string) $body['_raw'];
+
+            if (trim($raw) !== '') {
+                return $raw;
+            }
+
+            $body = null;
         }
 
-        if (is_array($body) && array_key_exists('_raw', $body) && count($body) === 1) {
-            return (string) $body['_raw'];
+        if ($body === null || $body === [] || $body === '') {
+            if ($this->http_status === null && ($this->error_message === null || $this->error_message === '')) {
+                return null;
+            }
+
+            $body = array_filter([
+                'http_status' => $this->http_status,
+                'error' => $this->error_message,
+                'note' => 'Empty Alif response',
+            ], fn (mixed $value) => $value !== null && $value !== '');
         }
 
         $encoded = json_encode($body, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
         return $encoded === false ? null : $encoded;
+    }
+
+    public function formattedCurl(): ?string
+    {
+        $parts = $this->curlParts();
+
+        if ($parts === null) {
+            return null;
+        }
+
+        $jsonFlags = JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES;
+        $body = json_encode($parts['body'], $jsonFlags);
+
+        if ($body === false) {
+            $body = '{}';
+        }
+
+        $lines = ['curl -i -X '.$parts['method'].' '.$this->shellQuote($parts['url']).' \\'];
+
+        foreach ($parts['headers'] as $name => $value) {
+            $lines[] = '  -H '.$this->shellQuote($name.': '.$value).' \\';
+        }
+
+        $lines[] = '  --data-raw '.$this->shellQuote($body);
+        $lines[] = '';
+        $lines[] = '# Response'.($this->http_status !== null ? ' HTTP '.$this->http_status : '');
+        $lines[] = $this->formattedResponseBody() ?: '(empty)';
+
+        return implode("\n", $lines);
+    }
+
+    /**
+     * @return array{method: string, url: string, headers: array<string, string>, body: array<string, mixed>}|null
+     */
+    protected function curlParts(): ?array
+    {
+        $payload = is_array($this->request_payload) ? $this->request_payload : [];
+        $response = is_array($this->response_body) ? $this->response_body : [];
+
+        $url = (string) ($payload['url'] ?? $response['url'] ?? $this->inferredGatewayUrl() ?? '');
+
+        if ($url === '') {
+            return null;
+        }
+
+        $headers = is_array($payload['headers'] ?? null) ? $payload['headers'] : $this->defaultCurlHeaders($payload);
+        $body = is_array($payload['body'] ?? null)
+            ? $payload['body']
+            : array_diff_key($payload, array_flip(['method', 'url', 'headers', 'body']));
+
+        return [
+            'method' => strtoupper((string) ($payload['method'] ?? $response['method'] ?? 'POST')),
+            'url' => $url,
+            'headers' => $headers,
+            'body' => $body,
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     * @return array<string, string>
+     */
+    protected function defaultCurlHeaders(array $payload): array
+    {
+        $headers = [
+            'Accept' => 'application/json',
+            'Content-Type' => 'application/json',
+        ];
+
+        $gate = $payload['gate'] ?? (is_array($payload['body'] ?? null) ? ($payload['body']['gate'] ?? null) : null);
+
+        if (is_string($gate) && $gate !== '') {
+            $headers['gate'] = $gate;
+        }
+
+        return $headers;
+    }
+
+    protected function inferredGatewayUrl(): ?string
+    {
+        $base = rtrim(app(AlifAcquiringConfig::class)->baseUrl(), '/');
+
+        return match ($this->action) {
+            'init' => $base.'/v2/',
+            'checktxn' => $base.'/checktxn',
+            default => null,
+        };
+    }
+
+    protected function shellQuote(string $value): string
+    {
+        return "'".str_replace("'", "'\\''", $value)."'";
     }
 }

@@ -139,6 +139,8 @@ return [
     'alif_api_log_duration' => 'Duration',
     'alif_api_log_ip' => 'Caller IP',
     'alif_api_log_request' => 'Request body',
+    'alif_api_log_curl' => 'cURL',
+    'alif_api_log_copy_curl' => 'Copy cURL',
     'alif_api_log_response' => 'Response body',
     'alif_api_log_no_request_body' => 'No request body.',
     'alif_api_log_no_response_body' => 'No response body.',

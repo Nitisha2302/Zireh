@@ -81,7 +81,10 @@ it('records a successful init request with its timing', function () {
         ->and($log->amount)->toBe('100.50')
         ->and($log->is_successful)->toBeTrue()
         ->and($log->alif_payment_id)->toBe($payment->id)
-        ->and((float) $log->duration_ms)->toBeGreaterThan(0);
+        ->and((float) $log->duration_ms)->toBeGreaterThan(0)
+        ->and($log->request_payload['url'] ?? null)->toBe('https://test-web.alif.tj/v2/')
+        ->and($log->request_payload['body']['order_id'] ?? null)->toBe($payment->order_id)
+        ->and($log->formattedCurl())->toContain("curl -i -X POST 'https://test-web.alif.tj/v2/'");
 });
 
 it('records a valid callback and redacts the token', function () {
@@ -221,6 +224,62 @@ it('shows the raw gateway body on the alif log detail page', function () {
     Livewire::test(AlifApiLogDetailPage::class, ['log' => $log])
         ->assertSee('<html>Bad Gateway from Alif</html>')
         ->assertDontSee('"_raw"');
+});
+
+it('shows a copyable curl with request body and response', function () {
+    $this->actingAs(alifLogAdmin(), 'admin');
+
+    $log = AlifApiLog::create([
+        'action' => AlifAcquiringService::ACTION_INIT,
+        'payment_id' => 'WU-CURL',
+        'response_code' => 405,
+        'http_status' => 405,
+        'is_successful' => false,
+        'error_message' => 'Invalid Alif response',
+        'request_payload' => [
+            'method' => 'POST',
+            'url' => 'https://web.alif.tj/v2/',
+            'headers' => [
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+                'gate' => 'wallet',
+            ],
+            'body' => [
+                'order_id' => 'WU-CURL',
+                'amount' => '100.00',
+                'gate' => 'wallet',
+            ],
+        ],
+        'response_body' => [
+            'http_status' => 405,
+            'note' => 'Empty Alif response',
+        ],
+    ]);
+
+    Livewire::test(AlifApiLogDetailPage::class, ['log' => $log])
+        ->assertSee(__('admin.alif_api_log_curl'))
+        ->assertSee("curl -i -X POST 'https://web.alif.tj/v2/'")
+        ->assertSee('--data-raw')
+        ->assertSee('# Response HTTP 405')
+        ->assertSee('Empty Alif response');
+});
+
+it('shows a note when the stored gateway body is empty', function () {
+    $this->actingAs(alifLogAdmin(), 'admin');
+
+    $log = AlifApiLog::create([
+        'action' => AlifAcquiringService::ACTION_INIT,
+        'payment_id' => 'WU-EMPTY',
+        'response_code' => 405,
+        'http_status' => 405,
+        'is_successful' => false,
+        'error_message' => 'Invalid Alif response',
+        'response_body' => ['_raw' => ''],
+    ]);
+
+    Livewire::test(AlifApiLogDetailPage::class, ['log' => $log])
+        ->assertSee('Empty Alif response')
+        ->assertSee('405');
 });
 
 it('allows an admin to purge old alif logs', function () {

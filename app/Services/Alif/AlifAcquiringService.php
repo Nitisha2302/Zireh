@@ -25,6 +25,79 @@ class AlifAcquiringService
         return hash_hmac('sha256', $dataToSign, $secret);
     }
 
+    public function initUrl(): string
+    {
+        return $this->config->baseUrl().'/v2/';
+    }
+
+    public function checktxnUrl(): string
+    {
+        return $this->config->baseUrl().'/checktxn';
+    }
+
+    /**
+     * @return array{method: string, url: string, headers: array<string, string>, body: array<string, mixed>}
+     */
+    public function prepareInitRequest(
+        string $orderId,
+        string $amount,
+        string $callbackUrl,
+        string $returnUrl,
+        string $phone,
+        ?string $info = null,
+        ?string $gate = null,
+    ): array {
+        $key = $this->config->terminalKey();
+        $gate ??= $this->config->gate();
+        $body = [
+            'order_id' => $orderId,
+            'amount' => $amount,
+            'callback_url' => $callbackUrl,
+            'return_url' => $returnUrl,
+            'gate' => $gate,
+            'phone' => $phone,
+            'key' => $key,
+            'token' => $this->generateToken($key.$orderId.$amount.$callbackUrl),
+        ];
+
+        if ($info !== null && $info !== '') {
+            $body['info'] = $info;
+        }
+
+        return [
+            'method' => 'POST',
+            'url' => $this->initUrl(),
+            'headers' => [
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+                'gate' => $gate,
+            ],
+            'body' => $body,
+        ];
+    }
+
+    /**
+     * @return array{method: string, url: string, headers: array<string, string>, body: array<string, mixed>}
+     */
+    public function prepareChecktxnRequest(string $orderId): array
+    {
+        $key = $this->config->terminalKey();
+
+        return [
+            'method' => 'POST',
+            'url' => $this->checktxnUrl(),
+            'headers' => [
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+            ],
+            'body' => [
+                'key' => $key,
+                'orderId' => $orderId,
+                'token' => $this->generateToken($key.$orderId),
+            ],
+        ];
+    }
+
     /**
      * @return array{url: string, code: int, message: string}
      */
@@ -37,37 +110,26 @@ class AlifAcquiringService
         ?string $info = null,
         ?string $gate = null,
     ): array {
-        $key = $this->config->terminalKey();
-        $gate ??= $this->config->gate();
-        $token = $this->generateToken($key.$orderId.$amount.$callbackUrl);
-
-        $body = [
-            'order_id' => $orderId,
-            'amount' => $amount,
-            'callback_url' => $callbackUrl,
-            'return_url' => $returnUrl,
-            'gate' => $gate,
-            'phone' => $phone,
-            'key' => $key,
-            'token' => $token,
-        ];
-
-        if ($info !== null && $info !== '') {
-            $body['info'] = $info;
-        }
+        $request = $this->prepareInitRequest(
+            $orderId,
+            $amount,
+            $callbackUrl,
+            $returnUrl,
+            $phone,
+            $info,
+            $gate,
+        );
 
         $response = Http::timeout($this->config->timeout())
-            ->withHeaders([
-                'Accept' => 'application/json',
-                'Content-Type' => 'application/json',
-                'gate' => $gate,
-            ])
-            ->post($this->config->baseUrl().'/v2/', $body);
+            ->withHeaders($request['headers'])
+            ->post($request['url'], $request['body']);
 
         return $this->jsonOrFail(
             $response,
             'Invalid Alif response',
             requireInitSuccess: true,
+            method: $request['method'],
+            url: $request['url'],
         );
     }
 
@@ -76,21 +138,18 @@ class AlifAcquiringService
      */
     public function checkTransactionStatus(string $orderId): array
     {
-        $key = $this->config->terminalKey();
-        $token = $this->generateToken($key.$orderId);
+        $request = $this->prepareChecktxnRequest($orderId);
 
         $response = Http::timeout($this->config->timeout())
-            ->withHeaders([
-                'Accept' => 'application/json',
-                'Content-Type' => 'application/json',
-            ])
-            ->post($this->config->baseUrl().'/checktxn', [
-                'key' => $key,
-                'orderId' => $orderId,
-                'token' => $token,
-            ]);
+            ->withHeaders($request['headers'])
+            ->post($request['url'], $request['body']);
 
-        return $this->jsonOrFail($response, 'Invalid Alif status response');
+        return $this->jsonOrFail(
+            $response,
+            'Invalid Alif status response',
+            method: $request['method'],
+            url: $request['url'],
+        );
     }
 
     public function verifyPaymentCallbackToken(
@@ -122,14 +181,24 @@ class AlifAcquiringService
     /**
      * @return array<string, mixed>
      */
-    protected function jsonOrFail(Response $response, string $invalidMessage, bool $requireInitSuccess = false): array
-    {
+    protected function jsonOrFail(
+        Response $response,
+        string $invalidMessage,
+        bool $requireInitSuccess = false,
+        string $method = 'POST',
+        ?string $url = null,
+    ): array {
         $status = $response->status();
         $raw = $response->body();
         $json = $response->json();
 
         if (! is_array($json)) {
-            throw new AlifGatewayException($invalidMessage, $status, $raw, $raw);
+            throw new AlifGatewayException(
+                $invalidMessage,
+                $status,
+                $this->nonJsonSnapshot($response, $method, $url),
+                $raw,
+            );
         }
 
         if ($requireInitSuccess && ($status !== 200 || (int) ($json['code'] ?? 0) !== 200)) {
@@ -151,5 +220,33 @@ class AlifAcquiringService
         }
 
         return $json;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function nonJsonSnapshot(Response $response, string $method, ?string $url): array
+    {
+        $raw = $response->body();
+        $headers = [];
+
+        foreach ($response->headers() as $name => $values) {
+            $key = strtolower((string) $name);
+
+            if (! in_array($key, ['allow', 'content-type', 'content-length', 'location', 'server', 'www-authenticate', 'x-request-id'], true)) {
+                continue;
+            }
+
+            $headers[$key] = is_array($values) ? implode(', ', $values) : (string) $values;
+        }
+
+        return [
+            'http_status' => $response->status(),
+            'method' => $method,
+            'url' => $url ?: (string) $response->effectiveUri(),
+            'headers' => $headers,
+            'body' => $raw === '' ? null : $raw,
+            'note' => $raw === '' ? 'Empty Alif response' : 'Non-JSON Alif response',
+        ];
     }
 }

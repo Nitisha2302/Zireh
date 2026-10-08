@@ -303,6 +303,8 @@ return [
     'alif_api_log_duration' => 'Вақти коркард',
     'alif_api_log_ip' => 'Суроғаи IP-и дархостдиҳанда',
     'alif_api_log_request' => 'Мазмуни дархост',
+    'alif_api_log_curl' => 'cURL',
+    'alif_api_log_copy_curl' => 'Нусхабардории cURL',
     'alif_api_log_response' => 'Мазмуни ҷавоб',
     'alif_api_log_no_request_body' => 'Мазмуни дархост нест.',
     'alif_api_log_no_response_body' => 'Мазмуни ҷавоб нест.',

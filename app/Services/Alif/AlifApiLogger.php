@@ -38,11 +38,13 @@ class AlifApiLogger
     ): AlifApiLog {
         [$body, $truncated] = $this->prepareBody($responseBody);
 
+        $nestedBody = is_array($requestPayload['body'] ?? null) ? $requestPayload['body'] : [];
+
         return AlifApiLog::query()->create([
             'action' => $this->normalizedAction($action),
-            'payment_id' => $this->scalarString($orderId ?? ($requestPayload['order_id'] ?? $requestPayload['orderId'] ?? null), 64),
+            'payment_id' => $this->scalarString($orderId ?? ($requestPayload['order_id'] ?? $requestPayload['orderId'] ?? $nestedBody['order_id'] ?? $nestedBody['orderId'] ?? null), 64),
             'account' => $this->scalarString($account, 64),
-            'amount' => Money::tryParse($amount ?? ($requestPayload['amount'] ?? null))?->value(),
+            'amount' => Money::tryParse($amount ?? ($requestPayload['amount'] ?? $nestedBody['amount'] ?? null))?->value(),
             'response_code' => $responseCode ?? $httpStatus,
             'http_status' => $httpStatus,
             'authorized' => $authorized,

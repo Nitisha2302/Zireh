@@ -9,6 +9,7 @@ use App\Models\WalletTransaction;
 use App\Services\Alif\AlifAcquiringService;
 use App\Services\Wallet\WalletService;
 use App\Support\Alif\AlifAcquiringConfig;
+use App\Support\Logging\SensitiveKeyRedactor;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Laravel\Sanctum\Sanctum;
@@ -229,8 +230,47 @@ it('stores the raw alif html error body on init failure', function () {
         ->and($log->http_status)->toBe(502)
         ->and($log->response_code)->toBe(502)
         ->and($log->error_message)->toBe('Invalid Alif response')
-        ->and($log->response_body['_raw'] ?? null)->toContain('Bad Gateway from Alif')
+        ->and($log->response_body['http_status'] ?? null)->toBe(502)
+        ->and($log->response_body['method'] ?? null)->toBe('POST')
+        ->and($log->response_body['url'] ?? null)->toBe('https://test-web.alif.tj/v2/')
+        ->and($log->response_body['body'] ?? null)->toContain('Bad Gateway from Alif')
+        ->and($log->response_body['note'] ?? null)->toBe('Non-JSON Alif response')
         ->and($log->formattedResponseBody())->toContain('Bad Gateway from Alif');
+});
+
+it('stores http metadata when alif returns an empty 405 body', function () {
+    Http::fake([
+        'https://test-web.alif.tj/v2/' => Http::response('', 405, [
+            'Allow' => 'GET',
+            'Content-Type' => 'text/html',
+        ]),
+    ]);
+
+    Sanctum::actingAs(alifAcquiringCustomer());
+
+    $this->postJson('/api/v1/auth/wallet/alif/init', ['amount' => '100.00'])
+        ->assertStatus(502);
+
+    $log = AlifApiLog::query()->firstOrFail();
+
+    expect($log->is_successful)->toBeFalse()
+        ->and($log->http_status)->toBe(405)
+        ->and($log->response_code)->toBe(405)
+        ->and($log->error_message)->toBe('Invalid Alif response')
+        ->and($log->response_body['http_status'] ?? null)->toBe(405)
+        ->and($log->response_body['method'] ?? null)->toBe('POST')
+        ->and($log->response_body['url'] ?? null)->toBe('https://test-web.alif.tj/v2/')
+        ->and($log->response_body)->toHaveKey('body')
+        ->and($log->response_body['body'])->toBeNull()
+        ->and($log->response_body['note'] ?? null)->toBe('Empty Alif response')
+        ->and($log->response_body['headers']['allow'] ?? null)->toBe('GET')
+        ->and($log->request_payload['url'] ?? null)->toBe('https://test-web.alif.tj/v2/')
+        ->and($log->request_payload['method'] ?? null)->toBe('POST')
+        ->and($log->request_payload['body']['token'] ?? null)->toBe(SensitiveKeyRedactor::REDACTED)
+        ->and($log->formattedResponseBody())->toContain('Empty Alif response')
+        ->and($log->formattedCurl())->toContain("curl -i -X POST 'https://test-web.alif.tj/v2/'")
+        ->and($log->formattedCurl())->toContain('--data-raw')
+        ->and($log->formattedCurl())->toContain('# Response HTTP 405');
 });
 
 it('stores the full alif json error body on init failure', function () {
@@ -283,5 +323,6 @@ it('stores the raw alif status error body on checktxn failure', function () {
 
     expect($log->is_successful)->toBeFalse()
         ->and($log->http_status)->toBe(500)
-        ->and($log->response_body['_raw'] ?? null)->toContain('status down');
+        ->and($log->response_body['body'] ?? null)->toContain('status down')
+        ->and($log->response_body['url'] ?? null)->toBe('https://test-web.alif.tj/checktxn');
 });
