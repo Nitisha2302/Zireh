@@ -21,13 +21,15 @@ class OrderDetailPage extends Component
 
     public string $statusCode = '';
 
+    public string $measurementMode = 'weight';
+
     public ?string $packageLengthCm = null;
 
     public ?string $packageWidthCm = null;
 
     public ?string $packageHeightCm = null;
 
-    public ?string $packageWeightKg = null;
+    public ?string $packageWeightG = null;
 
     public ?array $shippingPreview = null;
 
@@ -59,7 +61,7 @@ class OrderDetailPage extends Component
         $this->shippingPreview = null;
     }
 
-    public function updatedPackageWeightKg(): void
+    public function updatedPackageWeightG(): void
     {
         $this->shippingPreview = null;
     }
@@ -69,18 +71,27 @@ class OrderDetailPage extends Component
         $this->shippingPreview = null;
     }
 
+    public function updatedMeasurementMode(): void
+    {
+        if ($this->measurementMode === 'weight') {
+            $this->packageLengthCm = null;
+            $this->packageWidthCm = null;
+            $this->packageHeightCm = null;
+        } else {
+            $this->packageWeightG = null;
+        }
+
+        $this->resetErrorBag();
+        $this->shippingPreview = null;
+    }
+
     public function previewPickupShipping(OrderPickupService $pickupService): void
     {
         $data = $this->validate($this->measurementRules());
 
         try {
             $order = $this->prepareOrderForPickup();
-            $this->shippingPreview = $pickupService->previewShipping($order, [
-                'package_length_cm' => (float) $data['packageLengthCm'],
-                'package_width_cm' => (float) $data['packageWidthCm'],
-                'package_height_cm' => (float) $data['packageHeightCm'],
-                'package_weight_kg' => (float) $data['packageWeightKg'],
-            ]);
+            $this->shippingPreview = $pickupService->previewShipping($order, $this->measurementPayload($data));
         } catch (ValidationException $exception) {
             $this->shippingPreview = null;
             $this->setErrorBag($exception->validator->getMessageBag());
@@ -96,12 +107,7 @@ class OrderDetailPage extends Component
             $admin = Auth::guard('admin')->user();
             $order = $this->prepareOrderForPickup();
 
-            $this->order = $pickupService->confirmPickup($order, $admin, [
-                'package_length_cm' => (float) $data['packageLengthCm'],
-                'package_width_cm' => (float) $data['packageWidthCm'],
-                'package_height_cm' => (float) $data['packageHeightCm'],
-                'package_weight_kg' => (float) $data['packageWeightKg'],
-            ]);
+            $this->order = $pickupService->confirmPickup($order, $admin, $this->measurementPayload($data));
 
             $this->shippingPreview = null;
             $this->statusCode = $this->order->status;
@@ -170,12 +176,42 @@ class OrderDetailPage extends Component
 
     protected function measurementRules(): array
     {
-        return [
+        $rules = [
             'shippingMethodId' => ['required', 'integer', 'exists:shipping_methods,id'],
-            'packageLengthCm' => ['required', 'numeric', 'gt:0'],
-            'packageWidthCm' => ['required', 'numeric', 'gt:0'],
-            'packageHeightCm' => ['required', 'numeric', 'gt:0'],
-            'packageWeightKg' => ['required', 'numeric', 'gt:0'],
+            'measurementMode' => ['required', 'in:weight,cm'],
+        ];
+
+        if ($this->measurementMode === 'weight') {
+            $rules['packageWeightG'] = ['required', 'numeric', 'gt:0'];
+
+            return $rules;
+        }
+
+        $rules['packageLengthCm'] = ['required', 'numeric', 'gt:0'];
+        $rules['packageWidthCm'] = ['required', 'numeric', 'gt:0'];
+        $rules['packageHeightCm'] = ['required', 'numeric', 'gt:0'];
+
+        return $rules;
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array{mode: string, package_weight_kg?: float, package_length_cm?: float, package_width_cm?: float, package_height_cm?: float}
+     */
+    protected function measurementPayload(array $data): array
+    {
+        if ($this->measurementMode === 'weight') {
+            return [
+                'mode' => 'weight',
+                'package_weight_kg' => round(((float) $data['packageWeightG']) / 1000, 3),
+            ];
+        }
+
+        return [
+            'mode' => 'cm',
+            'package_length_cm' => (float) $data['packageLengthCm'],
+            'package_width_cm' => (float) $data['packageWidthCm'],
+            'package_height_cm' => (float) $data['packageHeightCm'],
         ];
     }
 

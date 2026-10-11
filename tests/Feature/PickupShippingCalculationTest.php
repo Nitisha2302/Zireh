@@ -68,3 +68,71 @@ it('calculates pickup shipping for tiered admin rates including low volumetric w
         ->and($result['shipping_cost'])->toBe(300.0)
         ->and($result['weight_cost_tjs'])->toBe(300.0);
 });
+
+it('bills pickup shipping from weight only when mode is weight', function () {
+    $method = ShippingMethod::create([
+        'name' => 'Cargo',
+        'code' => 'cargo',
+        'volumetric_divisor' => 5000,
+        'minimum_charge' => 10,
+        'is_active' => true,
+    ]);
+
+    ShippingRate::create([
+        'shipping_method_id' => $method->id,
+        'min_weight' => 0,
+        'max_weight' => 100,
+        'rate_per_kg' => 10,
+        'is_active' => true,
+    ]);
+
+    $result = app(ShippingRateService::class)->calculatePickupShipping(
+        $method,
+        1.5,
+        50,
+        50,
+        50,
+        null,
+        'weight',
+    );
+
+    expect($result['applied_method'])->toBe('weight')
+        ->and($result['shipping_cost'])->toBe(15.0)
+        ->and($result['volume_cost_tjs'])->toBe(0.0)
+        ->and($result['package']['length_cm'])->toBeNull()
+        ->and($result['package']['weight_kg'])->toBe(1.5);
+});
+
+it('bills pickup shipping from volume only when mode is cm', function () {
+    $method = ShippingMethod::create([
+        'name' => 'Cargo',
+        'code' => 'cargo',
+        'volumetric_divisor' => 5000,
+        'minimum_charge' => 10,
+        'is_active' => true,
+    ]);
+
+    ShippingRate::create([
+        'shipping_method_id' => $method->id,
+        'min_weight' => 0,
+        'max_weight' => 100,
+        'rate_per_kg' => 10,
+        'is_active' => true,
+    ]);
+
+    $result = app(ShippingRateService::class)->calculatePickupShipping(
+        $method,
+        20,
+        50,
+        40,
+        30,
+        null,
+        'cm',
+    );
+
+    expect($result['applied_method'])->toBe('volume')
+        ->and($result['weight_cost_tjs'])->toBe(0.0)
+        ->and($result['package']['weight_kg'])->toBeNull()
+        ->and($result['package']['volumetric_weight_kg'])->toBe(12.0)
+        ->and($result['shipping_cost'])->toBe(120.0);
+});

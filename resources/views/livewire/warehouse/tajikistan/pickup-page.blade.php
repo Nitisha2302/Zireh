@@ -115,8 +115,11 @@
                         <p class="mb-1"><strong>{{ __('admin.pickup_payment_status') }}:</strong> {{ $order->pickup_payment_status && trans()->has('admin.payment_status_'.$order->pickup_payment_status) ? __('admin.payment_status_'.$order->pickup_payment_status) : ($order->pickup_payment_status ?? '—') }}</p>
                     </div>
                     <div class="col-md-6">
-                        <p class="mb-1"><strong>{{ __('admin.package_weight_kg') }}:</strong> {{ $order->package_weight_kg }} kg</p>
-                        <p class="mb-1"><strong>{{ __('admin.package_length_cm') }}:</strong> {{ $order->package_length_cm }} × {{ $order->package_width_cm }} × {{ $order->package_height_cm }} cm</p>
+                        @if ($order->isPickupBilledByVolume())
+                            <p class="mb-1"><strong>{{ __('admin.package_length_cm') }}:</strong> {{ $order->package_length_cm }} × {{ $order->package_width_cm }} × {{ $order->package_height_cm }} cm</p>
+                        @else
+                            <p class="mb-1"><strong>{{ __('admin.package_weight_g') }}:</strong> {{ $order->packageWeightGrams() !== null ? number_format($order->packageWeightGrams(), 0) : '—' }} g</p>
+                        @endif
                         <p class="mb-1"><strong>{{ __('admin.pickup_shipping') }}:</strong> {{ number_format((float) $order->pickup_shipping_fee_tjs, 2) }} TJS</p>
                         <p class="mb-0"><strong>{{ __('admin.applied_method') }}:</strong> {{ $order->pickup_shipping_calculation_method && trans()->has('admin.pickup_method_'.$order->pickup_shipping_calculation_method) ? __('admin.pickup_method_'.$order->pickup_shipping_calculation_method) : ($order->pickup_shipping_calculation_method ? ucfirst($order->pickup_shipping_calculation_method) : '—') }}</p>
                     </div>

@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /** @property-read float $payment_amount_cny */
 /** @property-read float $payment_amount_tjs */
-
 class CustomerOrder extends Model
 {
     public const PLATFORM_TAOBAO = 'taobao';
@@ -154,6 +153,25 @@ class CustomerOrder extends Model
     public function isReadyForPickup(): bool
     {
         return $this->status === OrderStatus::CODE_READY_FOR_PICKUP;
+    }
+
+    public function isPickupBilledByWeight(): bool
+    {
+        return $this->pickup_shipping_calculation_method === 'weight';
+    }
+
+    public function isPickupBilledByVolume(): bool
+    {
+        return $this->pickup_shipping_calculation_method === 'volume';
+    }
+
+    public function packageWeightGrams(): ?float
+    {
+        if ($this->package_weight_kg === null) {
+            return null;
+        }
+
+        return round((float) $this->package_weight_kg * 1000, 2);
     }
 
     public function isPickupShippingPaid(): bool

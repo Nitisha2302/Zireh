@@ -1,5 +1,7 @@
 <?php
 
+use App\Livewire\Warehouse\Tajikistan\OrderDetailPage;
+use App\Livewire\Warehouse\Tajikistan\PickupPage;
 use App\Models\Admin;
 use App\Models\CustomerOrder;
 use App\Models\OrderStatus;
@@ -90,12 +92,12 @@ it('allows tajikistan staff to confirm pickup from order detail and deliver via 
 
     $this->actingAs($fixtures['admin'], 'admin');
 
-    Livewire::test(\App\Livewire\Warehouse\Tajikistan\OrderDetailPage::class, ['order' => $fixtures['order']])
+    Livewire::test(OrderDetailPage::class, ['order' => $fixtures['order']])
         ->set('shippingMethodId', $fixtures['method']->id)
+        ->set('measurementMode', 'cm')
         ->set('packageLengthCm', '40')
         ->set('packageWidthCm', '40')
         ->set('packageHeightCm', '40')
-        ->set('packageWeightKg', '2')
         ->call('previewPickupShipping')
         ->assertHasNoErrors()
         ->call('confirmPickup')
@@ -105,7 +107,7 @@ it('allows tajikistan staff to confirm pickup from order detail and deliver via 
     expect($order->status)->toBe(OrderStatus::CODE_READY_FOR_PICKUP)
         ->and($order->pickup_token)->not->toBeNull();
 
-    Livewire::test(\App\Livewire\Warehouse\Tajikistan\PickupPage::class, ['token' => $order->pickup_token])
+    Livewire::test(PickupPage::class, ['token' => $order->pickup_token])
         ->assertSet('order.id', $order->id)
         ->call('markPaymentReceived')
         ->assertHasNoErrors()
@@ -113,6 +115,57 @@ it('allows tajikistan staff to confirm pickup from order detail and deliver via 
         ->assertHasNoErrors();
 
     expect($order->fresh()->status)->toBe(OrderStatus::CODE_DELIVERED_TO_CUSTOMER);
+});
+
+it('confirms pickup from weight in grams without storing dimensions', function () {
+    $fixtures = makePickupPanelFixtures();
+
+    $this->actingAs($fixtures['admin'], 'admin');
+
+    Livewire::test(OrderDetailPage::class, ['order' => $fixtures['order']])
+        ->set('shippingMethodId', $fixtures['method']->id)
+        ->set('measurementMode', 'weight')
+        ->set('packageWeightG', '1500')
+        ->call('previewPickupShipping')
+        ->assertHasNoErrors()
+        ->assertSee('1,500')
+        ->call('confirmPickup')
+        ->assertHasNoErrors();
+
+    $order = $fixtures['order']->fresh();
+
+    expect($order->status)->toBe(OrderStatus::CODE_READY_FOR_PICKUP)
+        ->and($order->pickup_shipping_calculation_method)->toBe('weight')
+        ->and((float) $order->package_weight_kg)->toBe(1.5)
+        ->and($order->package_length_cm)->toBeNull()
+        ->and($order->package_width_cm)->toBeNull()
+        ->and($order->package_height_cm)->toBeNull()
+        ->and($order->package_volume_m3)->toBeNull();
+});
+
+it('confirms pickup from centimeters without storing weight', function () {
+    $fixtures = makePickupPanelFixtures();
+
+    $this->actingAs($fixtures['admin'], 'admin');
+
+    Livewire::test(OrderDetailPage::class, ['order' => $fixtures['order']])
+        ->set('shippingMethodId', $fixtures['method']->id)
+        ->set('measurementMode', 'cm')
+        ->set('packageLengthCm', '50')
+        ->set('packageWidthCm', '40')
+        ->set('packageHeightCm', '30')
+        ->call('previewPickupShipping')
+        ->assertHasNoErrors()
+        ->call('confirmPickup')
+        ->assertHasNoErrors();
+
+    $order = $fixtures['order']->fresh();
+
+    expect($order->pickup_shipping_calculation_method)->toBe('volume')
+        ->and((float) $order->package_length_cm)->toBe(50.0)
+        ->and((float) $order->package_width_cm)->toBe(40.0)
+        ->and((float) $order->package_height_cm)->toBe(30.0)
+        ->and($order->package_weight_kg)->toBeNull();
 });
 
 it('blocks pickup page access for orders outside staff warehouse', function () {
@@ -160,7 +213,7 @@ it('shows validation error for unknown pickup token', function () {
 
     $this->actingAs($fixtures['admin'], 'admin');
 
-    Livewire::test(\App\Livewire\Warehouse\Tajikistan\PickupPage::class)
+    Livewire::test(PickupPage::class)
         ->set('pickupToken', 'unknown-token')
         ->call('lookupOrder')
         ->assertHasErrors('pickup_token');
@@ -179,7 +232,7 @@ it('loads order from cargo-pickup qr payload via scanPickupQr', function () {
 
     $this->actingAs($fixtures['admin'], 'admin');
 
-    Livewire::test(\App\Livewire\Warehouse\Tajikistan\PickupPage::class)
+    Livewire::test(PickupPage::class)
         ->call('scanPickupQr', 'cargo-pickup:'.$order->pickup_token)
         ->assertHasNoErrors()
         ->assertSet('order.id', $order->id)
@@ -201,7 +254,7 @@ it('loads order from tajikistan pickup url via scanPickupQr', function () {
 
     $url = route('tajikistan.pickup.show', ['token' => $order->pickup_token]);
 
-    Livewire::test(\App\Livewire\Warehouse\Tajikistan\PickupPage::class)
+    Livewire::test(PickupPage::class)
         ->call('scanPickupQr', $url)
         ->assertHasNoErrors()
         ->assertSet('order.id', $order->id)

@@ -152,27 +152,109 @@ class ShippingRateService
 
     public function calculatePickupShipping(
         ShippingMethod $method,
-        float $weightKg,
-        float $lengthCm,
-        float $widthCm,
-        float $heightCm,
+        ?float $weightKg,
+        ?float $lengthCm = null,
+        ?float $widthCm = null,
+        ?float $heightCm = null,
         ?int $warehouseId = null,
+        string $mode = 'auto',
     ): array {
-        $actualWeight = max(0, $weightKg);
-        $volumeM3 = round(($lengthCm * $widthCm * $heightCm) / 1_000_000, 6);
-        $volumetricWeight = round(
-            ($lengthCm * $widthCm * $heightCm) / $method->volumetric_divisor,
-            2
-        );
+        $hasDimensions = $lengthCm !== null && $widthCm !== null && $heightCm !== null;
+        $actualWeight = $weightKg !== null ? max(0, $weightKg) : null;
+        $volumeM3 = $hasDimensions
+            ? round(($lengthCm * $widthCm * $heightCm) / 1_000_000, 6)
+            : null;
+        $volumetricWeight = $hasDimensions
+            ? round(($lengthCm * $widthCm * $heightCm) / $method->volumetric_divisor, 2)
+            : null;
 
-        $weightCost = $this->costForChargeableWeight($method, $actualWeight, $warehouseId);
-        $volumeCost = $this->costForChargeableWeight($method, $volumetricWeight, $warehouseId);
+        if ($mode === 'weight') {
+            if ($actualWeight === null) {
+                throw ValidationException::withMessages([
+                    'weight' => [__('api.shipping_rate_not_found_for_weight')],
+                ]);
+            }
 
+            $weightCost = $this->costForChargeableWeight($method, $actualWeight, $warehouseId);
+
+            return $this->pickupShippingResult(
+                $method,
+                lengthCm: null,
+                widthCm: null,
+                heightCm: null,
+                actualWeight: $actualWeight,
+                volumeM3: null,
+                volumetricWeight: null,
+                weightCost: $weightCost,
+                volumeCost: $this->emptyPickupCost(),
+                appliedMethod: 'weight',
+                shippingCost: $weightCost['shipping_cost'],
+            );
+        }
+
+        if ($mode === 'cm') {
+            if (! $hasDimensions || $volumetricWeight === null) {
+                throw ValidationException::withMessages([
+                    'weight' => [__('api.shipping_rate_not_found_for_weight')],
+                ]);
+            }
+
+            $volumeCost = $this->costForChargeableWeight($method, $volumetricWeight, $warehouseId);
+
+            return $this->pickupShippingResult(
+                $method,
+                lengthCm: $lengthCm,
+                widthCm: $widthCm,
+                heightCm: $heightCm,
+                actualWeight: null,
+                volumeM3: $volumeM3,
+                volumetricWeight: $volumetricWeight,
+                weightCost: $this->emptyPickupCost(),
+                volumeCost: $volumeCost,
+                appliedMethod: 'volume',
+                shippingCost: $volumeCost['shipping_cost'],
+            );
+        }
+
+        $weightCost = $this->costForChargeableWeight($method, $actualWeight ?? 0, $warehouseId);
+        $volumeCost = $this->costForChargeableWeight($method, $volumetricWeight ?? 0, $warehouseId);
         $appliedMethod = $volumeCost['shipping_cost'] > $weightCost['shipping_cost']
             ? 'volume'
             : 'weight';
-        $finalCost = max($weightCost['shipping_cost'], $volumeCost['shipping_cost']);
 
+        return $this->pickupShippingResult(
+            $method,
+            lengthCm: $lengthCm,
+            widthCm: $widthCm,
+            heightCm: $heightCm,
+            actualWeight: $actualWeight ?? 0,
+            volumeM3: $volumeM3 ?? 0,
+            volumetricWeight: $volumetricWeight,
+            weightCost: $weightCost,
+            volumeCost: $volumeCost,
+            appliedMethod: $appliedMethod,
+            shippingCost: max($weightCost['shipping_cost'], $volumeCost['shipping_cost']),
+        );
+    }
+
+    /**
+     * @param  array<string, mixed>  $weightCost
+     * @param  array<string, mixed>  $volumeCost
+     * @return array<string, mixed>
+     */
+    protected function pickupShippingResult(
+        ShippingMethod $method,
+        ?float $lengthCm,
+        ?float $widthCm,
+        ?float $heightCm,
+        ?float $actualWeight,
+        ?float $volumeM3,
+        ?float $volumetricWeight,
+        array $weightCost,
+        array $volumeCost,
+        string $appliedMethod,
+        float $shippingCost,
+    ): array {
         return [
             'method' => [
                 'id' => $method->id,
@@ -190,10 +272,24 @@ class ShippingRateService
             'weight_cost_tjs' => $weightCost['shipping_cost'],
             'volume_cost_tjs' => $volumeCost['shipping_cost'],
             'applied_method' => $appliedMethod,
-            'shipping_cost' => $finalCost,
+            'shipping_cost' => $shippingCost,
             'currency' => 'TJS',
             'weight_breakdown' => $weightCost,
             'volume_breakdown' => $volumeCost,
+        ];
+    }
+
+    /**
+     * @return array{chargeable_weight_kg: float, rate: null, minimum_charge: float, calculated_cost: float, shipping_cost: float}
+     */
+    protected function emptyPickupCost(): array
+    {
+        return [
+            'chargeable_weight_kg' => 0.0,
+            'rate' => null,
+            'minimum_charge' => 0.0,
+            'calculated_cost' => 0.0,
+            'shipping_cost' => 0.0,
         ];
     }
 

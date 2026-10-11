@@ -25,11 +25,12 @@ class OrderPickupService
 
         return $this->shippingRateService->calculatePickupShipping(
             $method,
-            (float) $measurements['package_weight_kg'],
-            (float) $measurements['package_length_cm'],
-            (float) $measurements['package_width_cm'],
-            (float) $measurements['package_height_cm'],
+            isset($measurements['package_weight_kg']) ? (float) $measurements['package_weight_kg'] : null,
+            isset($measurements['package_length_cm']) ? (float) $measurements['package_length_cm'] : null,
+            isset($measurements['package_width_cm']) ? (float) $measurements['package_width_cm'] : null,
+            isset($measurements['package_height_cm']) ? (float) $measurements['package_height_cm'] : null,
             $order->warehouse_id !== null ? (int) $order->warehouse_id : null,
+            (string) ($measurements['mode'] ?? 'auto'),
         );
     }
 
