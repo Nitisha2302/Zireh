@@ -424,6 +424,40 @@
                         "description": "Guest news listing. Returns only active items. Set collection `locale` (en, ru, tg) via Accept-Language header."
                     },
                     "response": []
+                },
+                {
+                    "name": "Legal Content",
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Accept-Language",
+                                "value": "{{locale}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/v1/public/legal",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "v1",
+                                "public",
+                                "legal"
+                            ]
+                        },
+                        "description": "Public legal copy from admin settings: privacy_policy, terms_conditions, and delete_account."
+                    },
+                    "response": []
                 }
             ]
         },

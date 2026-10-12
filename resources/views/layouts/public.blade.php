@@ -29,6 +29,7 @@
                 <div class="navbar-nav ms-auto">
                     <a class="nav-item nav-link" href="{{ route('privacy-policy') }}">Privacy Policy</a>
                     <a class="nav-item nav-link" href="{{ route('terms-conditions') }}">Terms & Conditions</a>
+                    <a class="nav-item nav-link" href="{{ route('delete-account') }}">Delete Account</a>
                 </div>
             </div>
         </nav>

@@ -73,7 +73,7 @@
                 <ul class="navbar-nav ms-auto">
 
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('privacy-policy') }}">
+                        <a class="nav-link active" href="{{ route('privacy-policy') }}">
                             Privacy Policy
                         </a>
                     </li>

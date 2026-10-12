@@ -73,6 +73,7 @@ Route::get('/', function () {
 
 Route::get('privacy-policy', [PublicController::class, 'privacyPolicy'])->name('privacy-policy');
 Route::get('terms-conditions', [PublicController::class, 'termsConditions'])->name('terms-conditions');
+Route::get('delete-account', [PublicController::class, 'deleteAccount'])->name('delete-account');
 Route::get('payment/alif/return', [PublicController::class, 'alifReturn'])->name('payment.alif.return');
 
 Route::get('sp/login', LoginPage::class)->name('login');

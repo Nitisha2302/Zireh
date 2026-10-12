@@ -494,6 +494,7 @@
                     </a>
                     <a href="{{ route('privacy-policy') }}" class="text-body-secondary">Privacy Policy</a>
                     <a href="{{ route('terms-conditions') }}" class="text-body-secondary">Terms & Conditions</a>
+                    <a href="{{ route('delete-account') }}" class="text-body-secondary">Delete Account</a>
                 </div>
             </div>
         </div>

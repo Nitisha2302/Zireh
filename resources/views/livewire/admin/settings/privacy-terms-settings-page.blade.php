@@ -37,11 +37,11 @@
                     </div>
 
                     <div class="col-12">
-                        <label class="form-label">Delete Account Information</label>
+                        <label class="form-label">{{ __('admin.delete_account') }}</label>
                         <textarea class="form-control @error('delete_account') is-invalid @enderror"
                                   wire:model="delete_account"
                                   rows="12"
-                                  placeholder="Enter delete account information..."></textarea>
+                                  placeholder="{{ __('admin.delete_account_placeholder') }}"></textarea>
                         @error('delete_account')
                             <div class="invalid-feedback d-block">{{ $message }}</div>
                         @enderror

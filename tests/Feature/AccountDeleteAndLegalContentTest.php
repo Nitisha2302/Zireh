@@ -1,10 +1,14 @@
 <?php
 
+use App\Livewire\Admin\Settings\PrivacyTermsSettingsPage;
+use App\Models\Admin;
 use App\Models\Setting;
 use App\Models\User;
 use Database\Seeders\PrivacyTermsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\PersonalAccessToken;
+use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
 
@@ -61,4 +65,42 @@ it('seeds zireh cargo privacy terms and delete account settings', function () {
     expect(Setting::query()->where('key', 'privacy_policy')->value('value'))->toContain('ZirehCargo Privacy Policy')
         ->and(Setting::query()->where('key', 'terms_conditions')->value('value'))->toContain('ZirehCargo Terms')
         ->and(Setting::query()->where('key', 'delete_account')->value('value'))->toContain('Delete Your ZirehCargo Account');
+});
+
+it('renders the public delete-account page from settings', function () {
+    $this->seed(PrivacyTermsSeeder::class);
+
+    $this->get(route('delete-account'))
+        ->assertOk()
+        ->assertSee('Delete Account', false)
+        ->assertSee('Delete Your ZirehCargo Account', false)
+        ->assertSee(route('privacy-policy'), false);
+});
+
+it('shows and saves delete account content next to privacy policy in admin', function () {
+    $this->seed(PrivacyTermsSeeder::class);
+
+    $admin = Admin::create([
+        'name' => 'Legal Admin',
+        'username' => 'legaladmin',
+        'email' => 'legal@example.com',
+        'role' => Admin::ROLE_SUPER_ADMIN,
+        'password' => Hash::make('secret-password'),
+        'email_verified_at' => now(),
+    ]);
+
+    $this->actingAs($admin, 'admin')
+        ->get(route('admin.settings.privacy-terms'))
+        ->assertOk()
+        ->assertSee(__('admin.privacy_policy'), false)
+        ->assertSee(__('admin.delete_account'), false);
+
+    $updated = "Delete Your ZirehCargo Account\n\nUpdated admin copy for account deletion.";
+
+    Livewire::test(PrivacyTermsSettingsPage::class)
+        ->set('delete_account', $updated)
+        ->call('save')
+        ->assertHasNoErrors();
+
+    expect(Setting::query()->where('key', 'delete_account')->value('value'))->toBe($updated);
 });
