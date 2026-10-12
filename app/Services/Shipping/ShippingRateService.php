@@ -23,6 +23,7 @@ class ShippingRateService
             $validated['max_weight'],
             null,
             $validated['warehouse_id'] ?? null,
+            $validated['mode'],
         );
 
         $rate = $this->repository->create($validated);
@@ -40,6 +41,7 @@ class ShippingRateService
             $validated['max_weight'],
             $rate->id,
             $validated['warehouse_id'] ?? null,
+            $validated['mode'],
         );
 
         $rate = $this->repository->update($rate, $validated);
@@ -70,6 +72,7 @@ class ShippingRateService
         float $maxWeight,
         ?int $ignoreId = null,
         ?int $warehouseId = null,
+        string $mode = ShippingRate::MODE_WEIGHT,
     ): void {
         if ($minWeight >= $maxWeight) {
             throw ValidationException::withMessages([
@@ -77,7 +80,7 @@ class ShippingRateService
             ]);
         }
 
-        $existingRates = $this->repository->forMethod($methodId, $ignoreId, $warehouseId);
+        $existingRates = $this->repository->forMethod($methodId, $ignoreId, $warehouseId, $mode);
 
         foreach ($existingRates as $rate) {
             if ($minWeight <= (float) $rate->max_weight && (float) $rate->min_weight <= $maxWeight) {
@@ -105,21 +108,26 @@ class ShippingRateService
             ? round(($lengthCm * $widthCm * $heightCm) / $method->volumetric_divisor, 2)
             : null;
 
-        if ($mode === 'weight') {
+        if ($mode === ShippingRate::MODE_WEIGHT) {
             $actualWeight ??= 0;
             $volumetricWeight = null;
             $chargeableWeight = $actualWeight;
-        } elseif ($mode === 'cm') {
+            $ladderMode = ShippingRate::MODE_WEIGHT;
+        } elseif ($mode === ShippingRate::MODE_CM) {
             $actualWeight = null;
             $chargeableWeight = $volumetricWeight ?? 0;
+            $ladderMode = ShippingRate::MODE_CM;
         } else {
             $actualWeight ??= 0;
             $chargeableWeight = $volumetricWeight !== null
                 ? max($actualWeight, $volumetricWeight)
                 : $actualWeight;
+            $ladderMode = $volumetricWeight !== null && $volumetricWeight > $actualWeight
+                ? ShippingRate::MODE_CM
+                : ShippingRate::MODE_WEIGHT;
         }
 
-        $rate = $this->repository->findActiveForWeight($method->id, $chargeableWeight, $warehouseId);
+        $rate = $this->repository->findActiveForWeight($method->id, $chargeableWeight, $warehouseId, $ladderMode);
 
         if (! $rate) {
             throw ValidationException::withMessages([
@@ -145,13 +153,7 @@ class ShippingRateService
             'actual_weight_g' => $actualWeight !== null ? round($actualWeight * 1000, 2) : null,
             'volumetric_weight_kg' => $volumetricWeight,
             'chargeable_weight_kg' => $chargeableWeight,
-            'rate' => [
-                'id' => $rate->id,
-                'min_weight' => (float) $rate->min_weight,
-                'max_weight' => (float) $rate->max_weight,
-                'rate_per_kg' => (float) $rate->rate_per_kg,
-                'warehouse_id' => $rate->warehouse_id,
-            ],
+            'rate' => $rate->toCalculationRatePayload(),
             'minimum_charge' => (float) $method->minimum_charge,
             'calculated_cost' => $calculatedCost,
             'shipping_cost' => $shippingCost,
@@ -184,7 +186,7 @@ class ShippingRateService
                 ]);
             }
 
-            $weightCost = $this->costForChargeableWeight($method, $actualWeight, $warehouseId);
+            $weightCost = $this->costForChargeableWeight($method, $actualWeight, $warehouseId, ShippingRate::MODE_WEIGHT);
 
             return $this->pickupShippingResult(
                 $method,
@@ -208,7 +210,7 @@ class ShippingRateService
                 ]);
             }
 
-            $volumeCost = $this->costForChargeableWeight($method, $volumetricWeight, $warehouseId);
+            $volumeCost = $this->costForChargeableWeight($method, $volumetricWeight, $warehouseId, ShippingRate::MODE_CM);
 
             return $this->pickupShippingResult(
                 $method,
@@ -225,8 +227,8 @@ class ShippingRateService
             );
         }
 
-        $weightCost = $this->costForChargeableWeight($method, $actualWeight ?? 0, $warehouseId);
-        $volumeCost = $this->costForChargeableWeight($method, $volumetricWeight ?? 0, $warehouseId);
+        $weightCost = $this->costForChargeableWeight($method, $actualWeight ?? 0, $warehouseId, ShippingRate::MODE_WEIGHT);
+        $volumeCost = $this->costForChargeableWeight($method, $volumetricWeight ?? 0, $warehouseId, ShippingRate::MODE_CM);
         $appliedMethod = $volumeCost['shipping_cost'] > $weightCost['shipping_cost']
             ? 'volume'
             : 'weight';
@@ -306,8 +308,9 @@ class ShippingRateService
         ShippingMethod $method,
         float $chargeableWeight,
         ?int $warehouseId = null,
+        string $mode = ShippingRate::MODE_WEIGHT,
     ): array {
-        $rate = $this->repository->findActiveForWeight($method->id, $chargeableWeight, $warehouseId);
+        $rate = $this->repository->findActiveForWeight($method->id, $chargeableWeight, $warehouseId, $mode);
 
         if (! $rate) {
             throw ValidationException::withMessages([
@@ -320,13 +323,7 @@ class ShippingRateService
 
         return [
             'chargeable_weight_kg' => $chargeableWeight,
-            'rate' => [
-                'id' => $rate->id,
-                'min_weight' => (float) $rate->min_weight,
-                'max_weight' => (float) $rate->max_weight,
-                'rate_per_kg' => (float) $rate->rate_per_kg,
-                'warehouse_id' => $rate->warehouse_id,
-            ],
+            'rate' => $rate->toCalculationRatePayload(),
             'minimum_charge' => (float) $method->minimum_charge,
             'calculated_cost' => $calculatedCost,
             'shipping_cost' => $shippingCost,
@@ -338,6 +335,7 @@ class ShippingRateService
         return validator($data, [
             'shipping_method_id' => ['required', 'integer', 'exists:shipping_methods,id'],
             'warehouse_id' => ['required', 'integer', 'exists:warehouses,id'],
+            'mode' => ['required', 'in:'.ShippingRate::MODE_WEIGHT.','.ShippingRate::MODE_CM],
             'min_weight' => ['required', 'numeric', 'min:0'],
             'max_weight' => ['required', 'numeric', 'gt:min_weight'],
             'rate_per_kg' => ['required', 'numeric', 'gt:0'],

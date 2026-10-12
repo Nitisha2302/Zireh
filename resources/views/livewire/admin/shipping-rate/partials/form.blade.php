@@ -31,19 +31,40 @@
                         </select>
                         @error('warehouseId') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
+                    <div class="col-12">
+                        <label class="form-label">{{ __('admin.pickup_measurement_mode') }}</label>
+                        <div class="btn-group" role="group">
+                            <input type="radio" class="btn-check" id="rate-mode-weight" value="weight" wire:model.live="mode">
+                            <label class="btn btn-outline-primary" for="rate-mode-weight">{{ __('admin.pickup_mode_weight') }}</label>
+                            <input type="radio" class="btn-check" id="rate-mode-cm" value="cm" wire:model.live="mode">
+                            <label class="btn btn-outline-primary" for="rate-mode-cm">{{ __('admin.pickup_mode_cm') }}</label>
+                        </div>
+                        <div class="form-text">
+                            @if ($mode === 'cm')
+                                {{ __('admin.shipping_rate_mode_cm_hint') }}
+                            @else
+                                {{ __('admin.shipping_rate_mode_weight_hint') }}
+                            @endif
+                        </div>
+                        @error('mode') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                    </div>
                     <div class="col-md-4">
-                        <label class="form-label">{{ __('admin.shipping_min_weight') }}</label>
+                        <label class="form-label">
+                            {{ $mode === 'cm' ? __('admin.shipping_min_volumetric_weight') : __('admin.shipping_min_weight_g') }}
+                        </label>
                         <div class="input-group">
-                            <input type="number" step="0.01" class="form-control @error('minWeight') is-invalid @enderror" wire:model.blur="minWeight" min="0">
-                            <span class="input-group-text">KG</span>
+                            <input type="number" step="{{ $mode === 'cm' ? '0.001' : '1' }}" class="form-control @error('minWeight') is-invalid @enderror" wire:model.blur="minWeight" min="0">
+                            <span class="input-group-text">{{ $mode === 'cm' ? 'KG' : 'g' }}</span>
                         </div>
                         @error('minWeight') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label">{{ __('admin.shipping_max_weight') }}</label>
+                        <label class="form-label">
+                            {{ $mode === 'cm' ? __('admin.shipping_max_volumetric_weight') : __('admin.shipping_max_weight_g') }}
+                        </label>
                         <div class="input-group">
-                            <input type="number" step="0.01" class="form-control @error('maxWeight') is-invalid @enderror" wire:model.blur="maxWeight" min="0">
-                            <span class="input-group-text">KG</span>
+                            <input type="number" step="{{ $mode === 'cm' ? '0.001' : '1' }}" class="form-control @error('maxWeight') is-invalid @enderror" wire:model.blur="maxWeight" min="0">
+                            <span class="input-group-text">{{ $mode === 'cm' ? 'KG' : 'g' }}</span>
                         </div>
                         @error('maxWeight') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                     </div>

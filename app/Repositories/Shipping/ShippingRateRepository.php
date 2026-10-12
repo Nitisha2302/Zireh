@@ -41,6 +41,7 @@ class ShippingRateRepository
         ?int $methodFilter,
         ?int $warehouseFilter,
         ?string $statusFilter,
+        ?string $modeFilter,
         ?float $weightFilter,
         string $sortField,
         string $sortDirection,
@@ -51,6 +52,10 @@ class ShippingRateRepository
             ->when($warehouseFilter, fn (Builder $query) => $query->where('warehouse_id', $warehouseFilter))
             ->when($statusFilter === 'active', fn (Builder $query) => $query->where('is_active', true))
             ->when($statusFilter === 'inactive', fn (Builder $query) => $query->where('is_active', false))
+            ->when(
+                in_array($modeFilter, [ShippingRate::MODE_WEIGHT, ShippingRate::MODE_CM], true),
+                fn (Builder $query) => $query->where('mode', $modeFilter),
+            )
             ->when($weightFilter !== null, function (Builder $query) use ($weightFilter): void {
                 $query->where('min_weight', '<=', $weightFilter)
                     ->where('max_weight', '>=', $weightFilter);
@@ -82,7 +87,7 @@ class ShippingRateRepository
     /**
      * @return Collection<int, ShippingRate>
      */
-    public function forMethod(int $methodId, ?int $ignoreId = null, ?int $warehouseId = null): Collection
+    public function forMethod(int $methodId, ?int $ignoreId = null, ?int $warehouseId = null, ?string $mode = null): Collection
     {
         return ShippingRate::query()
             ->where('shipping_method_id', $methodId)
@@ -91,24 +96,66 @@ class ShippingRateRepository
                 fn (Builder $query) => $query->whereNull('warehouse_id'),
                 fn (Builder $query) => $query->where('warehouse_id', $warehouseId),
             )
+            ->when(
+                in_array($mode, [ShippingRate::MODE_WEIGHT, ShippingRate::MODE_CM], true),
+                fn (Builder $query) => $query->where('mode', $mode),
+            )
             ->when($ignoreId, fn (Builder $query) => $query->where('id', '!=', $ignoreId))
             ->get();
     }
 
-    public function findActiveForWeight(int $methodId, float $weight, ?int $warehouseId = null): ?ShippingRate
+    public function findActiveForWeight(int $methodId, float $weight, ?int $warehouseId = null, ?string $mode = null): ?ShippingRate
     {
         $weight = max(0, $weight);
+        $preferred = $mode === ShippingRate::MODE_CM ? ShippingRate::MODE_CM : ShippingRate::MODE_WEIGHT;
+        $fallback = $preferred === ShippingRate::MODE_CM ? ShippingRate::MODE_WEIGHT : ShippingRate::MODE_CM;
 
-        $rates = $this->activeRatesForMethodAndWarehouse($methodId, $warehouseId);
+        $attempts = [
+            [$warehouseId, $preferred],
+            [$warehouseId, $fallback],
+        ];
 
-        if ($rates->isEmpty() && $warehouseId !== null) {
-            $rates = $this->activeRatesForMethodAndWarehouse($methodId, null);
+        if ($warehouseId !== null) {
+            $attempts[] = [null, $preferred];
+            $attempts[] = [null, $fallback];
         }
 
-        if ($rates->isEmpty()) {
-            return null;
+        foreach ($attempts as [$tryWarehouseId, $tryMode]) {
+            $rates = $this->activeRatesForMethodAndWarehouse($methodId, $tryWarehouseId, $tryMode);
+
+            if ($rates->isEmpty()) {
+                continue;
+            }
+
+            return $this->pickRateForWeight($rates, $weight);
         }
 
+        return null;
+    }
+
+    /**
+     * @return Collection<int, ShippingRate>
+     */
+    protected function activeRatesForMethodAndWarehouse(int $methodId, ?int $warehouseId, string $mode): Collection
+    {
+        return ShippingRate::query()
+            ->where('shipping_method_id', $methodId)
+            ->where('is_active', true)
+            ->where('mode', $mode)
+            ->when(
+                $warehouseId === null,
+                fn (Builder $query) => $query->whereNull('warehouse_id'),
+                fn (Builder $query) => $query->where('warehouse_id', $warehouseId),
+            )
+            ->orderBy('min_weight')
+            ->get();
+    }
+
+    /**
+     * @param  Collection<int, ShippingRate>  $rates
+     */
+    protected function pickRateForWeight(Collection $rates, float $weight): ShippingRate
+    {
         $exact = $rates
             ->filter(fn (ShippingRate $rate) => (float) $rate->min_weight <= $weight
                 && (float) $rate->max_weight >= $weight)
@@ -131,22 +178,5 @@ class ShippingRateRepository
             ->filter(fn (ShippingRate $rate) => (float) $rate->max_weight < $weight)
             ->sortByDesc(fn (ShippingRate $rate) => (float) $rate->max_weight)
             ->first() ?? $rates->last();
-    }
-
-    /**
-     * @return Collection<int, ShippingRate>
-     */
-    protected function activeRatesForMethodAndWarehouse(int $methodId, ?int $warehouseId): Collection
-    {
-        return ShippingRate::query()
-            ->where('shipping_method_id', $methodId)
-            ->where('is_active', true)
-            ->when(
-                $warehouseId === null,
-                fn (Builder $query) => $query->whereNull('warehouse_id'),
-                fn (Builder $query) => $query->where('warehouse_id', $warehouseId),
-            )
-            ->orderBy('min_weight')
-            ->get();
     }
 }

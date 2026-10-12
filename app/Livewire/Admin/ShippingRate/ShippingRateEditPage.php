@@ -2,16 +2,20 @@
 
 namespace App\Livewire\Admin\ShippingRate;
 
+use App\Livewire\Admin\ShippingRate\Concerns\ManagesShippingRateForm;
 use App\Models\ShippingMethod;
 use App\Models\ShippingRate;
 use App\Models\Warehouse;
 use App\Services\Shipping\ShippingRateService;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 #[Layout('layouts::admin', ['title' => 'Edit Shipping Rate'])]
 class ShippingRateEditPage extends Component
 {
+    use ManagesShippingRateForm;
+
     public ShippingRate $shippingRate;
 
     public string $shippingMethodId = '';
@@ -31,49 +35,43 @@ class ShippingRateEditPage extends Component
         $this->shippingRate = $shippingRate->load(['shippingMethod', 'warehouse']);
         $this->shippingMethodId = (string) $shippingRate->shipping_method_id;
         $this->warehouseId = $shippingRate->warehouse_id !== null ? (string) $shippingRate->warehouse_id : '';
-        $this->minWeight = (string) $shippingRate->min_weight;
-        $this->maxWeight = (string) $shippingRate->max_weight;
+        $this->mode = $shippingRate->billingMode();
+        $this->minWeight = $this->mode === ShippingRate::MODE_WEIGHT
+            ? (string) $shippingRate->minWeightGrams()
+            : (string) $shippingRate->min_weight;
+        $this->maxWeight = $this->mode === ShippingRate::MODE_WEIGHT
+            ? (string) $shippingRate->maxWeightGrams()
+            : (string) $shippingRate->max_weight;
         $this->ratePerKg = (string) $shippingRate->rate_per_kg;
         $this->isActive = $shippingRate->is_active;
     }
 
     protected function rules(): array
     {
-        return [
-            'shippingMethodId' => ['required', 'integer', 'exists:shipping_methods,id'],
-            'warehouseId' => ['required', 'integer', 'exists:warehouses,id'],
-            'minWeight' => ['required', 'numeric', 'min:0'],
-            'maxWeight' => ['required', 'numeric', 'gt:minWeight'],
-            'ratePerKg' => ['required', 'numeric', 'gt:0'],
-            'isActive' => ['boolean'],
-        ];
+        return $this->shippingRateRules();
     }
 
     protected function validationAttributes(): array
     {
-        return [
-            'shippingMethodId' => __('admin.shipping_method'),
-            'warehouseId' => __('admin.warehouse'),
-            'minWeight' => __('admin.shipping_min_weight'),
-            'maxWeight' => __('admin.shipping_max_weight'),
-            'ratePerKg' => __('admin.shipping_rate_per_kg'),
-        ];
+        return $this->shippingRateValidationAttributes();
     }
 
     public function update(ShippingRateService $service): void
     {
         $validated = $this->validate();
+        [$minWeight, $maxWeight] = $this->storedBoundsFromForm($validated);
 
         try {
             $service->update($this->shippingRate, [
                 'shipping_method_id' => (int) $validated['shippingMethodId'],
                 'warehouse_id' => (int) $validated['warehouseId'],
-                'min_weight' => $validated['minWeight'],
-                'max_weight' => $validated['maxWeight'],
+                'mode' => $validated['mode'],
+                'min_weight' => $minWeight,
+                'max_weight' => $maxWeight,
                 'rate_per_kg' => $validated['ratePerKg'],
                 'is_active' => $validated['isActive'],
             ]);
-        } catch (\Illuminate\Validation\ValidationException $exception) {
+        } catch (ValidationException $exception) {
             $this->setErrorBag($exception->validator->getMessageBag());
             throw $exception;
         }

@@ -25,6 +25,8 @@ class ShippingRateListPage extends Component
 
     public string $statusFilter = '';
 
+    public string $modeFilter = '';
+
     public string $weightFilter = '';
 
     public string $sortField = 'created_at';
@@ -53,6 +55,11 @@ class ShippingRateListPage extends Component
         $this->resetPage();
     }
 
+    public function updatingModeFilter(): void
+    {
+        $this->resetPage();
+    }
+
     public function updatingWeightFilter(): void
     {
         $this->resetPage();
@@ -64,6 +71,7 @@ class ShippingRateListPage extends Component
         $this->methodFilter = '';
         $this->warehouseFilter = '';
         $this->statusFilter = '';
+        $this->modeFilter = '';
         $this->weightFilter = '';
         $this->resetPage();
     }
@@ -74,6 +82,7 @@ class ShippingRateListPage extends Component
             || $this->methodFilter !== ''
             || $this->warehouseFilter !== ''
             || $this->statusFilter !== ''
+            || $this->modeFilter !== ''
             || $this->weightFilter !== '';
     }
 
@@ -136,6 +145,7 @@ class ShippingRateListPage extends Component
                 $this->methodFilter !== '' ? (int) $this->methodFilter : null,
                 $this->warehouseFilter !== '' ? (int) $this->warehouseFilter : null,
                 $this->statusFilter ?: null,
+                $this->modeFilter ?: null,
                 $weight,
                 $this->sortField,
                 $this->sortDirection
@@ -148,6 +158,6 @@ class ShippingRateListPage extends Component
 
     protected function sortableFields(): array
     {
-        return ['min_weight', 'max_weight', 'rate_per_kg', 'is_active', 'created_at', 'updated_at'];
+        return ['mode', 'min_weight', 'max_weight', 'rate_per_kg', 'is_active', 'created_at', 'updated_at'];
     }
 }

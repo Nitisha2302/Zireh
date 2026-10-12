@@ -61,7 +61,7 @@
     <div class="card">
         <div class="card-body border-bottom">
             <div class="row g-3 align-items-end">
-                <div class="col-lg-3">
+                <div class="col-lg-2">
                     <label class="form-label mb-1">{{ __('admin.search') }}</label>
                     <div class="input-group">
                         <span class="input-group-text"><i class="icon-base ti tabler-search"></i></span>
@@ -86,12 +86,20 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="col-lg-2">
+                <div class="col-lg-1">
                     <label class="form-label mb-1">{{ __('admin.status') }}</label>
                     <select class="form-select" wire:model.live="statusFilter">
                         <option value="">{{ __('admin.all_statuses') }}</option>
                         <option value="active">{{ __('admin.active') }}</option>
                         <option value="inactive">{{ __('admin.inactive') }}</option>
+                    </select>
+                </div>
+                <div class="col-lg-2">
+                    <label class="form-label mb-1">{{ __('admin.pickup_measurement_mode') }}</label>
+                    <select class="form-select" wire:model.live="modeFilter">
+                        <option value="">{{ __('admin.all_modes') }}</option>
+                        <option value="weight">{{ __('admin.pickup_mode_weight') }}</option>
+                        <option value="cm">{{ __('admin.pickup_mode_cm') }}</option>
                     </select>
                 </div>
                 <div class="col-lg-2">
@@ -119,6 +127,7 @@
                         <th width="60">ID</th>
                         <th>{{ __('admin.shipping_method') }}</th>
                         <th>{{ __('admin.warehouse') }}</th>
+                        <th>{{ __('admin.pickup_measurement_mode') }}</th>
                         <th>{{ __('admin.shipping_weight_range') }}</th>
                         <th>{{ __('admin.shipping_rate_per_kg') }}</th>
                         <th>{{ __('admin.status') }}</th>
@@ -141,6 +150,11 @@
                                 @else
                                     <span class="text-body-secondary">—</span>
                                 @endif
+                            </td>
+                            <td>
+                                <span class="badge {{ $rate->isCmMode() ? 'bg-label-info' : 'bg-label-primary' }}">
+                                    {{ $rate->isCmMode() ? __('admin.pickup_mode_cm') : __('admin.pickup_mode_weight') }}
+                                </span>
                             </td>
                             <td>{{ $rate->weightRangeLabel() }}</td>
                             <td class="fw-semibold">{{ number_format((float) $rate->rate_per_kg, 2) }} TJS/KG</td>
@@ -173,7 +187,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="text-center py-5 text-body-secondary">{{ __('admin.shipping_rates_empty') }}</td>
+                            <td colspan="9" class="text-center py-5 text-body-secondary">{{ __('admin.shipping_rates_empty') }}</td>
                         </tr>
                     @endforelse
                 </tbody>

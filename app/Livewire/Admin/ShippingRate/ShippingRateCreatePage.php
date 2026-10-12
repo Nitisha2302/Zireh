@@ -2,15 +2,19 @@
 
 namespace App\Livewire\Admin\ShippingRate;
 
+use App\Livewire\Admin\ShippingRate\Concerns\ManagesShippingRateForm;
 use App\Models\ShippingMethod;
 use App\Models\Warehouse;
 use App\Services\Shipping\ShippingRateService;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 #[Layout('layouts::admin', ['title' => 'Add Shipping Rate'])]
 class ShippingRateCreatePage extends Component
 {
+    use ManagesShippingRateForm;
+
     public string $shippingMethodId = '';
 
     public string $warehouseId = '';
@@ -25,41 +29,30 @@ class ShippingRateCreatePage extends Component
 
     protected function rules(): array
     {
-        return [
-            'shippingMethodId' => ['required', 'integer', 'exists:shipping_methods,id'],
-            'warehouseId' => ['required', 'integer', 'exists:warehouses,id'],
-            'minWeight' => ['required', 'numeric', 'min:0'],
-            'maxWeight' => ['required', 'numeric', 'gt:minWeight'],
-            'ratePerKg' => ['required', 'numeric', 'gt:0'],
-            'isActive' => ['boolean'],
-        ];
+        return $this->shippingRateRules();
     }
 
     protected function validationAttributes(): array
     {
-        return [
-            'shippingMethodId' => __('admin.shipping_method'),
-            'warehouseId' => __('admin.warehouse'),
-            'minWeight' => __('admin.shipping_min_weight'),
-            'maxWeight' => __('admin.shipping_max_weight'),
-            'ratePerKg' => __('admin.shipping_rate_per_kg'),
-        ];
+        return $this->shippingRateValidationAttributes();
     }
 
     public function save(ShippingRateService $service): void
     {
         $validated = $this->validate();
+        [$minWeight, $maxWeight] = $this->storedBoundsFromForm($validated);
 
         try {
             $service->create([
                 'shipping_method_id' => (int) $validated['shippingMethodId'],
                 'warehouse_id' => (int) $validated['warehouseId'],
-                'min_weight' => $validated['minWeight'],
-                'max_weight' => $validated['maxWeight'],
+                'mode' => $validated['mode'],
+                'min_weight' => $minWeight,
+                'max_weight' => $maxWeight,
                 'rate_per_kg' => $validated['ratePerKg'],
                 'is_active' => $validated['isActive'],
             ]);
-        } catch (\Illuminate\Validation\ValidationException $exception) {
+        } catch (ValidationException $exception) {
             $this->setErrorBag($exception->validator->getMessageBag());
             throw $exception;
         }

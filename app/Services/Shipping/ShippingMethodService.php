@@ -63,12 +63,9 @@ class ShippingMethodService
                         'from' => ShippingMethod::ROUTE_FROM,
                         'to' => ShippingMethod::ROUTE_TO,
                     ],
-                    'rates' => $method->activeRates->map(fn ($rate): array => [
-                        'id' => $rate->id,
-                        'min_weight' => (float) $rate->min_weight,
-                        'max_weight' => (float) $rate->max_weight,
-                        'rate_per_kg' => (float) $rate->rate_per_kg,
-                    ])->values()->all(),
+                    'rates' => $method->activeRates->map(
+                        fn ($rate): array => $rate->toMethodRatePayload()
+                    )->values()->all(),
                 ])
                 ->values()
                 ->all();

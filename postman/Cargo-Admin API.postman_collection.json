@@ -4304,7 +4304,8 @@
                                 "shipping",
                                 "methods"
                             ]
-                        }
+                        },
+                        "description": "Each method includes two optional rate ladders. Rate `mode` is `weight` (min/max also as min_weight_g / max_weight_g) or `cm` (volumetric kg after L×W×H / volumetric_divisor). Billing is always TJS per kg."
                     },
                     "response": []
                 },
@@ -4349,7 +4350,7 @@
                                 "calculate"
                             ]
                         },
-                        "description": "Legacy payload: weight_kg is required. Dimensions are optional and raise chargeable weight if all three are sent."
+                        "description": "Legacy payload: weight_kg is required. Dimensions are optional and raise chargeable weight if all three are sent. Auto uses the weight ladder if actual kg wins, otherwise the CM (volumetric) ladder. Falls back to the other ladder if the matching one is empty."
                     },
                     "response": []
                 },
@@ -4394,7 +4395,7 @@
                                 "calculate"
                             ]
                         },
-                        "description": "Charge by actual weight only. Send weight_g (grams) or weight_kg. Dimensions are ignored."
+                        "description": "Charge by actual weight only against the Weight (g) rate ladder. Send weight_g (grams) or weight_kg. Dimensions are ignored. Falls back to CM rates if no weight rates exist."
                     },
                     "response": []
                 },
@@ -4439,7 +4440,7 @@
                                 "calculate"
                             ]
                         },
-                        "description": "Charge by volumetric weight only: (L × W × H) / method volumetric_divisor. Weight is not required."
+                        "description": "Charge by volumetric weight only against the CM rate ladder: (L × W × H) / method volumetric_divisor. Weight is not required. Falls back to weight rates if no CM rates exist."
                     },
                     "response": []
                 }

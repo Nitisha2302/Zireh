@@ -121,11 +121,80 @@ it('rejects overlapping shipping rate ranges for the same warehouse', function (
     Livewire::test(ShippingRateCreatePage::class)
         ->set('shippingMethodId', (string) $method->id)
         ->set('warehouseId', (string) $warehouse->id)
-        ->set('minWeight', '4')
-        ->set('maxWeight', '10')
+        ->set('mode', 'weight')
+        ->set('minWeight', '4000')
+        ->set('maxWeight', '10000')
         ->set('ratePerKg', '22')
         ->call('save')
         ->assertHasErrors(['minWeight']);
+});
+
+it('allows overlapping ranges across weight and cm ladders', function () {
+    $warehouse = makeShippingWarehouse();
+    $method = ShippingMethod::create([
+        'name' => 'Cargo',
+        'code' => 'cargo',
+        'volumetric_divisor' => 6000,
+        'minimum_charge' => 100,
+        'is_active' => true,
+    ]);
+
+    ShippingRate::create([
+        'shipping_method_id' => $method->id,
+        'warehouse_id' => $warehouse->id,
+        'mode' => ShippingRate::MODE_WEIGHT,
+        'min_weight' => 0,
+        'max_weight' => 5,
+        'rate_per_kg' => 25,
+        'is_active' => true,
+    ]);
+
+    $admin = makeShippingAdmin();
+    $this->actingAs($admin, 'admin');
+
+    Livewire::test(ShippingRateCreatePage::class)
+        ->set('shippingMethodId', (string) $method->id)
+        ->set('warehouseId', (string) $warehouse->id)
+        ->set('mode', 'cm')
+        ->set('minWeight', '0')
+        ->set('maxWeight', '5')
+        ->set('ratePerKg', '22')
+        ->call('save')
+        ->assertRedirect(route('admin.shipping-rates.index'));
+
+    expect(ShippingRate::query()->where('mode', ShippingRate::MODE_CM)->exists())->toBeTrue();
+});
+
+it('stores weight ladder bounds from grams', function () {
+    $warehouse = makeShippingWarehouse();
+    $method = ShippingMethod::create([
+        'name' => 'Cargo',
+        'code' => 'cargo',
+        'volumetric_divisor' => 6000,
+        'minimum_charge' => 100,
+        'is_active' => true,
+    ]);
+
+    $admin = makeShippingAdmin();
+    $this->actingAs($admin, 'admin');
+
+    Livewire::test(ShippingRateCreatePage::class)
+        ->set('shippingMethodId', (string) $method->id)
+        ->set('warehouseId', (string) $warehouse->id)
+        ->set('mode', 'weight')
+        ->set('minWeight', '1500')
+        ->set('maxWeight', '5000')
+        ->set('ratePerKg', '25')
+        ->call('save')
+        ->assertRedirect(route('admin.shipping-rates.index'));
+
+    $rate = ShippingRate::query()->first();
+
+    expect($rate->mode)->toBe(ShippingRate::MODE_WEIGHT)
+        ->and((float) $rate->min_weight)->toBe(1.5)
+        ->and((float) $rate->max_weight)->toBe(5.0)
+        ->and($rate->minWeightGrams())->toBe(1500.0)
+        ->and($rate->weightRangeLabel())->toContain('1,500 g');
 });
 
 it('allows the same weight range for different warehouses', function () {
@@ -329,6 +398,116 @@ it('calculates shipping by weight grams via api', function () {
         ->assertJsonPath('data.shipping_cost', 15);
 });
 
+it('uses separate weight and cm rate ladders via api', function () {
+    $method = ShippingMethod::create([
+        'name' => 'Air',
+        'code' => 'air',
+        'volumetric_divisor' => 5000,
+        'minimum_charge' => 10,
+        'is_active' => true,
+    ]);
+
+    ShippingRate::create([
+        'shipping_method_id' => $method->id,
+        'mode' => ShippingRate::MODE_WEIGHT,
+        'min_weight' => 0,
+        'max_weight' => 10,
+        'rate_per_kg' => 10,
+        'is_active' => true,
+    ]);
+
+    ShippingRate::create([
+        'shipping_method_id' => $method->id,
+        'mode' => ShippingRate::MODE_CM,
+        'min_weight' => 0,
+        'max_weight' => 100,
+        'rate_per_kg' => 50,
+        'is_active' => true,
+    ]);
+
+    $this->postJson('/api/v1/shipping/calculate', [
+        'method' => 'air',
+        'mode' => 'weight',
+        'weight_g' => 1500,
+        'length_cm' => 50,
+        'width_cm' => 40,
+        'height_cm' => 30,
+    ])
+        ->assertOk()
+        ->assertJsonPath('data.mode', 'weight')
+        ->assertJsonPath('data.rate.mode', 'weight')
+        ->assertJsonPath('data.shipping_cost', 15);
+
+    $this->postJson('/api/v1/shipping/calculate', [
+        'method' => 'air',
+        'mode' => 'cm',
+        'length_cm' => 50,
+        'width_cm' => 40,
+        'height_cm' => 30,
+    ])
+        ->assertOk()
+        ->assertJsonPath('data.mode', 'cm')
+        ->assertJsonPath('data.rate.mode', 'cm')
+        ->assertJsonPath('data.volumetric_weight_kg', 12)
+        ->assertJsonPath('data.shipping_cost', 600);
+});
+
+it('falls back to the other ladder when matching rates are missing', function () {
+    $method = ShippingMethod::create([
+        'name' => 'Air',
+        'code' => 'air',
+        'volumetric_divisor' => 5000,
+        'minimum_charge' => 10,
+        'is_active' => true,
+    ]);
+
+    ShippingRate::create([
+        'shipping_method_id' => $method->id,
+        'mode' => ShippingRate::MODE_WEIGHT,
+        'min_weight' => 0,
+        'max_weight' => 100,
+        'rate_per_kg' => 10,
+        'is_active' => true,
+    ]);
+
+    $this->postJson('/api/v1/shipping/calculate', [
+        'method' => 'air',
+        'mode' => 'cm',
+        'length_cm' => 50,
+        'width_cm' => 40,
+        'height_cm' => 30,
+    ])
+        ->assertOk()
+        ->assertJsonPath('data.mode', 'cm')
+        ->assertJsonPath('data.rate.mode', 'weight')
+        ->assertJsonPath('data.shipping_cost', 120);
+});
+
+it('lists rate mode and gram bounds on shipping methods api', function () {
+    $method = ShippingMethod::create([
+        'name' => 'Air',
+        'code' => 'air',
+        'volumetric_divisor' => 5000,
+        'minimum_charge' => 10,
+        'is_active' => true,
+    ]);
+
+    ShippingRate::create([
+        'shipping_method_id' => $method->id,
+        'mode' => ShippingRate::MODE_WEIGHT,
+        'min_weight' => 1.5,
+        'max_weight' => 5,
+        'rate_per_kg' => 10,
+        'is_active' => true,
+    ]);
+
+    $this->getJson('/api/v1/shipping/methods')
+        ->assertOk()
+        ->assertJsonPath('data.methods.0.rates.0.mode', 'weight')
+        ->assertJsonPath('data.methods.0.rates.0.min_weight_g', 1500)
+        ->assertJsonPath('data.methods.0.rates.0.max_weight_g', 5000);
+});
+
 it('calculates shipping by centimeters via api', function () {
     $method = ShippingMethod::create([
         'name' => 'Air',
@@ -385,5 +564,6 @@ it('shows shipping rates list with warehouse column', function () {
         ->get(route('admin.shipping-rates.index'))
         ->assertOk()
         ->assertSee('Dushanbe Hub')
-        ->assertSee('DUS-SHIP');
+        ->assertSee('DUS-SHIP')
+        ->assertSee('Weight (g)');
 });

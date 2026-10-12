@@ -168,6 +168,56 @@ it('confirms pickup from centimeters without storing weight', function () {
         ->and($order->package_weight_kg)->toBeNull();
 });
 
+it('confirms warehouse pickup using the matching rate ladder', function () {
+    $fixtures = makePickupPanelFixtures();
+
+    ShippingRate::query()->update([
+        'mode' => ShippingRate::MODE_WEIGHT,
+        'rate_per_kg' => 10,
+    ]);
+
+    ShippingRate::create([
+        'shipping_method_id' => $fixtures['method']->id,
+        'mode' => ShippingRate::MODE_CM,
+        'min_weight' => 0,
+        'max_weight' => 100,
+        'rate_per_kg' => 20,
+        'is_active' => true,
+    ]);
+
+    $this->actingAs($fixtures['admin'], 'admin');
+
+    Livewire::test(OrderDetailPage::class, ['order' => $fixtures['order']])
+        ->set('shippingMethodId', $fixtures['method']->id)
+        ->set('measurementMode', 'weight')
+        ->set('packageWeightG', '1500')
+        ->call('previewPickupShipping')
+        ->assertHasNoErrors()
+        ->call('confirmPickup')
+        ->assertHasNoErrors();
+
+    expect((float) $fixtures['order']->fresh()->pickup_shipping_fee_tjs)->toBe(15.0);
+
+    $volumeOrder = $fixtures['order']->replicate();
+    $volumeOrder->elim_order_id = 'ORD-PICKUP-CM';
+    $volumeOrder->pickup_token = null;
+    $volumeOrder->status = OrderStatus::CODE_ARRIVED_IN_TAJIKISTAN;
+    $volumeOrder->save();
+
+    Livewire::test(OrderDetailPage::class, ['order' => $volumeOrder])
+        ->set('shippingMethodId', $fixtures['method']->id)
+        ->set('measurementMode', 'cm')
+        ->set('packageLengthCm', '50')
+        ->set('packageWidthCm', '40')
+        ->set('packageHeightCm', '30')
+        ->call('previewPickupShipping')
+        ->assertHasNoErrors()
+        ->call('confirmPickup')
+        ->assertHasNoErrors();
+
+    expect((float) $volumeOrder->fresh()->pickup_shipping_fee_tjs)->toBe(240.0);
+});
+
 it('blocks pickup page access for orders outside staff warehouse', function () {
     $fixtures = makePickupPanelFixtures();
     $otherWarehouse = Warehouse::create([

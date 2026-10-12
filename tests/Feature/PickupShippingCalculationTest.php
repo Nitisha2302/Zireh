@@ -136,3 +136,41 @@ it('bills pickup shipping from volume only when mode is cm', function () {
         ->and($result['package']['volumetric_weight_kg'])->toBe(12.0)
         ->and($result['shipping_cost'])->toBe(120.0);
 });
+
+it('bills pickup from the matching weight or cm ladder', function () {
+    $method = ShippingMethod::create([
+        'name' => 'Cargo',
+        'code' => 'cargo',
+        'volumetric_divisor' => 5000,
+        'minimum_charge' => 10,
+        'is_active' => true,
+    ]);
+
+    ShippingRate::create([
+        'shipping_method_id' => $method->id,
+        'mode' => ShippingRate::MODE_WEIGHT,
+        'min_weight' => 0,
+        'max_weight' => 10,
+        'rate_per_kg' => 10,
+        'is_active' => true,
+    ]);
+
+    ShippingRate::create([
+        'shipping_method_id' => $method->id,
+        'mode' => ShippingRate::MODE_CM,
+        'min_weight' => 0,
+        'max_weight' => 100,
+        'rate_per_kg' => 20,
+        'is_active' => true,
+    ]);
+
+    $service = app(ShippingRateService::class);
+
+    $weight = $service->calculatePickupShipping($method, 1.5, 50, 50, 50, null, 'weight');
+    expect($weight['shipping_cost'])->toBe(15.0)
+        ->and($weight['weight_breakdown']['rate']['mode'])->toBe('weight');
+
+    $volume = $service->calculatePickupShipping($method, 20, 50, 40, 30, null, 'cm');
+    expect($volume['shipping_cost'])->toBe(240.0)
+        ->and($volume['volume_breakdown']['rate']['mode'])->toBe('cm');
+});
