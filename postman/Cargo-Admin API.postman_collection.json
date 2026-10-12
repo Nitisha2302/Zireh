@@ -4348,7 +4348,98 @@
                                 "shipping",
                                 "calculate"
                             ]
-                        }
+                        },
+                        "description": "Legacy payload: weight_kg is required. Dimensions are optional and raise chargeable weight if all three are sent."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Calculate Shipping by Weight (g)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Accept-Language",
+                                "value": "{{locale}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"method\": \"{{shipping_method}}\",\n  \"mode\": \"weight\",\n  \"weight_g\": {{shipping_weight_g}}\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/v1/shipping/calculate",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "v1",
+                                "shipping",
+                                "calculate"
+                            ]
+                        },
+                        "description": "Charge by actual weight only. Send weight_g (grams) or weight_kg. Dimensions are ignored."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Calculate Shipping by CM",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Accept-Language",
+                                "value": "{{locale}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"method\": \"{{shipping_method}}\",\n  \"mode\": \"cm\",\n  \"length_cm\": {{shipping_length_cm}},\n  \"width_cm\": {{shipping_width_cm}},\n  \"height_cm\": {{shipping_height_cm}}\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/v1/shipping/calculate",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "v1",
+                                "shipping",
+                                "calculate"
+                            ]
+                        },
+                        "description": "Charge by volumetric weight only: (L × W × H) / method volumetric_divisor. Weight is not required."
                     },
                     "response": []
                 }
@@ -4906,6 +4997,10 @@
         {
             "key": "shipping_weight_kg",
             "value": "5"
+        },
+        {
+            "key": "shipping_weight_g",
+            "value": "1500"
         },
         {
             "key": "shipping_length_cm",

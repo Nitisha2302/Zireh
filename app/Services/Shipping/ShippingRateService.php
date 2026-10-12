@@ -90,27 +90,34 @@ class ShippingRateService
 
     public function calculate(
         string $methodCode,
-        float $weightKg,
+        ?float $weightKg,
         ?float $lengthCm = null,
         ?float $widthCm = null,
         ?float $heightCm = null,
         ?int $warehouseId = null,
+        string $mode = 'auto',
     ): array {
         $method = $this->shippingMethodService->findActiveByCode($methodCode);
 
-        $actualWeight = max(0, $weightKg);
-        $volumetricWeight = null;
+        $hasDimensions = $lengthCm !== null && $widthCm !== null && $heightCm !== null;
+        $actualWeight = $weightKg !== null ? max(0, $weightKg) : null;
+        $volumetricWeight = $hasDimensions
+            ? round(($lengthCm * $widthCm * $heightCm) / $method->volumetric_divisor, 2)
+            : null;
 
-        if ($lengthCm !== null && $widthCm !== null && $heightCm !== null) {
-            $volumetricWeight = round(
-                ($lengthCm * $widthCm * $heightCm) / $method->volumetric_divisor,
-                2
-            );
+        if ($mode === 'weight') {
+            $actualWeight ??= 0;
+            $volumetricWeight = null;
+            $chargeableWeight = $actualWeight;
+        } elseif ($mode === 'cm') {
+            $actualWeight = null;
+            $chargeableWeight = $volumetricWeight ?? 0;
+        } else {
+            $actualWeight ??= 0;
+            $chargeableWeight = $volumetricWeight !== null
+                ? max($actualWeight, $volumetricWeight)
+                : $actualWeight;
         }
-
-        $chargeableWeight = $volumetricWeight !== null
-            ? max($actualWeight, $volumetricWeight)
-            : $actualWeight;
 
         $rate = $this->repository->findActiveForWeight($method->id, $chargeableWeight, $warehouseId);
 
@@ -133,7 +140,9 @@ class ShippingRateService
                 'from' => ShippingMethod::ROUTE_FROM,
                 'to' => ShippingMethod::ROUTE_TO,
             ],
+            'mode' => $mode === 'cm' ? 'cm' : ($mode === 'weight' ? 'weight' : 'auto'),
             'actual_weight_kg' => $actualWeight,
+            'actual_weight_g' => $actualWeight !== null ? round($actualWeight * 1000, 2) : null,
             'volumetric_weight_kg' => $volumetricWeight,
             'chargeable_weight_kg' => $chargeableWeight,
             'rate' => [

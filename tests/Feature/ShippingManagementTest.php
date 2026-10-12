@@ -3,7 +3,6 @@
 use App\Livewire\Admin\ShippingMethod\ShippingMethodCreatePage;
 use App\Livewire\Admin\ShippingMethod\ShippingMethodListPage;
 use App\Livewire\Admin\ShippingRate\ShippingRateCreatePage;
-use App\Livewire\Admin\ShippingRate\ShippingRateListPage;
 use App\Models\Admin;
 use App\Models\ShippingMethod;
 use App\Models\ShippingRate;
@@ -293,7 +292,72 @@ it('calculates shipping via api endpoint', function () {
         'weight_kg' => 3,
     ])
         ->assertOk()
-        ->assertJsonPath('data.shipping_cost', 150);
+        ->assertJsonPath('data.shipping_cost', 150)
+        ->assertJsonPath('data.mode', 'auto');
+});
+
+it('calculates shipping by weight grams via api', function () {
+    $method = ShippingMethod::create([
+        'name' => 'Air',
+        'code' => 'air',
+        'volumetric_divisor' => 5000,
+        'minimum_charge' => 10,
+        'is_active' => true,
+    ]);
+
+    ShippingRate::create([
+        'shipping_method_id' => $method->id,
+        'min_weight' => 0,
+        'max_weight' => 10,
+        'rate_per_kg' => 10,
+        'is_active' => true,
+    ]);
+
+    $this->postJson('/api/v1/shipping/calculate', [
+        'method' => 'air',
+        'mode' => 'weight',
+        'weight_g' => 1500,
+        'length_cm' => 80,
+        'width_cm' => 80,
+        'height_cm' => 80,
+    ])
+        ->assertOk()
+        ->assertJsonPath('data.mode', 'weight')
+        ->assertJsonPath('data.actual_weight_kg', 1.5)
+        ->assertJsonPath('data.actual_weight_g', 1500)
+        ->assertJsonPath('data.volumetric_weight_kg', null)
+        ->assertJsonPath('data.shipping_cost', 15);
+});
+
+it('calculates shipping by centimeters via api', function () {
+    $method = ShippingMethod::create([
+        'name' => 'Air',
+        'code' => 'air',
+        'volumetric_divisor' => 5000,
+        'minimum_charge' => 10,
+        'is_active' => true,
+    ]);
+
+    ShippingRate::create([
+        'shipping_method_id' => $method->id,
+        'min_weight' => 0,
+        'max_weight' => 100,
+        'rate_per_kg' => 10,
+        'is_active' => true,
+    ]);
+
+    $this->postJson('/api/v1/shipping/calculate', [
+        'method' => 'air',
+        'mode' => 'cm',
+        'length_cm' => 50,
+        'width_cm' => 40,
+        'height_cm' => 30,
+    ])
+        ->assertOk()
+        ->assertJsonPath('data.mode', 'cm')
+        ->assertJsonPath('data.actual_weight_kg', null)
+        ->assertJsonPath('data.volumetric_weight_kg', 12)
+        ->assertJsonPath('data.shipping_cost', 120);
 });
 
 it('shows shipping rates list with warehouse column', function () {

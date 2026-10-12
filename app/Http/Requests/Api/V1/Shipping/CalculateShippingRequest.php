@@ -13,12 +13,18 @@ class CalculateShippingRequest extends FormRequest
 
     public function rules(): array
     {
+        $mode = $this->input('mode');
+        $isCm = $mode === 'cm';
+        $isWeight = $mode === 'weight';
+
         return [
             'method' => ['required', 'string', 'max:50'],
-            'weight_kg' => ['required', 'numeric', 'min:0'],
-            'length_cm' => ['nullable', 'numeric', 'min:0', 'required_with:width_cm,height_cm'],
-            'width_cm' => ['nullable', 'numeric', 'min:0', 'required_with:length_cm,height_cm'],
-            'height_cm' => ['nullable', 'numeric', 'min:0', 'required_with:length_cm,width_cm'],
+            'mode' => ['nullable', 'in:weight,cm'],
+            'weight_g' => [$isWeight && ! $this->filled('weight_kg') ? 'required' : 'nullable', 'numeric', 'gt:0'],
+            'weight_kg' => [! $isCm && ! $this->filled('weight_g') ? 'required' : 'nullable', 'numeric', 'min:0'],
+            'length_cm' => array_values(array_filter([$isCm ? 'required' : 'nullable', 'numeric', 'min:0', $isCm ? null : 'required_with:width_cm,height_cm'])),
+            'width_cm' => array_values(array_filter([$isCm ? 'required' : 'nullable', 'numeric', 'min:0', $isCm ? null : 'required_with:length_cm,height_cm'])),
+            'height_cm' => array_values(array_filter([$isCm ? 'required' : 'nullable', 'numeric', 'min:0', $isCm ? null : 'required_with:length_cm,width_cm'])),
             'warehouse_id' => ['nullable', 'integer', 'exists:warehouses,id'],
         ];
     }
