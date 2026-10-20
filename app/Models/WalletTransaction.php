@@ -31,6 +31,8 @@ class WalletTransaction extends Model
 
     public const SOURCE_ALIF_DEPOSIT = 'alif_deposit';
 
+    public const SOURCE_DC_NEXT_DEPOSIT = 'dc_next_deposit';
+
     public const STATUS_COMPLETED = 'completed';
 
     public const STATUS_REVERTED = 'reverted';

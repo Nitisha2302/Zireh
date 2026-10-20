@@ -85,4 +85,10 @@ return [
     'warehouse_fetched' => 'Тафсилоти анбор бомуваффақият гирифта шуд.',
     'warehouses_listed' => 'Рӯйхати анборҳо бомуваффақият гирифта шуд.',
     'elim_warehouse_address_missing' => 'Суроғаи анбор тanzim нашудааст. Лутфан ба дастгирӣ муроҷиат кунед.',
+    'dc_next_payment_initialized' => 'Ҳисобномаи DC NEXT бомуваффақият сохта шуд.',
+    'dc_next_payment_not_found' => 'Пардохти DC NEXT ёфт нашуд.',
+    'dc_next_amount_invalid' => 'Маблағи дурусти пардохтро ворид кунед.',
+    'dc_next_amount_out_of_range' => 'Маблағ аз ҳудуди қабулшуда берун аст.',
+    'dc_next_not_configured' => 'DC NEXT танзим нашудааст.',
+    'dc_next_phone_required' => 'Барои пардохт тавассути DC NEXT рақами телефон лозим аст.',
 ];

@@ -34,6 +34,7 @@ use App\Livewire\Admin\Settings\AlifApiSettingsPage;
 use App\Livewire\Admin\Settings\ChinaWarehouseLoginSettingsPage;
 use App\Livewire\Admin\Settings\CompanySettingsPage;
 use App\Livewire\Admin\Settings\CurrencyExchangeSettingsPage;
+use App\Livewire\Admin\Settings\DcNextSettingsPage;
 use App\Livewire\Admin\Settings\DiditSettingsPage;
 use App\Livewire\Admin\Settings\ElimApiLogDetailPage;
 use App\Livewire\Admin\Settings\ElimApiLogListPage;
@@ -112,6 +113,7 @@ Route::prefix('admin')->name('admin.')->middleware(['is_auth:admin'])->group(fun
         Route::get('settings/alif', AlifApiSettingsPage::class)->name('settings.alif');
         Route::get('settings/alif/logs', AlifApiLogListPage::class)->name('settings.alif-api-logs.index');
         Route::get('settings/alif/logs/{log}', AlifApiLogDetailPage::class)->name('settings.alif-api-logs.show');
+        Route::get('settings/dc-next', DcNextSettingsPage::class)->name('settings.dc-next');
         Route::get('settings/elim-warehouse', ElimWarehouseSettingsPage::class)->name('settings.elim-warehouse');
         Route::get('settings/china-warehouse-login', ChinaWarehouseLoginSettingsPage::class)->name('settings.china-warehouse-login');
         Route::get('settings/company', CompanySettingsPage::class)->name('settings.company');

@@ -4,6 +4,8 @@ namespace App\Providers;
 
 use App\Services\Alif\AlifWalletCreditor;
 use App\Services\Alif\Contracts\AlifWalletCreditorInterface;
+use App\Services\DcNext\Contracts\DcNextWalletCreditorInterface;
+use App\Services\DcNext\DcNextWalletCreditor;
 use App\Services\FileManager;
 use Dedoc\Scramble\Scramble;
 use Illuminate\Contracts\Auth\Authenticatable;
@@ -24,6 +26,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->singleton(FileManager::class);
         $this->app->bind(AlifWalletCreditorInterface::class, AlifWalletCreditor::class);
+        $this->app->bind(DcNextWalletCreditorInterface::class, DcNextWalletCreditor::class);
     }
 
     /**

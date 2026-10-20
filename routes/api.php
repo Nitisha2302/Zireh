@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\Auth\AlifWalletPaymentController;
 use App\Http\Controllers\Api\V1\Auth\CustomerAuthController;
+use App\Http\Controllers\Api\V1\Auth\DcNextWalletPaymentController;
 use App\Http\Controllers\Api\V1\Auth\UserAddressController;
 use App\Http\Controllers\Api\V1\Auth\WalletController;
 use App\Http\Controllers\Api\V1\Auth\WishlistController;
@@ -13,6 +14,7 @@ use App\Http\Controllers\Api\V1\Cart\Taobao\TaobaoCartController;
 use App\Http\Controllers\Api\V1\Cart\Taobao\TaobaoCheckoutController;
 use App\Http\Controllers\Api\V1\Order\CustomerOrderController;
 use App\Http\Controllers\Api\V1\WarehouseController;
+use App\Http\Controllers\Api\V1\Webhooks\DcNextWebhookController;
 use Illuminate\Support\Facades\Route;
 
 $publicCatalogRoutes = require __DIR__.'/api/public-catalog.php';
@@ -26,6 +28,9 @@ Route::prefix('v1')->group(function () use ($publicCatalogRoutes) {
 
     Route::post('payments/alif/callback', [AlifWalletPaymentController::class, 'callback'])
         ->name('payments.alif.callback');
+
+    Route::post('webhooks/dc-next/invoice', [DcNextWebhookController::class, 'invoice'])
+        ->name('webhooks.dc-next.invoice');
 
     Route::prefix('auth')->group(function () {
         Route::prefix('register')->group(function () {
@@ -65,6 +70,8 @@ Route::prefix('v1')->group(function () use ($publicCatalogRoutes) {
             Route::get('wallet/transactions', [WalletController::class, 'transactions']);
             Route::post('wallet/alif/init', [AlifWalletPaymentController::class, 'init']);
             Route::get('wallet/alif/status/{orderId}', [AlifWalletPaymentController::class, 'status']);
+            Route::post('wallet/dc-next/init', [DcNextWalletPaymentController::class, 'init']);
+            Route::get('wallet/dc-next/status/{orderId}', [DcNextWalletPaymentController::class, 'status']);
 
             Route::get('orders/elim/purchasing-wallet', [CustomerOrderController::class, 'elimPurchasingWallet']);
             Route::get('orders/elim/exchange-rates', [CustomerOrderController::class, 'elimExchangeRates']);

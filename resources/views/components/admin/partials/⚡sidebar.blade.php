@@ -178,6 +178,11 @@ new class extends Component {
                             <div>{{ __('admin.alif_api_logs') }}</div>
                         </a>
                     </li>
+                    <li class="menu-item {{ request()->routeIs('admin.settings.dc-next') ? 'active' : '' }}">
+                        <a href="{{ route('admin.settings.dc-next') }}" class="menu-link">
+                            <div>{{ __('admin.dc_next_settings') }}</div>
+                        </a>
+                    </li>
                     <li class="menu-item {{ request()->routeIs('admin.settings.elim-warehouse') ? 'active' : '' }}">
                         <a href="{{ route('admin.settings.elim-warehouse') }}" class="menu-link">
                             <div>{{ __('admin.elim_warehouse') }}</div>

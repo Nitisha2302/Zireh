@@ -29,3 +29,6 @@ Homestead.json
 .phpactor.json
 auth.json
 laravel-alif-integration/*
+
+
+laravel-dc-next-integration

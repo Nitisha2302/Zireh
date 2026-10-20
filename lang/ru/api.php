@@ -84,4 +84,10 @@ return [
     'warehouse_fetched' => 'Данные склада успешно получены.',
     'warehouses_listed' => 'Список складов успешно получен.',
     'elim_warehouse_address_missing' => 'Адрес склада не настроен. Обратитесь в поддержку.',
+    'dc_next_payment_initialized' => 'Счёт DC NEXT успешно создан.',
+    'dc_next_payment_not_found' => 'Платёж DC NEXT не найден.',
+    'dc_next_amount_invalid' => 'Введите корректную сумму платежа.',
+    'dc_next_amount_out_of_range' => 'Сумма выходит за пределы допустимого диапазона.',
+    'dc_next_not_configured' => 'Эквайринг DC NEXT не настроен.',
+    'dc_next_phone_required' => 'Для оплаты через DC NEXT требуется номер телефона.',
 ];

@@ -83,6 +83,7 @@ class WalletTransactionListPage extends Component
                 WalletTransaction::SOURCE_ORDER_PAYMENT => 'Order Payment',
                 WalletTransaction::SOURCE_ORDER_REFUND => 'Order Refund',
                 WalletTransaction::SOURCE_ALIF_DEPOSIT => __('admin.wallet_source_alif_deposit'),
+                WalletTransaction::SOURCE_DC_NEXT_DEPOSIT => __('admin.wallet_source_dc_next_deposit'),
             ],
         ])->title('Wallet Transactions');
     }

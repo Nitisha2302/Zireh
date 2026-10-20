@@ -2716,6 +2716,150 @@
             ]
         },
         {
+            "name": "08b - DC NEXT Acquiring (Add Wallet Money)",
+            "description": "Flutter top-up via DC NEXT (`invoice.dc.tj`). Run Init, open payment_url, then Status.\n\n1. **Init** — Sanctum token. Returns order_id, invoice_id, and payment_url.\n2. **Status** — poll until paid.\n3. **Callback** — DC NEXT webhook (`POST /v1/webhooks/dc-next/invoice`); local tests only.",
+            "auth": {
+                "type": "bearer",
+                "bearer": [
+                    {
+                        "key": "token",
+                        "value": "{{customer_token}}",
+                        "type": "string"
+                    }
+                ]
+            },
+            "item": [
+                {
+                    "name": "1. Init DC NEXT checkout",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "const json = pm.response.json();",
+                                    "if (json?.data?.order_id) pm.collectionVariables.set(\"dc_next_order_id\", json.data.order_id);",
+                                    "pm.test(\"Init succeeded\", function () { pm.expect(pm.response.code).to.eql(200); pm.expect(json.success).to.be.true; });"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"amount\": \"{{dc_next_amount}}\",\n  \"description\": \"Wallet top-up\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/v1/auth/wallet/dc-next/init",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "v1",
+                                "auth",
+                                "wallet",
+                                "dc-next",
+                                "init"
+                            ]
+                        },
+                        "description": "Creates a pending DC NEXT payment and returns the hosted invoice URL. Requires customer_token."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "2. Payment status",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/v1/auth/wallet/dc-next/status/{{dc_next_order_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "v1",
+                                "auth",
+                                "wallet",
+                                "dc-next",
+                                "status",
+                                "{{dc_next_order_id}}"
+                            ]
+                        },
+                        "description": "Owner-only. If still pending, this app calls DC NEXT /v1/check and may credit the wallet."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "3. Callback (DC NEXT webhook)",
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"merchant\": \"100101\",\n  \"order_id\": \"{{dc_next_order_id}}\",\n  \"invoice_id\": \"26549494\",\n  \"payid\": \"PAY-TEST\",\n  \"sign\": \"replace-with-md5\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/v1/webhooks/dc-next/invoice",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "v1",
+                                "webhooks",
+                                "dc-next",
+                                "invoice"
+                            ]
+                        },
+                        "description": "Called by DC NEXT, not the mobile app. Sign is md5(merchant + order_id + secret)."
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
             "name": "09 - Wallet",
             "description": "Customer Sanctum token. Read-only. Adding money is **08 - Alif Acquiring** (init + Alif callback), not a customer deposit endpoint.",
             "item": [
@@ -5059,6 +5203,14 @@
         },
         {
             "key": "alif_order_id",
+            "value": ""
+        },
+        {
+            "key": "dc_next_amount",
+            "value": "50.00"
+        },
+        {
+            "key": "dc_next_order_id",
             "value": ""
         }
     ]
