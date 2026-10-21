@@ -9,19 +9,15 @@ use RuntimeException;
 
 class DcNextInvoiceService
 {
-    public function __construct(
-        private readonly DcNextConfig $config,
-    ) {}
-
     public function createInvoice(
         string $orderId,
         float $amountTjs,
         string $phone,
         string $description,
     ): array {
-        $merchant = $this->config->merchant();
-        $secret = $this->config->secret();
-        $callbackUrl = $this->config->callbackUrl();
+        $merchant = config('dc_next.merchant');
+        $secret = config('dc_next.secret');
+        $callbackUrl = config('dc_next.callback_url');
 
         if ($merchant === '' || $secret === '') {
             throw new RuntimeException('DC NEXT is not configured.');
@@ -30,29 +26,21 @@ class DcNextInvoiceService
         $payload = [
             'merchant' => $merchant,
             'order_id' => $orderId,
-            'currency' => $this->config->currency(),
+            'currency' => config('dc_next.default_currency', 'TJS'),
             'amount' => self::toMinorUnits($amountTjs),
-            'exp_time' => $this->config->expMinutes(),
+            'exp_time' => config('dc_next.invoice_exp_minutes', 40),
             'phone' => self::normalizePhone($phone),
             'description' => mb_substr($description, 0, 150),
             'callback_url' => $callbackUrl,
             'sign' => self::signCreateOrCheck($merchant, $orderId, $secret),
         ];
 
-        $response = Http::timeout($this->config->timeout())
-            ->acceptJson()
-            ->post($this->config->createUrl(), $payload);
+        $response = Http::acceptJson()
+            ->post(config('dc_next.create_url'), $payload);
 
         $body = $response->json();
-        if (! $response->successful() || ($body['status'] ?? '') !== 'success') {
-            $message = is_array($body) ? ($body['message'] ?? $response->body()) : $response->body();
-
-            Log::error('DC NEXT create invoice failed', [
-                'order_id' => $orderId,
-                'http_status' => $response->status(),
-                'message' => $message,
-            ]);
-
+        if (!$response->successful() || ($body['status'] ?? '') !== 'success') {
+            $message = $body['message'] ?? $response->body();
             throw new RuntimeException('DC NEXT create failed: '.$message);
         }
 
@@ -67,8 +55,8 @@ class DcNextInvoiceService
 
     public function checkInvoice(string $orderId, string $invoiceId): array
     {
-        $merchant = $this->config->merchant();
-        $secret = $this->config->secret();
+        $merchant = config('dc_next.merchant');
+        $secret = config('dc_next.secret');
 
         $payload = [
             'merchant' => $merchant,
@@ -77,31 +65,10 @@ class DcNextInvoiceService
             'sign' => self::signCreateOrCheck($merchant, $orderId, $secret),
         ];
 
-        $response = Http::timeout($this->config->timeout())
-            ->acceptJson()
-            ->post($this->config->checkUrl(), $payload);
-
-        if (! $response->successful()) {
-            Log::warning('DC NEXT check invoice HTTP error', [
-                'order_id' => $orderId,
-                'invoice_id' => $invoiceId,
-                'http_status' => $response->status(),
-                'body' => $response->body(),
-            ]);
-        }
+        $response = Http::acceptJson()
+            ->post(config('dc_next.check_url'), $payload);
 
         return $response->json() ?? [];
-    }
-
-    public function verifySign(string $orderId, string $providedSign): bool
-    {
-        $expected = self::signCreateOrCheck(
-            $this->config->merchant(),
-            $orderId,
-            $this->config->secret(),
-        );
-
-        return hash_equals($expected, $providedSign);
     }
 
     public static function signCreateOrCheck(
@@ -123,9 +90,9 @@ class DcNextInvoiceService
         return round($minor / 100, 2);
     }
 
-    public static function normalizePhone(?string $phone): string
+    public static function normalizePhone(string $phone): string
     {
-        $digits = preg_replace('/\D+/', '', (string) $phone) ?? '';
+        $digits = preg_replace('/\D+/', '', $phone) ?? '';
         if (str_starts_with($digits, '992')) {
             return $digits;
         }
@@ -134,5 +101,34 @@ class DcNextInvoiceService
         }
 
         return $digits;
+    }
+
+    /**
+     * Parses /v1/check message text. Do NOT treat "<g>amount</g>" as paid —
+     * unpaid invoices include that tag for the amount still due.
+     */
+    public static function interpretCheckAsPaid(array $checkResponse): bool
+    {
+        if (($checkResponse['status'] ?? '') === 'failed') {
+            return false;
+        }
+
+        $message = mb_strtolower((string) ($checkResponse['message'] ?? ''));
+
+        if ($message === '') {
+            return false;
+        }
+
+        // Unpaid: "Сумма к оплате" / amount still to pay
+        if (str_contains($message, 'к оплате') || str_contains($message, 'сумма к оплате')) {
+            return false;
+        }
+
+        // Paid (heuristic until bank documents status codes)
+        if (str_contains($message, 'оплачен') || str_contains($message, 'успешно оплачен')) {
+            return true;
+        }
+
+        return false;
     }
 }

@@ -117,14 +117,22 @@ class DcNextWalletPaymentController extends ApiController
         try {
             $check = $this->dcNext->checkInvoice($payment->order_id, (string) ($payment->invoice_id ?? ''));
             $remoteStatus = strtolower((string) ($check['status'] ?? ''));
-            $message = (string) ($check['message'] ?? '');
+            $message = mb_strtolower((string) ($check['message'] ?? ''));
 
-            $isPaidByMessage = str_contains($message, '<g>')
-                || str_contains(mb_strtolower($message), 'оплач');
+            if ($remoteStatus === 'failed') {
+                $this->settler->markFailed($payment, $check);
 
-            if (in_array($remoteStatus, ['paid', 'success', 'ok'], true) || $isPaidByMessage) {
+                return;
+            }
+
+            // DC /check "success" = API call OK, NOT "invoice paid".
+            if ($this->checkMessageIndicatesPaid($message)) {
                 $this->settler->markPaid($payment, $check);
-            } elseif (in_array($remoteStatus, ['failed', 'canceled', 'cancelled', 'expired'], true)) {
+
+                return;
+            }
+
+            if (in_array($remoteStatus, ['failed', 'canceled', 'cancelled', 'expired'], true)) {
                 $this->settler->markFailed($payment, $check);
             }
         } catch (Throwable $exception) {
@@ -133,6 +141,23 @@ class DcNextWalletPaymentController extends ApiController
                 'message' => $exception->getMessage(),
             ]);
         }
+    }
+
+    /**
+     * Unpaid invoices still contain "<g>50.00</g>" (amount due) — never treat that as paid.
+     */
+    protected function checkMessageIndicatesPaid(string $messageLower): bool
+    {
+        if ($messageLower === '') {
+            return false;
+        }
+
+        if (str_contains($messageLower, 'к оплате') || str_contains($messageLower, 'сумма к оплате')) {
+            return false;
+        }
+
+        return str_contains($messageLower, 'оплачен')
+            || str_contains($messageLower, 'успешно оплачен');
     }
 
     /**
