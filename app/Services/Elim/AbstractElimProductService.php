@@ -65,10 +65,24 @@ abstract class AbstractElimProductService implements MarketplaceProductService
 
     public function searchByImage(array $filters): array
     {
-        $payload = $this->payload($filters);
+        if (
+            empty($filters['img_id'])
+            && empty($filters['imgId'])
+            && empty($filters['img_url'])
+            && empty($filters['imgUrl'])
+            && isset($filters['file'])
+            && $filters['file'] instanceof UploadedFile
+        ) {
+            $uploaded = $this->uploadImage($filters['file']);
+            $filters['img_id'] = (string) ($uploaded['imageId'] ?? $uploaded['img_id'] ?? '');
+        }
+
+        unset($filters['file']);
+
+        $payload = $this->imageSearchPayload($filters);
 
         return Cache::remember($this->cacheKey('image-search', $payload), $this->productTtl(), function () use ($payload): array {
-            $response = $this->client->post('/v1/products/search-img', $payload);
+            $response = $this->client->post('/v2/products/search-by-image', $payload);
 
             return $this->normalizer->listResponse($response, $this->platform());
         });
@@ -76,9 +90,23 @@ abstract class AbstractElimProductService implements MarketplaceProductService
 
     public function uploadImage(UploadedFile $file): array
     {
-        return $this->client->upload('/v1/products/upload-image', $file, [
+        $response = $this->client->upload('/v2/products/upload-image', $file, [
             'platform' => $this->elimPlatform(),
         ]);
+
+        $imageId = $response['imageId']
+            ?? $response['img_id']
+            ?? $response['image_id']
+            ?? $response['data']['imageId']
+            ?? $response['data']['img_id']
+            ?? null;
+
+        if (is_string($imageId) && $imageId !== '') {
+            $response['imageId'] = $imageId;
+            $response['img_id'] = $imageId;
+        }
+
+        return $response;
     }
 
     protected function payload(array $filters): array
@@ -93,6 +121,26 @@ abstract class AbstractElimProductService implements MarketplaceProductService
             'filter' => $filters['filter'] ?? null,
             'page' => (int) ($filters['page'] ?? 1),
             'size' => (int) ($filters['size'] ?? 20),
+        ], fn (mixed $value): bool => $value !== null && $value !== '');
+    }
+
+    protected function imageSearchPayload(array $filters): array
+    {
+        $imgUrl = $filters['imgUrl'] ?? $filters['img_url'] ?? null;
+        $imgId = $filters['imgId'] ?? $filters['img_id'] ?? $filters['imageId'] ?? null;
+        $keywordTranslate = $filters['keywordTranslate'] ?? $filters['keyword_translate'] ?? null;
+
+        return array_filter([
+            'platform' => $this->elimPlatform(),
+            'imgUrl' => $imgUrl,
+            'imgId' => $imgUrl ? null : $imgId,
+            'lang' => $this->lang($filters['lang'] ?? null),
+            'sort' => $filters['sort'] ?? null,
+            'filter' => $filters['filter'] ?? null,
+            'page' => (int) ($filters['page'] ?? 1),
+            'size' => min(20, max(1, (int) ($filters['size'] ?? 20))),
+            'keyword' => $filters['keyword'] ?? $filters['q'] ?? null,
+            'keywordTranslate' => is_bool($keywordTranslate) ? $keywordTranslate : null,
         ], fn (mixed $value): bool => $value !== null && $value !== '');
     }
 
@@ -123,7 +171,7 @@ abstract class AbstractElimProductService implements MarketplaceProductService
 
     protected function lang(?string $lang): string
     {
-        return in_array($lang, ['vi', 'en'], true) ? $lang : $this->config->defaultLang();
+        return in_array($lang, ['vi', 'en', 'ru', 'ko', 'ja'], true) ? $lang : $this->config->defaultLang();
     }
 
     protected function elimPlatform(): string

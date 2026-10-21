@@ -20,7 +20,7 @@ return function (): void {
     Route::get('lessons', [ContentController::class, 'lessons']);
     Route::get('news', [ContentController::class, 'news']);
     Route::get('legal', [LegalContentController::class, 'index']);
-    
+
     Route::get('china-warehouse', [ChinaWarehouseController::class, 'show']);
     Route::get('warehouses', [WarehouseController::class, 'list']);
     Route::get('warehouses/{warehouse}', [WarehouseController::class, 'show']);
@@ -36,6 +36,7 @@ return function (): void {
         Route::get('products/{id}', [TaobaoCatalogController::class, 'show']);
         Route::get('categories', [TaobaoCatalogController::class, 'categories']);
         Route::post('image-search', [TaobaoCatalogController::class, 'imageSearch']);
+        Route::post('search-by-image', [TaobaoCatalogController::class, 'imageSearch']);
         Route::post('upload-image', [TaobaoCatalogController::class, 'uploadImage']);
     });
 
@@ -45,6 +46,7 @@ return function (): void {
         Route::get('products/{id}', [Alibaba1688CatalogController::class, 'show']);
         Route::get('categories', [Alibaba1688CatalogController::class, 'categories']);
         Route::post('image-search', [Alibaba1688CatalogController::class, 'imageSearch']);
+        Route::post('search-by-image', [Alibaba1688CatalogController::class, 'imageSearch']);
         Route::post('upload-image', [Alibaba1688CatalogController::class, 'uploadImage']);
     });
 
@@ -54,6 +56,7 @@ return function (): void {
         Route::get('products/{id}', [JingdongCatalogController::class, 'show']);
         Route::get('categories', [JingdongCatalogController::class, 'categories']);
         Route::post('image-search', [JingdongCatalogController::class, 'imageSearch']);
+        Route::post('search-by-image', [JingdongCatalogController::class, 'imageSearch']);
         Route::post('upload-image', [JingdongCatalogController::class, 'uploadImage']);
     });
 };

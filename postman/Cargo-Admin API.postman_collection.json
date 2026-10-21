@@ -739,7 +739,7 @@
                     "response": []
                 },
                 {
-                    "name": "Image Search",
+                    "name": "Search by Image",
                     "request": {
                         "method": "POST",
                         "header": [
@@ -761,7 +761,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"img_url\": \"{{image_url}}\",\n  \"img_id\": \"{{image_id}}\",\n  \"lang\": \"{{elim_lang}}\",\n  \"page\": {{page}},\n  \"size\": {{size}},\n  \"sort\": \"{{image_sort}}\"\n}",
+                            "raw": "{\n  \"imgUrl\": \"{{image_url}}\",\n  \"imgId\": \"{{image_id}}\",\n  \"lang\": \"{{elim_lang}}\",\n  \"page\": {{page}},\n  \"size\": 20,\n  \"sort\": \"{{image_sort}}\"\n}",
                             "options": {
                                 "raw": {
                                     "language": "json"
@@ -769,16 +769,18 @@
                             }
                         },
                         "url": {
-                            "raw": "{{base_url}}/v1/taobao/image-search",
+                            "raw": "{{base_url}}/v1/public/taobao/search-by-image",
                             "host": [
                                 "{{base_url}}"
                             ],
                             "path": [
                                 "v1",
+                                "public",
                                 "taobao",
-                                "image-search"
+                                "search-by-image"
                             ]
-                        }
+                        },
+                        "description": "Elim v2 Search by Image. Pass either `imgUrl` (*.alicdn.com), `imgId` (from upload-image), or multipart `file`. Also available at `/v1/taobao/image-search` and `/v1/taobao/search-by-image`."
                     },
                     "response": []
                 },
@@ -809,16 +811,18 @@
                             ]
                         },
                         "url": {
-                            "raw": "{{base_url}}/v1/taobao/upload-image",
+                            "raw": "{{base_url}}/v1/public/taobao/upload-image",
                             "host": [
                                 "{{base_url}}"
                             ],
                             "path": [
                                 "v1",
+                                "public",
                                 "taobao",
                                 "upload-image"
                             ]
-                        }
+                        },
+                        "description": "Uploads an image to Elim (`/v2/products/upload-image`) and returns `data.imageId` (and `data.img_id`) for `search-by-image`."
                     },
                     "response": []
                 }
@@ -1029,7 +1033,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"img_url\": \"{{image_url}}\",\n  \"img_id\": \"{{image_id}}\",\n  \"lang\": \"{{elim_lang}}\",\n  \"page\": {{page}},\n  \"size\": {{size}},\n  \"sort\": \"{{image_sort}}\"\n}",
+                            "raw": "{\n  \"imgUrl\": \"{{image_url}}\",\n  \"imgId\": \"{{image_id}}\",\n  \"lang\": \"{{elim_lang}}\",\n  \"page\": {{page}},\n  \"size\": 20,\n  \"sort\": \"{{image_sort}}\"\n}",
                             "options": {
                                 "raw": {
                                     "language": "json"
@@ -1037,16 +1041,18 @@
                             }
                         },
                         "url": {
-                            "raw": "{{base_url}}/v1/1688/image-search",
+                            "raw": "{{base_url}}/v1/public/1688/search-by-image",
                             "host": [
                                 "{{base_url}}"
                             ],
                             "path": [
                                 "v1",
+                                "public",
                                 "1688",
-                                "image-search"
+                                "search-by-image"
                             ]
-                        }
+                        },
+                        "description": "Elim v2 Search by Image (`platform: alibaba`). Pass either `imgUrl` (*.alicdn.com), `imgId` (from upload-image), or multipart `file`. Also available at `/v1/1688/image-search` and `/v1/1688/search-by-image`."
                     },
                     "response": []
                 },
@@ -1077,16 +1083,18 @@
                             ]
                         },
                         "url": {
-                            "raw": "{{base_url}}/v1/1688/upload-image",
+                            "raw": "{{base_url}}/v1/public/1688/upload-image",
                             "host": [
                                 "{{base_url}}"
                             ],
                             "path": [
                                 "v1",
+                                "public",
                                 "1688",
                                 "upload-image"
                             ]
-                        }
+                        },
+                        "description": "Uploads an image to Elim (`/v2/products/upload-image`) and returns `data.imageId` (and `data.img_id`) for `search-by-image`."
                     },
                     "response": []
                 }

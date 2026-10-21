@@ -9,6 +9,7 @@ class ProductNormalizer
     public function __construct(
         protected CurrencyPriceConverter $currencyPriceConverter,
     ) {}
+
     public function listResponse(array $response, string $platform): array
     {
         return [
@@ -20,7 +21,7 @@ class ProductNormalizer
                 'size' => $response['paginate']['size'] ?? null,
             ],
             'items' => collect($response['items'] ?? [])
-                ->map(fn(array $item): array => $this->currencyPriceConverter->applyToProductListItem(
+                ->map(fn (array $item): array => $this->currencyPriceConverter->applyToProductListItem(
                     $this->listItem($item, $platform)
                 ))
                 ->values()
@@ -36,10 +37,10 @@ class ProductNormalizer
             'platform' => $platform,
             'id' => (string) ($response['id'] ?? ''),
             'marketplace_id' => $response['mp_id'] ?? null,
-            'title' => $response['titleEn'] ?? $response['title'] ?? null,
+            'title' => $response['title_en'] ?? $response['titleEn'] ?? $response['title'] ?? null,
             'original_title' => $response['title'] ?? null,
-            'description' => $response['description'] ?? null,
-            'url' => $response['link'] ?? null,
+            'description' => $response['description_en'] ?? $response['description'] ?? null,
+            'url' => $response['link'] ?? $response['original_product_url'] ?? null,
             'price' => $this->money($response['price'] ?? null),
             'promotion_price' => $this->money($response['promotion_price'] ?? null),
             'price_range' => $response['price_range'] ?? [],
@@ -119,7 +120,7 @@ class ProductNormalizer
                 (string) ($sku['skuId'] ?? ''),
                 (string) ($sku['spec_id'] ?? ''),
                 (string) ($sku['mp_skuid'] ?? ''),
-            ], fn(string $value): bool => $value !== '');
+            ], fn (string $value): bool => $value !== '');
 
             if (in_array($skuId, $candidates, true)) {
                 return $sku;
@@ -167,10 +168,10 @@ class ProductNormalizer
         return [
             'platform' => $platform,
             'id' => (string) ($item['id'] ?? ''),
-            'title' => $item['titleEn'] ?? $item['title'] ?? null,
+            'title' => $item['title_en'] ?? $item['titleEn'] ?? $item['title'] ?? null,
             'original_title' => $item['title'] ?? null,
-            'url' => $item['link'] ?? null,
-            'image' => $item['img_url'] ?? null,
+            'url' => $item['link'] ?? $item['original_product_url'] ?? null,
+            'image' => $item['img_url'] ?? ($item['img_urls'][0] ?? null),
             'price' => $this->money($item['price'] ?? null),
             'promotion_price' => $this->money($item['promotion_price'] ?? null),
             'retail_price' => $this->money($item['retail_price'] ?? null),
@@ -184,7 +185,7 @@ class ProductNormalizer
         ];
     }
 
-    private function money(mixed $value): float|null
+    private function money(mixed $value): ?float
     {
         return is_numeric($value) ? (float) $value : null;
     }
