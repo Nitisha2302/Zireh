@@ -173,4 +173,12 @@ it('bills pickup from the matching weight or cm ladder', function () {
     $volume = $service->calculatePickupShipping($method, 20, 50, 40, 30, null, 'cm');
     expect($volume['shipping_cost'])->toBe(240.0)
         ->and($volume['volume_breakdown']['rate']['mode'])->toBe('cm');
+
+    $both = $service->calculatePickupShipping($method, 1.5, 50, 40, 30, null, 'both');
+    expect($both['applied_method'])->toBe('both')
+        ->and($both['weight_cost_tjs'])->toBe(15.0)
+        ->and($both['volume_cost_tjs'])->toBe(240.0)
+        ->and($both['shipping_cost'])->toBe(255.0)
+        ->and($both['package']['weight_kg'])->toBe(1.5)
+        ->and($both['package']['volumetric_weight_kg'])->toBe(12.0);
 });

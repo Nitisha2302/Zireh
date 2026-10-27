@@ -115,7 +115,10 @@
                         <p class="mb-1"><strong>{{ __('admin.pickup_payment_status') }}:</strong> {{ $order->pickup_payment_status && trans()->has('admin.payment_status_'.$order->pickup_payment_status) ? __('admin.payment_status_'.$order->pickup_payment_status) : ($order->pickup_payment_status ?? '—') }}</p>
                     </div>
                     <div class="col-md-6">
-                        @if ($order->isPickupBilledByVolume())
+                        @if ($order->isPickupBilledByBoth())
+                            <p class="mb-1"><strong>{{ __('admin.package_weight_g') }}:</strong> {{ $order->packageWeightGrams() !== null ? number_format($order->packageWeightGrams(), 0) : '—' }} g</p>
+                            <p class="mb-1"><strong>{{ __('admin.package_length_cm') }}:</strong> {{ $order->package_length_cm }} × {{ $order->package_width_cm }} × {{ $order->package_height_cm }} cm</p>
+                        @elseif ($order->isPickupBilledByVolume())
                             <p class="mb-1"><strong>{{ __('admin.package_length_cm') }}:</strong> {{ $order->package_length_cm }} × {{ $order->package_width_cm }} × {{ $order->package_height_cm }} cm</p>
                         @else
                             <p class="mb-1"><strong>{{ __('admin.package_weight_g') }}:</strong> {{ $order->packageWeightGrams() !== null ? number_format($order->packageWeightGrams(), 0) : '—' }} g</p>

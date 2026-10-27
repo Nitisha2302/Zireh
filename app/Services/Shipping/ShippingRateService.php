@@ -108,6 +108,45 @@ class ShippingRateService
             ? round(($lengthCm * $widthCm * $heightCm) / $method->volumetric_divisor, 2)
             : null;
 
+        if ($mode === 'both') {
+            if ($actualWeight === null || ! $hasDimensions || $volumetricWeight === null) {
+                throw ValidationException::withMessages([
+                    'weight' => [__('api.shipping_rate_not_found_for_weight')],
+                ]);
+            }
+
+            $weightCost = $this->costForChargeableWeight($method, $actualWeight, $warehouseId, ShippingRate::MODE_WEIGHT);
+            $volumeCost = $this->costForChargeableWeight($method, $volumetricWeight, $warehouseId, ShippingRate::MODE_CM);
+            $calculatedCost = round($weightCost['calculated_cost'] + $volumeCost['calculated_cost'], 2);
+            $shippingCost = round($weightCost['shipping_cost'] + $volumeCost['shipping_cost'], 2);
+
+            return [
+                'method' => [
+                    'id' => $method->id,
+                    'name' => $method->name,
+                    'code' => $method->code,
+                ],
+                'route' => [
+                    'from' => ShippingMethod::ROUTE_FROM,
+                    'to' => ShippingMethod::ROUTE_TO,
+                ],
+                'mode' => 'both',
+                'actual_weight_kg' => $actualWeight,
+                'actual_weight_g' => round($actualWeight * 1000, 2),
+                'volumetric_weight_kg' => $volumetricWeight,
+                'chargeable_weight_kg' => round($actualWeight + $volumetricWeight, 2),
+                'rate' => $weightCost['rate'],
+                'weight_cost_tjs' => $weightCost['shipping_cost'],
+                'volume_cost_tjs' => $volumeCost['shipping_cost'],
+                'weight_breakdown' => $weightCost,
+                'volume_breakdown' => $volumeCost,
+                'minimum_charge' => (float) $method->minimum_charge,
+                'calculated_cost' => $calculatedCost,
+                'shipping_cost' => $shippingCost,
+                'currency' => 'TJS',
+            ];
+        }
+
         if ($mode === ShippingRate::MODE_WEIGHT) {
             $actualWeight ??= 0;
             $volumetricWeight = null;
@@ -224,6 +263,31 @@ class ShippingRateService
                 volumeCost: $volumeCost,
                 appliedMethod: 'volume',
                 shippingCost: $volumeCost['shipping_cost'],
+            );
+        }
+
+        if ($mode === 'both') {
+            if ($actualWeight === null || ! $hasDimensions || $volumetricWeight === null) {
+                throw ValidationException::withMessages([
+                    'weight' => [__('api.shipping_rate_not_found_for_weight')],
+                ]);
+            }
+
+            $weightCost = $this->costForChargeableWeight($method, $actualWeight, $warehouseId, ShippingRate::MODE_WEIGHT);
+            $volumeCost = $this->costForChargeableWeight($method, $volumetricWeight, $warehouseId, ShippingRate::MODE_CM);
+
+            return $this->pickupShippingResult(
+                $method,
+                lengthCm: $lengthCm,
+                widthCm: $widthCm,
+                heightCm: $heightCm,
+                actualWeight: $actualWeight,
+                volumeM3: $volumeM3,
+                volumetricWeight: $volumetricWeight,
+                weightCost: $weightCost,
+                volumeCost: $volumeCost,
+                appliedMethod: 'both',
+                shippingCost: round($weightCost['shipping_cost'] + $volumeCost['shipping_cost'], 2),
             );
         }
 

@@ -77,7 +77,7 @@ class OrderDetailPage extends Component
             $this->packageLengthCm = null;
             $this->packageWidthCm = null;
             $this->packageHeightCm = null;
-        } else {
+        } elseif ($this->measurementMode === 'cm') {
             $this->packageWeightG = null;
         }
 
@@ -178,18 +178,18 @@ class OrderDetailPage extends Component
     {
         $rules = [
             'shippingMethodId' => ['required', 'integer', 'exists:shipping_methods,id'],
-            'measurementMode' => ['required', 'in:weight,cm'],
+            'measurementMode' => ['required', 'in:weight,cm,both'],
         ];
 
-        if ($this->measurementMode === 'weight') {
+        if ($this->measurementMode === 'weight' || $this->measurementMode === 'both') {
             $rules['packageWeightG'] = ['required', 'numeric', 'gt:0'];
-
-            return $rules;
         }
 
-        $rules['packageLengthCm'] = ['required', 'numeric', 'gt:0'];
-        $rules['packageWidthCm'] = ['required', 'numeric', 'gt:0'];
-        $rules['packageHeightCm'] = ['required', 'numeric', 'gt:0'];
+        if ($this->measurementMode === 'cm' || $this->measurementMode === 'both') {
+            $rules['packageLengthCm'] = ['required', 'numeric', 'gt:0'];
+            $rules['packageWidthCm'] = ['required', 'numeric', 'gt:0'];
+            $rules['packageHeightCm'] = ['required', 'numeric', 'gt:0'];
+        }
 
         return $rules;
     }
@@ -204,6 +204,16 @@ class OrderDetailPage extends Component
             return [
                 'mode' => 'weight',
                 'package_weight_kg' => round(((float) $data['packageWeightG']) / 1000, 3),
+            ];
+        }
+
+        if ($this->measurementMode === 'both') {
+            return [
+                'mode' => 'both',
+                'package_weight_kg' => round(((float) $data['packageWeightG']) / 1000, 3),
+                'package_length_cm' => (float) $data['packageLengthCm'],
+                'package_width_cm' => (float) $data['packageWidthCm'],
+                'package_height_cm' => (float) $data['packageHeightCm'],
             ];
         }
 

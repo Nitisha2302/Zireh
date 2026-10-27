@@ -20,7 +20,13 @@
             <div class="card-header">
                 <h5 class="mb-0">{{ __('admin.pickup_measurement') }}</h5>
                 <small class="text-body-secondary d-block">
-                    {{ $measurementMode === 'cm' ? __('admin.pickup_measurement_hint_cm') : __('admin.pickup_measurement_hint_weight') }}
+                    @if ($measurementMode === 'cm')
+                        {{ __('admin.pickup_measurement_hint_cm') }}
+                    @elseif ($measurementMode === 'both')
+                        {{ __('admin.pickup_measurement_hint_both') }}
+                    @else
+                        {{ __('admin.pickup_measurement_hint_weight') }}
+                    @endif
                 </small>
                 <small class="text-body-secondary">{{ __('admin.pickup_shipping_rate_hint') }}</small>
             </div>
@@ -53,9 +59,18 @@
                             <label class="btn btn-outline-primary" for="pickup-mode-weight">{{ __('admin.pickup_mode_weight') }}</label>
                             <input type="radio" class="btn-check" id="pickup-mode-cm" value="cm" wire:model.live="measurementMode">
                             <label class="btn btn-outline-primary" for="pickup-mode-cm">{{ __('admin.pickup_mode_cm') }}</label>
+                            <input type="radio" class="btn-check" id="pickup-mode-both" value="both" wire:model.live="measurementMode">
+                            <label class="btn btn-outline-primary" for="pickup-mode-both">{{ __('admin.pickup_mode_both') }}</label>
                         </div>
                     </div>
-                    @if ($measurementMode === 'cm')
+                    @if ($measurementMode === 'weight' || $measurementMode === 'both')
+                        <div class="col-md-4">
+                            <label class="form-label">{{ __('admin.package_weight_g') }}</label>
+                            <input type="number" step="1" class="form-control @error('packageWeightG') is-invalid @enderror" wire:model.blur="packageWeightG">
+                            @error('packageWeightG') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
+                    @endif
+                    @if ($measurementMode === 'cm' || $measurementMode === 'both')
                         <div class="col-md-4">
                             <label class="form-label">{{ __('admin.package_length_cm') }}</label>
                             <input type="number" step="0.01" class="form-control @error('packageLengthCm') is-invalid @enderror" wire:model.blur="packageLengthCm">
@@ -71,12 +86,6 @@
                             <input type="number" step="0.01" class="form-control @error('packageHeightCm') is-invalid @enderror" wire:model.blur="packageHeightCm">
                             @error('packageHeightCm') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
-                    @else
-                        <div class="col-md-4">
-                            <label class="form-label">{{ __('admin.package_weight_g') }}</label>
-                            <input type="number" step="1" class="form-control @error('packageWeightG') is-invalid @enderror" wire:model.blur="packageWeightG">
-                            @error('packageWeightG') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                        </div>
                     @endif
                 </div>
 
@@ -86,18 +95,20 @@
                         <div class="row g-2">
                             <div class="col-md-6">
                                 <p class="mb-1"><strong>{{ __('admin.shipping_method') }}:</strong> {{ $shippingPreview['method']['name'] ?? '—' }}</p>
-                                @if (($shippingPreview['applied_method'] ?? null) === 'volume')
+                                @if (in_array($shippingPreview['applied_method'] ?? null, ['weight', 'both'], true))
+                                    <p class="mb-1"><strong>{{ __('admin.package_weight_g') }}:</strong> {{ number_format(($shippingPreview['package']['weight_kg'] ?? 0) * 1000, 0) }} g</p>
+                                @endif
+                                @if (in_array($shippingPreview['applied_method'] ?? null, ['volume', 'both'], true))
                                     <p class="mb-1"><strong>{{ __('admin.package_volume_m3') }}:</strong> {{ number_format($shippingPreview['package']['volume_m3'] ?? 0, 4) }} m³</p>
                                     <p class="mb-1"><strong>{{ __('admin.volumetric_weight_kg') }}:</strong> {{ number_format($shippingPreview['package']['volumetric_weight_kg'] ?? 0, 2) }} kg</p>
-                                @else
-                                    <p class="mb-1"><strong>{{ __('admin.package_weight_g') }}:</strong> {{ number_format(($shippingPreview['package']['weight_kg'] ?? 0) * 1000, 0) }} g</p>
                                 @endif
                             </div>
                             <div class="col-md-6">
-                                @if (($shippingPreview['applied_method'] ?? null) === 'volume')
-                                    <p class="mb-1"><strong>{{ __('admin.volume_cost') }}:</strong> {{ number_format($shippingPreview['volume_cost_tjs'], 2) }} TJS</p>
-                                @else
+                                @if (in_array($shippingPreview['applied_method'] ?? null, ['weight', 'both'], true))
                                     <p class="mb-1"><strong>{{ __('admin.weight_cost') }}:</strong> {{ number_format($shippingPreview['weight_cost_tjs'], 2) }} TJS</p>
+                                @endif
+                                @if (in_array($shippingPreview['applied_method'] ?? null, ['volume', 'both'], true))
+                                    <p class="mb-1"><strong>{{ __('admin.volume_cost') }}:</strong> {{ number_format($shippingPreview['volume_cost_tjs'], 2) }} TJS</p>
                                 @endif
                                 <p class="mb-1"><strong>{{ __('admin.applied_method') }}:</strong> {{ isset($shippingPreview['applied_method']) && trans()->has('admin.pickup_method_'.$shippingPreview['applied_method']) ? __('admin.pickup_method_'.$shippingPreview['applied_method']) : ucfirst($shippingPreview['applied_method'] ?? '—') }}</p>
                             </div>
@@ -130,7 +141,10 @@
                         <p class="mb-1"><strong>{{ __('admin.pickup_shipping') }}:</strong> {{ number_format((float) $order->pickup_shipping_fee_tjs, 2) }} TJS</p>
                         <p class="mb-1"><strong>{{ __('admin.applied_method') }}:</strong> {{ $order->pickup_shipping_calculation_method && trans()->has('admin.pickup_method_'.$order->pickup_shipping_calculation_method) ? __('admin.pickup_method_'.$order->pickup_shipping_calculation_method) : ($order->pickup_shipping_calculation_method ? ucfirst($order->pickup_shipping_calculation_method) : '—') }}</p>
                         <p class="mb-1"><strong>{{ __('admin.pickup_payment_status') }}:</strong> {{ $order->pickup_payment_status && trans()->has('admin.payment_status_'.$order->pickup_payment_status) ? __('admin.payment_status_'.$order->pickup_payment_status) : $order->pickup_payment_status }}</p>
-                        @if ($order->isPickupBilledByVolume())
+                        @if ($order->isPickupBilledByBoth())
+                            <p class="mb-1"><strong>{{ __('admin.package_weight_g') }}:</strong> {{ $order->packageWeightGrams() !== null ? number_format($order->packageWeightGrams(), 0) : '—' }} g</p>
+                            <p class="mb-1"><strong>{{ __('admin.package_length_cm') }}:</strong> {{ $order->package_length_cm }} × {{ $order->package_width_cm }} × {{ $order->package_height_cm }} cm</p>
+                        @elseif ($order->isPickupBilledByVolume())
                             <p class="mb-1"><strong>{{ __('admin.package_length_cm') }}:</strong> {{ $order->package_length_cm }} × {{ $order->package_width_cm }} × {{ $order->package_height_cm }} cm</p>
                         @else
                             <p class="mb-1"><strong>{{ __('admin.package_weight_g') }}:</strong> {{ $order->packageWeightGrams() !== null ? number_format($order->packageWeightGrams(), 0) : '—' }} g</p>

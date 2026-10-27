@@ -450,6 +450,31 @@ it('uses separate weight and cm rate ladders via api', function () {
         ->assertJsonPath('data.rate.mode', 'cm')
         ->assertJsonPath('data.volumetric_weight_kg', 12)
         ->assertJsonPath('data.shipping_cost', 600);
+
+    $this->postJson('/api/v1/shipping/calculate', [
+        'method' => 'air',
+        'mode' => 'both',
+        'weight_g' => 1500,
+        'length_cm' => 50,
+        'width_cm' => 40,
+        'height_cm' => 30,
+    ])
+        ->assertOk()
+        ->assertJsonPath('data.mode', 'both')
+        ->assertJsonPath('data.actual_weight_kg', 1.5)
+        ->assertJsonPath('data.actual_weight_g', 1500)
+        ->assertJsonPath('data.volumetric_weight_kg', 12)
+        ->assertJsonPath('data.weight_cost_tjs', 15)
+        ->assertJsonPath('data.volume_cost_tjs', 600)
+        ->assertJsonPath('data.shipping_cost', 615);
+
+    $this->postJson('/api/v1/shipping/calculate', [
+        'method' => 'air',
+        'mode' => 'both',
+        'weight_g' => 1500,
+    ])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors(['length_cm', 'width_cm', 'height_cm']);
 });
 
 it('falls back to the other ladder when matching rates are missing', function () {

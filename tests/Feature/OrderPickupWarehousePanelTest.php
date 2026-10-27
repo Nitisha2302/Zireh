@@ -216,6 +216,34 @@ it('confirms warehouse pickup using the matching rate ladder', function () {
         ->assertHasNoErrors();
 
     expect((float) $volumeOrder->fresh()->pickup_shipping_fee_tjs)->toBe(240.0);
+
+    $bothOrder = $fixtures['order']->replicate();
+    $bothOrder->elim_order_id = 'ORD-PICKUP-BOTH';
+    $bothOrder->pickup_token = null;
+    $bothOrder->status = OrderStatus::CODE_ARRIVED_IN_TAJIKISTAN;
+    $bothOrder->save();
+
+    Livewire::test(OrderDetailPage::class, ['order' => $bothOrder])
+        ->set('shippingMethodId', $fixtures['method']->id)
+        ->set('measurementMode', 'both')
+        ->set('packageWeightG', '1500')
+        ->set('packageLengthCm', '50')
+        ->set('packageWidthCm', '40')
+        ->set('packageHeightCm', '30')
+        ->call('previewPickupShipping')
+        ->assertHasNoErrors()
+        ->call('confirmPickup')
+        ->assertHasNoErrors();
+
+    $bothOrder = $bothOrder->fresh();
+    expect($bothOrder->pickup_shipping_calculation_method)->toBe('both')
+        ->and((float) $bothOrder->package_weight_kg)->toBe(1.5)
+        ->and((float) $bothOrder->package_length_cm)->toBe(50.0)
+        ->and((float) $bothOrder->package_width_cm)->toBe(40.0)
+        ->and((float) $bothOrder->package_height_cm)->toBe(30.0)
+        ->and((float) $bothOrder->pickup_shipping_weight_fee_tjs)->toBe(15.0)
+        ->and((float) $bothOrder->pickup_shipping_volume_fee_tjs)->toBe(240.0)
+        ->and((float) $bothOrder->pickup_shipping_fee_tjs)->toBe(255.0);
 });
 
 it('blocks pickup page access for orders outside staff warehouse', function () {

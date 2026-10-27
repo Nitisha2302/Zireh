@@ -34,6 +34,8 @@ class CustomerOrder extends Model
 
     public const PICKUP_CALCULATION_VOLUME = 'volume';
 
+    public const PICKUP_CALCULATION_BOTH = 'both';
+
     /** @var list<string> */
     public const PRE_PICKUP_STATUSES = [
         OrderStatus::CODE_ARRIVED_IN_TAJIKISTAN,
@@ -163,6 +165,11 @@ class CustomerOrder extends Model
     public function isPickupBilledByVolume(): bool
     {
         return $this->pickup_shipping_calculation_method === 'volume';
+    }
+
+    public function isPickupBilledByBoth(): bool
+    {
+        return $this->pickup_shipping_calculation_method === self::PICKUP_CALCULATION_BOTH;
     }
 
     public function packageWeightGrams(): ?float

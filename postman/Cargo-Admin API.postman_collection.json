@@ -4629,6 +4629,51 @@
                         "description": "Charge by volumetric weight only against the CM rate ladder: (L × W × H) / method volumetric_divisor. Weight is not required. Falls back to weight rates if no CM rates exist."
                     },
                     "response": []
+                },
+                {
+                    "name": "Calculate Shipping by Both (Weight + CM)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Accept-Language",
+                                "value": "{{locale}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"method\": \"{{shipping_method}}\",\n  \"mode\": \"both\",\n  \"weight_g\": {{shipping_weight_g}},\n  \"length_cm\": {{shipping_length_cm}},\n  \"width_cm\": {{shipping_width_cm}},\n  \"height_cm\": {{shipping_height_cm}}\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/v1/shipping/calculate",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "v1",
+                                "shipping",
+                                "calculate"
+                            ]
+                        },
+                        "description": "Charge by both actual weight (against the Weight (g) rate ladder) and volumetric weight (against the CM rate ladder). Requires both weight_g (or weight_kg) and length_cm, width_cm, height_cm. Returns weight_cost_tjs, volume_cost_tjs, and combined shipping_cost."
+                    },
+                    "response": []
                 }
             ]
         },
