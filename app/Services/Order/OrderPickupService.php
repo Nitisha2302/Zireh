@@ -131,12 +131,15 @@ class OrderPickupService
             'status' => $order->status,
             'payment_status' => $order->pickup_payment_status,
             'shipping_fee_tjs' => $order->pickupPaymentAmountTjs(),
+            'weight_fee_tjs' => $order->pickup_shipping_weight_fee_tjs !== null ? (float) $order->pickup_shipping_weight_fee_tjs : null,
+            'volume_fee_tjs' => $order->pickup_shipping_volume_fee_tjs !== null ? (float) $order->pickup_shipping_volume_fee_tjs : null,
             'calculation_method' => $order->pickup_shipping_calculation_method,
             'package' => [
                 'length_cm' => $order->package_length_cm !== null ? (float) $order->package_length_cm : null,
                 'width_cm' => $order->package_width_cm !== null ? (float) $order->package_width_cm : null,
                 'height_cm' => $order->package_height_cm !== null ? (float) $order->package_height_cm : null,
                 'weight_kg' => $order->package_weight_kg !== null ? (float) $order->package_weight_kg : null,
+                'weight_g' => $order->packageWeightGrams(),
                 'volume_m3' => $order->package_volume_m3 !== null ? (float) $order->package_volume_m3 : null,
             ],
             'qr' => [

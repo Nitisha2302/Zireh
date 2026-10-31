@@ -4671,7 +4671,7 @@
                                 "calculate"
                             ]
                         },
-                        "description": "Charge by both actual weight (against the Weight (g) rate ladder) and volumetric weight (against the CM rate ladder). Requires both weight_g (or weight_kg) and length_cm, width_cm, height_cm. Returns weight_cost_tjs, volume_cost_tjs, and combined shipping_cost."
+                        "description": "Charge by both actual weight (against the Weight (g) rate ladder) and volumetric weight (against the CM rate ladder). Requires both weight_g (or weight_kg) and length_cm, width_cm, height_cm. Returns package details, weight_cost_tjs, volume_cost_tjs, weight_breakdown, volume_breakdown, and combined shipping_cost."
                     },
                     "response": []
                 }

@@ -436,6 +436,10 @@ it('uses separate weight and cm rate ladders via api', function () {
         ->assertOk()
         ->assertJsonPath('data.mode', 'weight')
         ->assertJsonPath('data.rate.mode', 'weight')
+        ->assertJsonPath('data.weight_cost_tjs', 15)
+        ->assertJsonPath('data.volume_cost_tjs', 0)
+        ->assertJsonPath('data.package.weight_g', 1500)
+        ->assertJsonPath('data.package.length_cm', null)
         ->assertJsonPath('data.shipping_cost', 15);
 
     $this->postJson('/api/v1/shipping/calculate', [
@@ -449,11 +453,15 @@ it('uses separate weight and cm rate ladders via api', function () {
         ->assertJsonPath('data.mode', 'cm')
         ->assertJsonPath('data.rate.mode', 'cm')
         ->assertJsonPath('data.volumetric_weight_kg', 12)
+        ->assertJsonPath('data.weight_cost_tjs', 0)
+        ->assertJsonPath('data.volume_cost_tjs', 600)
+        ->assertJsonPath('data.package.length_cm', 50)
+        ->assertJsonPath('data.package.volume_m3', 0.06)
         ->assertJsonPath('data.shipping_cost', 600);
 
-    $this->postJson('/api/v1/shipping/calculate', [
+    $this->postJson('/api/v1/public/shipping/calculate', [
         'method' => 'air',
-        'mode' => 'both',
+        'mode' => 'BOTH',
         'weight_g' => 1500,
         'length_cm' => 50,
         'width_cm' => 40,
@@ -464,6 +472,13 @@ it('uses separate weight and cm rate ladders via api', function () {
         ->assertJsonPath('data.actual_weight_kg', 1.5)
         ->assertJsonPath('data.actual_weight_g', 1500)
         ->assertJsonPath('data.volumetric_weight_kg', 12)
+        ->assertJsonPath('data.package.weight_kg', 1.5)
+        ->assertJsonPath('data.package.weight_g', 1500)
+        ->assertJsonPath('data.package.length_cm', 50)
+        ->assertJsonPath('data.package.width_cm', 40)
+        ->assertJsonPath('data.package.height_cm', 30)
+        ->assertJsonPath('data.package.volume_m3', 0.06)
+        ->assertJsonPath('data.package.volumetric_weight_kg', 12)
         ->assertJsonPath('data.weight_cost_tjs', 15)
         ->assertJsonPath('data.volume_cost_tjs', 600)
         ->assertJsonPath('data.shipping_cost', 615);
@@ -475,6 +490,27 @@ it('uses separate weight and cm rate ladders via api', function () {
     ])
         ->assertStatus(422)
         ->assertJsonValidationErrors(['length_cm', 'width_cm', 'height_cm']);
+
+    $this->postJson('/api/v1/shipping/calculate', [
+        'method' => 'air',
+        'mode' => 'both',
+        'length_cm' => 50,
+        'width_cm' => 40,
+        'height_cm' => 30,
+    ])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors(['weight_g', 'weight_kg']);
+
+    $this->postJson('/api/v1/shipping/calculate', [
+        'method' => 'air',
+        'mode' => 'both',
+        'weight_kg' => 0,
+        'length_cm' => 50,
+        'width_cm' => 40,
+        'height_cm' => 30,
+    ])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors(['weight_kg']);
 });
 
 it('falls back to the other ladder when matching rates are missing', function () {

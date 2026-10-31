@@ -104,6 +104,9 @@ class ShippingRateService
 
         $hasDimensions = $lengthCm !== null && $widthCm !== null && $heightCm !== null;
         $actualWeight = $weightKg !== null ? max(0, $weightKg) : null;
+        $volumeM3 = $hasDimensions
+            ? round(($lengthCm * $widthCm * $heightCm) / 1_000_000, 6)
+            : null;
         $volumetricWeight = $hasDimensions
             ? round(($lengthCm * $widthCm * $heightCm) / $method->volumetric_divisor, 2)
             : null;
@@ -119,6 +122,7 @@ class ShippingRateService
             $volumeCost = $this->costForChargeableWeight($method, $volumetricWeight, $warehouseId, ShippingRate::MODE_CM);
             $calculatedCost = round($weightCost['calculated_cost'] + $volumeCost['calculated_cost'], 2);
             $shippingCost = round($weightCost['shipping_cost'] + $volumeCost['shipping_cost'], 2);
+            $actualWeightGrams = round($actualWeight * 1000, 2);
 
             return [
                 'method' => [
@@ -131,8 +135,17 @@ class ShippingRateService
                     'to' => ShippingMethod::ROUTE_TO,
                 ],
                 'mode' => 'both',
+                'package' => [
+                    'length_cm' => $lengthCm,
+                    'width_cm' => $widthCm,
+                    'height_cm' => $heightCm,
+                    'weight_kg' => $actualWeight,
+                    'weight_g' => $actualWeightGrams,
+                    'volume_m3' => $volumeM3,
+                    'volumetric_weight_kg' => $volumetricWeight,
+                ],
                 'actual_weight_kg' => $actualWeight,
-                'actual_weight_g' => round($actualWeight * 1000, 2),
+                'actual_weight_g' => $actualWeightGrams,
                 'volumetric_weight_kg' => $volumetricWeight,
                 'chargeable_weight_kg' => round($actualWeight + $volumetricWeight, 2),
                 'rate' => $weightCost['rate'],
@@ -149,6 +162,10 @@ class ShippingRateService
 
         if ($mode === ShippingRate::MODE_WEIGHT) {
             $actualWeight ??= 0;
+            $lengthCm = null;
+            $widthCm = null;
+            $heightCm = null;
+            $volumeM3 = null;
             $volumetricWeight = null;
             $chargeableWeight = $actualWeight;
             $ladderMode = ShippingRate::MODE_WEIGHT;
@@ -176,6 +193,16 @@ class ShippingRateService
 
         $calculatedCost = round($chargeableWeight * (float) $rate->rate_per_kg, 2);
         $shippingCost = max($calculatedCost, (float) $method->minimum_charge);
+        $ratePayload = $rate->toCalculationRatePayload();
+        $breakdown = [
+            'chargeable_weight_kg' => $chargeableWeight,
+            'rate' => $ratePayload,
+            'minimum_charge' => (float) $method->minimum_charge,
+            'calculated_cost' => $calculatedCost,
+            'shipping_cost' => $shippingCost,
+        ];
+        $isCmCharge = $ladderMode === ShippingRate::MODE_CM;
+        $actualWeightGrams = $actualWeight !== null ? round($actualWeight * 1000, 2) : null;
 
         return [
             'method' => [
@@ -188,11 +215,24 @@ class ShippingRateService
                 'to' => ShippingMethod::ROUTE_TO,
             ],
             'mode' => $mode === 'cm' ? 'cm' : ($mode === 'weight' ? 'weight' : 'auto'),
+            'package' => [
+                'length_cm' => $lengthCm,
+                'width_cm' => $widthCm,
+                'height_cm' => $heightCm,
+                'weight_kg' => $actualWeight,
+                'weight_g' => $actualWeightGrams,
+                'volume_m3' => $volumeM3,
+                'volumetric_weight_kg' => $volumetricWeight,
+            ],
             'actual_weight_kg' => $actualWeight,
-            'actual_weight_g' => $actualWeight !== null ? round($actualWeight * 1000, 2) : null,
+            'actual_weight_g' => $actualWeightGrams,
             'volumetric_weight_kg' => $volumetricWeight,
             'chargeable_weight_kg' => $chargeableWeight,
-            'rate' => $rate->toCalculationRatePayload(),
+            'rate' => $ratePayload,
+            'weight_cost_tjs' => $isCmCharge ? 0.0 : $shippingCost,
+            'volume_cost_tjs' => $isCmCharge ? $shippingCost : 0.0,
+            'weight_breakdown' => $isCmCharge ? null : $breakdown,
+            'volume_breakdown' => $isCmCharge ? $breakdown : null,
             'minimum_charge' => (float) $method->minimum_charge,
             'calculated_cost' => $calculatedCost,
             'shipping_cost' => $shippingCost,

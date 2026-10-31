@@ -62,12 +62,15 @@ trait MapsCustomerOrderDetails
                     'payment_status' => $this->pickup_payment_status,
                     'payment_method' => $this->pickup_payment_method,
                     'shipping_fee_tjs' => $this->pickup_shipping_fee_tjs !== null ? (float) $this->pickup_shipping_fee_tjs : null,
+                    'weight_fee_tjs' => $this->pickup_shipping_weight_fee_tjs !== null ? (float) $this->pickup_shipping_weight_fee_tjs : null,
+                    'volume_fee_tjs' => $this->pickup_shipping_volume_fee_tjs !== null ? (float) $this->pickup_shipping_volume_fee_tjs : null,
                     'calculation_method' => $this->pickup_shipping_calculation_method,
                     'package' => [
                         'length_cm' => $this->package_length_cm !== null ? (float) $this->package_length_cm : null,
                         'width_cm' => $this->package_width_cm !== null ? (float) $this->package_width_cm : null,
                         'height_cm' => $this->package_height_cm !== null ? (float) $this->package_height_cm : null,
                         'weight_kg' => $this->package_weight_kg !== null ? (float) $this->package_weight_kg : null,
+                        'weight_g' => $this->packageWeightGrams(),
                         'volume_m3' => $this->package_volume_m3 !== null ? (float) $this->package_volume_m3 : null,
                     ],
                     'qr' => [
