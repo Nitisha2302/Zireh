@@ -65,6 +65,43 @@ class CustomerOrderController extends ApiController
         );
     }
 
+    public function refresh(Request $request, CustomerOrder $order): JsonResponse
+    {
+        $order = $this->lifecycleService->refreshFromElim($request->user(), $order);
+
+        return $this->successResponse(
+            (new CustomerOrderResource($order))->resolve(),
+            __('api.order_synced')
+        );
+    }
+
+    public function requestPayment(Request $request, CustomerOrder $order): JsonResponse
+    {
+        $order = $this->lifecycleService->requestPayment($request->user(), $order);
+
+        return $this->successResponse(
+            (new CustomerOrderResource($order))->resolve(),
+            __('api.order_paid')
+        );
+    }
+
+    public function cancelPaymentRequest(Request $request, CustomerOrder $order): JsonResponse
+    {
+        $order = $this->lifecycleService->cancelPaymentRequest($request->user(), $order);
+
+        return $this->successResponse(
+            (new CustomerOrderResource($order))->resolve(),
+            __('api.order_synced')
+        );
+    }
+
+    public function paymentDetail(Request $request, CustomerOrder $order): JsonResponse
+    {
+        $detail = $this->lifecycleService->paymentDetail($request->user(), $order);
+
+        return $this->successResponse($detail, __('api.order_fetched'));
+    }
+
     public function cancel(Request $request, CustomerOrder $order): JsonResponse
     {
         $order = $this->lifecycleService->cancel($request->user(), $order);
@@ -80,7 +117,8 @@ class CustomerOrderController extends ApiController
         $logistics = $this->lifecycleService->logistics(
             $request->user(),
             $order,
-            $request->validated('package_id')
+            $request->validated('package_id'),
+            $request->validated('lang')
         );
 
         return $this->successResponse($logistics, __('api.order_logistics_fetched'));
@@ -91,6 +129,21 @@ class CustomerOrderController extends ApiController
         $wallet = $this->lifecycleService->elimPurchasingWallet();
 
         return $this->successResponse($wallet, __('api.elim_purchasing_wallet_fetched'));
+    }
+
+    public function elimPurchasingTransactions(Request $request): JsonResponse
+    {
+        $query = $request->validate([
+            'page' => ['nullable', 'integer', 'min:1'],
+            'size' => ['nullable', 'integer', 'min:1', 'max:100'],
+            'type' => ['nullable', 'string', 'in:deposit,order_deduction,order_refund,admin_adjustment,order_freeze,order_unfreeze'],
+            'date_from' => ['nullable', 'string', 'max:40'],
+            'date_to' => ['nullable', 'string', 'max:40'],
+        ]);
+
+        $transactions = $this->lifecycleService->elimPurchasingTransactions($query);
+
+        return $this->successResponse($transactions, __('api.wallet_transactions_listed'));
     }
 
     public function elimExchangeRates(): JsonResponse

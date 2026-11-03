@@ -46,6 +46,9 @@ class TaobaoOrderService
             'items' => $items->values()->all(),
             'checkout' => $context->toPreviewArray(),
             'final_amount' => round((float) $item->final_amount_tjs, 2),
+            'preview_token' => $parsed['preview_token'] ?? null,
+            'goods_subtotal_cny' => $parsed['goods_subtotal_cny'] ?? 0,
+            'shipping_fee_cny' => $parsed['shipping_fee_cny'] ?? 0,
         ];
     }
 
@@ -133,19 +136,19 @@ class TaobaoOrderService
             'receiver_address' => ElimWarehouseAddress::get(),
             'line_items' => $items->map(fn (UserCartItem $item): array => $this->normalizer->toElimLineItem(
                 (string) ($item->marketplace_id ?: $item->product_id),
-                $item->product_id,
-                $item->sku_id,
-                $item->quantity,
-                (float) $item->unit_price
+                (string) $item->product_id,
+                (string) ($item->sku_id ?? ''),
+                (int) $item->quantity,
+                (float) $item->unit_price,
+                'taobao',
+                is_array($item->product_snapshot) ? $item->product_snapshot : null
             ))->values()->all(),
         ];
 
-        if (! empty($options['remark'])) {
-            $payload['remark'] = $options['remark'];
-        }
-
-        if (! empty($options['promotion_id'])) {
-            $payload['promotion_id'] = $options['promotion_id'];
+        foreach (['remark', 'promotion_id', 'preview_token', 'idempotency_key', 'client_order_id'] as $optionalField) {
+            if (! empty($options[$optionalField]) && is_string($options[$optionalField])) {
+                $payload[$optionalField] = $options[$optionalField];
+            }
         }
 
         return $payload;

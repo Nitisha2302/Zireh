@@ -50,6 +50,7 @@ trait MapsCustomerOrderDetails
         return [
             'payment_method' => $this->payment_method,
             'is_demo_order' => (bool) $this->is_demo_order,
+            'parcel_tracking_id' => $this->parcel_tracking_id,
             'cargo_shipping_fee_tjs' => (float) ($this->cargo_shipping_fee_tjs ?? 0),
             'cargo_shipping_fee_cny' => (float) ($this->cargo_shipping_fee_cny ?? 0),
             'china_receiver_address' => $this->receiver_address,

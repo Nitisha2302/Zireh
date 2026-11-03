@@ -14,6 +14,8 @@ class ElimApiLog extends Model
 
     public const SOURCE_UPLOAD = 'upload';
 
+    public const SOURCE_WEBHOOK = 'webhook';
+
     protected $fillable = [
         'method',
         'endpoint',

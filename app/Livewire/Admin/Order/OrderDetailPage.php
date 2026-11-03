@@ -60,6 +60,34 @@ class OrderDetailPage extends Component
         flash()->success(__('admin.order_cancelled_and_refunded'));
     }
 
+    public function syncElimOrder(CustomerOrderLifecycleService $lifecycleService): void
+    {
+        try {
+            $this->order = $lifecycleService->syncFromElimByStaff($this->order, false)
+                ->load(['user', 'items', 'commissionSlab', 'orderStatus', 'warehouse', 'shippingMethod']);
+            $this->statusCode = $this->order->status;
+            flash()->success(__('admin.elim_order_synced'));
+        } catch (ValidationException $exception) {
+            $this->setErrorBag($exception->validator->getMessageBag());
+        } catch (\Throwable $exception) {
+            flash()->error($exception->getMessage());
+        }
+    }
+
+    public function refreshElimOrder(CustomerOrderLifecycleService $lifecycleService): void
+    {
+        try {
+            $this->order = $lifecycleService->syncFromElimByStaff($this->order, true)
+                ->load(['user', 'items', 'commissionSlab', 'orderStatus', 'warehouse', 'shippingMethod']);
+            $this->statusCode = $this->order->status;
+            flash()->success(__('admin.elim_order_refreshed'));
+        } catch (ValidationException $exception) {
+            $this->setErrorBag($exception->validator->getMessageBag());
+        } catch (\Throwable $exception) {
+            flash()->error($exception->getMessage());
+        }
+    }
+
     public function render(OrderStatusService $orderStatusService, OrderProfitAnalytics $profitAnalytics)
     {
         return view('livewire.admin.order.order-detail-page', [

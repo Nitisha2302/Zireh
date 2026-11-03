@@ -19,6 +19,9 @@ abstract class CheckoutRequest extends ApiRequest
             ])],
             'remark' => ['nullable', 'string', 'max:500'],
             'promotion_id' => ['nullable', 'string', 'max:255'],
+            'preview_token' => ['nullable', 'string', 'max:255'],
+            'idempotency_key' => ['nullable', 'string', 'max:255'],
+            'client_order_id' => ['nullable', 'string', 'max:255'],
         ];
     }
 }

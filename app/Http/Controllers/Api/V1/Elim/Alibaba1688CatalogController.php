@@ -14,12 +14,11 @@ use App\Http\Resources\Api\V1\Elim\ProductDetailResource;
 use App\Http\Resources\Api\V1\Elim\ProductListResource;
 use App\Services\Elim\Alibaba1688Service;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class Alibaba1688CatalogController extends ApiController
 {
-    public function __construct(private readonly Alibaba1688Service $alibaba1688)
-    {
-    }
+    public function __construct(private readonly Alibaba1688Service $alibaba1688) {}
 
     public function products(ProductListRequest $request): JsonResponse
     {
@@ -36,6 +35,11 @@ class Alibaba1688CatalogController extends ApiController
         return $this->respond(fn (): array => (new ProductDetailResource($this->alibaba1688->find($id, $request->validated('lang'))))->resolve(), __('api.elim_product_fetched'));
     }
 
+    public function detail(ProductDetailRequest $request, string $id): JsonResponse
+    {
+        return $this->respond(fn (): array => (new ProductDetailResource($this->alibaba1688->detail($id, $request->validated('lang'))))->resolve(), __('api.elim_product_fetched'));
+    }
+
     public function categories(ProductDetailRequest $request): JsonResponse
     {
         return $this->respond(fn (): array => (new CategoryListResource($this->alibaba1688->categories($request->validated('lang'))))->resolve(), __('api.elim_categories_listed'));
@@ -49,6 +53,18 @@ class Alibaba1688CatalogController extends ApiController
     public function uploadImage(ProductImageUploadRequest $request): JsonResponse
     {
         return $this->respond(fn (): array => $this->alibaba1688->uploadImage($request->file('file')), __('api.elim_image_uploaded'));
+    }
+
+    public function unshorten(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'url' => ['required', 'string', 'url', 'max:2048'],
+        ]);
+
+        return $this->respond(
+            fn (): array => $this->alibaba1688->unshorten($validated['url']),
+            __('api.elim_product_fetched')
+        );
     }
 
     private function respond(callable $callback, string $message): JsonResponse

@@ -27,7 +27,8 @@ abstract class AbstractElimProductService implements MarketplaceProductService
         $cacheKey = $this->cacheKey('search', $payload);
 
         return Cache::remember($cacheKey, $this->productTtl(), function () use ($payload): array {
-            $response = $this->client->post('/v1/products/search', $payload);
+            $uri = $this->client->resolveUriWithLegacyFallback('/v2/products/search', '/v1/products/search');
+            $response = $this->client->post($uri, $payload);
 
             return $this->normalizer->listResponse($response, $this->platform());
         });
@@ -52,10 +53,47 @@ abstract class AbstractElimProductService implements MarketplaceProductService
         ];
 
         return Cache::remember($this->cacheKey('detail', $payload), $this->productTtl(), function () use ($payload): array {
-            $response = $this->client->post('/v1/products/find', $payload);
+            $uri = $this->client->resolveUriWithLegacyFallback('/v2/products/find', '/v1/products/find');
+            $response = $this->client->post($uri, $payload);
 
             return $this->normalizer->detailResponse($response, $this->platform());
         });
+    }
+
+    public function detail(string $id, ?string $lang = null): array
+    {
+        $payload = [
+            'id' => $this->findIdentifier($id),
+            'platform' => $this->elimPlatform(),
+            'lang' => $this->lang($lang),
+        ];
+
+        return Cache::remember($this->cacheKey('full-detail', $payload), $this->productTtl(), function () use ($payload): array {
+            $uri = $this->client->resolveUriWithLegacyFallback('/v2/products/detail', '/v1/products/detail');
+
+            try {
+                $response = $this->client->post($uri, $payload);
+            } catch (ElimException) {
+                $fallbackUri = $this->client->resolveUriWithLegacyFallback('/v2/products/find', '/v1/products/find');
+                $response = $this->client->post($fallbackUri, $payload);
+            }
+
+            if ($response === []) {
+                $fallbackUri = $this->client->resolveUriWithLegacyFallback('/v2/products/find', '/v1/products/find');
+                $response = $this->client->post($fallbackUri, $payload);
+            }
+
+            return $this->normalizer->detailResponse($response, $this->platform());
+        });
+    }
+
+    public function unshorten(string $url): array
+    {
+        $response = $this->client->get('/v1/utils/unshorten', [
+            'url' => trim($url),
+        ]);
+
+        return is_array($response['data'] ?? null) ? $response['data'] : $response;
     }
 
     public function categories(?string $lang = null): array
@@ -68,6 +106,8 @@ abstract class AbstractElimProductService implements MarketplaceProductService
         if (
             empty($filters['img_id'])
             && empty($filters['imgId'])
+            && empty($filters['imageHandle'])
+            && empty($filters['image_handle'])
             && empty($filters['img_url'])
             && empty($filters['imgUrl'])
             && isset($filters['file'])
@@ -75,6 +115,9 @@ abstract class AbstractElimProductService implements MarketplaceProductService
         ) {
             $uploaded = $this->uploadImage($filters['file']);
             $filters['img_id'] = (string) ($uploaded['imageId'] ?? $uploaded['img_id'] ?? '');
+            if (! empty($uploaded['imageHandle'])) {
+                $filters['imageHandle'] = (string) $uploaded['imageHandle'];
+            }
         }
 
         unset($filters['file']);
@@ -82,7 +125,8 @@ abstract class AbstractElimProductService implements MarketplaceProductService
         $payload = $this->imageSearchPayload($filters);
 
         return Cache::remember($this->cacheKey('image-search', $payload), $this->productTtl(), function () use ($payload): array {
-            $response = $this->client->post('/v2/products/search-by-image', $payload);
+            $uri = $this->client->resolveUriWithLegacyFallback('/v2/products/search-by-image', '/v1/products/search-by-image');
+            $response = $this->client->post($uri, $payload);
 
             return $this->normalizer->listResponse($response, $this->platform());
         });
@@ -90,7 +134,8 @@ abstract class AbstractElimProductService implements MarketplaceProductService
 
     public function uploadImage(UploadedFile $file): array
     {
-        $response = $this->client->upload('/v2/products/upload-image', $file, [
+        $uri = $this->client->resolveUriWithLegacyFallback('/v2/products/upload-image', '/v1/products/upload-image');
+        $response = $this->client->upload($uri, $file, [
             'platform' => $this->elimPlatform(),
         ]);
 
@@ -99,6 +144,14 @@ abstract class AbstractElimProductService implements MarketplaceProductService
             ?? $response['image_id']
             ?? $response['data']['imageId']
             ?? $response['data']['img_id']
+            ?? $response['imageHandle']
+            ?? $response['data']['imageHandle']
+            ?? null;
+
+        $imageHandle = $response['imageHandle']
+            ?? $response['image_handle']
+            ?? $response['data']['imageHandle']
+            ?? $response['data']['image_handle']
             ?? null;
 
         if (is_string($imageId) && $imageId !== '') {
@@ -106,11 +159,18 @@ abstract class AbstractElimProductService implements MarketplaceProductService
             $response['img_id'] = $imageId;
         }
 
+        if (is_string($imageHandle) && $imageHandle !== '') {
+            $response['imageHandle'] = $imageHandle;
+            $response['image_handle'] = $imageHandle;
+        }
+
         return $response;
     }
 
     protected function payload(array $filters): array
     {
+        $keywordTranslate = $filters['keywordTranslate'] ?? $filters['keyword_translate'] ?? null;
+
         return array_filter([
             'q' => $filters['q'] ?? null,
             'img_url' => $filters['img_url'] ?? null,
@@ -118,9 +178,10 @@ abstract class AbstractElimProductService implements MarketplaceProductService
             'platform' => $this->elimPlatform(),
             'lang' => $this->lang($filters['lang'] ?? null),
             'sort' => $filters['sort'] ?? null,
-            'filter' => $filters['filter'] ?? null,
+            'filter' => $this->normalizeSearchFilter($filters['filter'] ?? null),
             'page' => (int) ($filters['page'] ?? 1),
             'size' => (int) ($filters['size'] ?? 20),
+            'keywordTranslate' => is_bool($keywordTranslate) ? $keywordTranslate : null,
         ], fn (mixed $value): bool => $value !== null && $value !== '');
     }
 
@@ -128,20 +189,65 @@ abstract class AbstractElimProductService implements MarketplaceProductService
     {
         $imgUrl = $filters['imgUrl'] ?? $filters['img_url'] ?? null;
         $imgId = $filters['imgId'] ?? $filters['img_id'] ?? $filters['imageId'] ?? null;
+        $imageHandle = $filters['imageHandle'] ?? $filters['image_handle'] ?? null;
         $keywordTranslate = $filters['keywordTranslate'] ?? $filters['keyword_translate'] ?? null;
 
         return array_filter([
             'platform' => $this->elimPlatform(),
             'imgUrl' => $imgUrl,
             'imgId' => $imgUrl ? null : $imgId,
+            'imageHandle' => $imgUrl ? null : $imageHandle,
             'lang' => $this->lang($filters['lang'] ?? null),
             'sort' => $filters['sort'] ?? null,
-            'filter' => $filters['filter'] ?? null,
+            'filter' => $this->normalizeSearchFilter($filters['filter'] ?? null),
             'page' => (int) ($filters['page'] ?? 1),
             'size' => min(20, max(1, (int) ($filters['size'] ?? 20))),
             'keyword' => $filters['keyword'] ?? $filters['q'] ?? null,
             'keywordTranslate' => is_bool($keywordTranslate) ? $keywordTranslate : null,
         ], fn (mixed $value): bool => $value !== null && $value !== '');
+    }
+
+    protected function normalizeSearchFilter(mixed $filter): ?array
+    {
+        if (! is_array($filter) || $filter === []) {
+            return null;
+        }
+
+        $keyMap = [
+            'price_range' => 'priceRange',
+            'shop_id' => 'shopId',
+            'seller_level' => 'sellerLevel',
+            'is_factory' => 'isFactory',
+            'ffm_outbound' => 'ffmOutbound',
+            'ffm_delivery' => 'ffmDelivery',
+            'allow_return' => 'allowReturn',
+            'allow_dropship' => 'allowDropship',
+            'freeship_for_dropship' => 'freeshipForDropship',
+            'new_arrival' => 'newArrival',
+            'platform_pick' => 'platformPick',
+            'global_pick' => 'globalPick',
+            'dropship_pick' => 'dropshipPick',
+            'category_id' => 'categoryId',
+            'category_id_list' => 'categoryIdList',
+            'seller_open_id' => 'sellerOpenId',
+        ];
+
+        $normalized = [];
+
+        foreach ($filter as $key => $value) {
+            if ($value === null || $value === '') {
+                continue;
+            }
+
+            if ($value === 'true' || $value === 'false') {
+                $value = $value === 'true';
+            }
+
+            $mappedKey = $keyMap[$key] ?? $key;
+            $normalized[$mappedKey] = $value;
+        }
+
+        return $normalized !== [] ? $normalized : null;
     }
 
     protected function filtersWithCategory(array $filters): array

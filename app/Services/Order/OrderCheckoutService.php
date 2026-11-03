@@ -18,6 +18,7 @@ use App\Services\Elim\ElimOrderApiService;
 use App\Services\PlatformCommissionService;
 use App\Services\Shipping\ShippingRateService;
 use App\Services\Wallet\WalletService;
+use App\Support\Elim\ElimApiConfig;
 use App\Support\Elim\ElimWarehouseAddress;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -103,6 +104,10 @@ class OrderCheckoutService
 
     public function callCreate(array $payload, array $parsedPreview): array
     {
+        if (! empty($parsedPreview['preview_token']) && empty($payload['preview_token'])) {
+            $payload['preview_token'] = $parsedPreview['preview_token'];
+        }
+
         if ($this->isDemoMode() || $this->isLocalCheckoutPlatform($payload)) {
             return $this->demoCheckout->create($payload, $parsedPreview);
         }
@@ -121,9 +126,29 @@ class OrderCheckoutService
         $data = $response['data'] ?? $response;
 
         return [
-            'goods_subtotal_cny' => (float) ($data['goods_amount_cny'] ?? $data['goods_amount'] ?? $data['goods_subtotal'] ?? 0),
-            'shipping_fee_cny' => (float) ($data['shipping_fee_cny'] ?? $data['shipping_fee'] ?? 0),
+            'goods_subtotal_cny' => (float) (
+                $data['total_product_amount']
+                ?? $data['goods_amount_cny']
+                ?? $data['goods_amount']
+                ?? $data['goods_subtotal']
+                ?? 0
+            ),
+            'shipping_fee_cny' => (float) (
+                $data['total_post_fee']
+                ?? $data['shipping_fee_cny']
+                ?? $data['shipping_fee']
+                ?? 0
+            ),
+            'total_amount_cny' => (float) (
+                $data['total_amount']
+                ?? $data['total_amount_cny']
+                ?? 0
+            ),
             'service_fee_cny' => isset($data['service_fee_cny']) ? (float) $data['service_fee_cny'] : null,
+            'preview_token' => isset($data['preview_token']) && is_string($data['preview_token']) && $data['preview_token'] !== ''
+                ? $data['preview_token']
+                : null,
+            'shops' => is_array($data['shops'] ?? null) ? $data['shops'] : [],
             'unavailable_items' => $this->normalizeUnavailableItems($data['unavailable_items'] ?? []),
             'raw' => $response,
         ];
@@ -225,11 +250,20 @@ class OrderCheckoutService
         }
 
         $goodsSubtotalCny = (float) $parsed['goods_subtotal_cny'];
+        $shippingFeeCny = (float) ($parsed['shipping_fee_cny'] ?? 0);
+        $serviceFeeCny = isset($parsed['service_fee_cny']) ? (float) $parsed['service_fee_cny'] : null;
         $slab = $this->platformCommissionService->findActiveSlabOrNull($platform, $goodsSubtotalCny);
         $commissionPercentage = $slab ? (float) $slab->commission_percentage : 0;
         $commissionAmount = $slab
             ? round($goodsSubtotalCny * ($commissionPercentage / 100), 2)
             : 0;
+        $customerTotalCny = $this->calculateCustomerTotalCny(
+            $goodsSubtotalCny,
+            $shippingFeeCny,
+            $serviceFeeCny,
+            $commissionAmount,
+            0.0
+        );
 
         $order = CustomerOrder::query()->create([
             'user_id' => $user->id,
@@ -238,19 +272,19 @@ class OrderCheckoutService
             'shipping_method_id' => $context->shippingMethod->id,
             'platform_id' => $platform->id,
             'platform' => $platformCode,
-            'elim_order_id' => (string) ($orderData['id'] ?? null),
+            'elim_order_id' => (string) ($orderData['id'] ?? $orderData['order_id'] ?? $createResponse['id'] ?? $createResponse['order_id'] ?? ''),
             'status' => OrderStatus::CODE_PAID,
             'payment_status' => (string) ($orderData['payment_status'] ?? 'unpaid'),
             'payment_method' => $context->paymentMethod,
             'goods_subtotal_cny' => $goodsSubtotalCny,
-            'shipping_fee_cny' => $parsed['shipping_fee_cny'],
+            'shipping_fee_cny' => $shippingFeeCny,
             'cargo_shipping_fee_tjs' => 0,
             'cargo_shipping_fee_cny' => 0,
-            'elim_service_fee_cny' => $parsed['service_fee_cny'],
+            'elim_service_fee_cny' => $serviceFeeCny,
             'commission_slab_id' => $slab?->id,
             'commission_percentage' => $commissionPercentage,
             'commission_amount' => $commissionAmount,
-            'customer_total_cny' => 0,
+            'customer_total_cny' => $customerTotalCny,
             'exchange_rate' => $this->currencyExchangeService->getRate(),
             'customer_total_tjs' => $finalAmountTjs,
             'final_amount_tjs' => $finalAmountTjs,
@@ -290,26 +324,34 @@ class OrderCheckoutService
             return $order;
         }
 
-        if ($order->payment_status === 'paid') {
+        if (in_array($order->payment_status, [
+            CustomerOrder::PAYMENT_STATUS_PAID,
+            CustomerOrder::PAYMENT_STATUS_REQUESTED,
+            CustomerOrder::PAYMENT_STATUS_APPROVED,
+        ], true)) {
             return $order;
         }
 
-        $amountDue = $order->paymentAmountTjs();
-        $walletBalance = $this->walletService->getBalance($user);
+        if ($order->wallet_transaction_id !== null && $order->walletTransaction) {
+            $transaction = $order->walletTransaction;
+        } else {
+            $amountDue = $order->paymentAmountTjs();
+            $walletBalance = $this->walletService->getBalance($user);
 
-        if ($walletBalance < $amountDue) {
-            throw ValidationException::withMessages([
-                'wallet' => [__('api.wallet_insufficient_balance')],
-                'deficit' => [(string) max(0, round($amountDue - $walletBalance, 2))],
-            ]);
+            if ($walletBalance < $amountDue) {
+                throw ValidationException::withMessages([
+                    'wallet' => [__('api.wallet_insufficient_balance')],
+                    'deficit' => [(string) max(0, round($amountDue - $walletBalance, 2))],
+                ]);
+            }
+
+            $transaction = $this->walletService->payForOrder(
+                $user,
+                $order,
+                $amountDue,
+                'Checkout payment for order '.($order->elim_order_id ?: '#'.$order->id)
+            );
         }
-
-        $transaction = $this->walletService->payForOrder(
-            $user,
-            $order,
-            $amountDue,
-            'Checkout payment for order '.($order->elim_order_id ?: '#'.$order->id)
-        );
 
         if ($this->isDemoMode() || $order->is_demo_order || $order->platform === UserCartItem::PLATFORM_JD) {
             $order->update([
@@ -328,8 +370,16 @@ class OrderCheckoutService
             ]);
         }
 
+        $paymentMode = app(ElimApiConfig::class)->paymentMode();
+
         try {
-            $confirmResponse = $this->elimOrders->confirmPayment($order->elim_order_id);
+            if ($paymentMode === ElimApiConfig::PAYMENT_MODE_REQUEST) {
+                $paymentResponse = $this->elimOrders->requestPayment($order->elim_order_id);
+                $resolvedPaymentStatus = (string) ($paymentResponse['payment_status'] ?? CustomerOrder::PAYMENT_STATUS_REQUESTED);
+            } else {
+                $paymentResponse = $this->elimOrders->confirmPayment($order->elim_order_id);
+                $resolvedPaymentStatus = (string) ($paymentResponse['payment_status'] ?? CustomerOrder::PAYMENT_STATUS_PAID);
+            }
         } catch (ElimRequestException $exception) {
             $this->walletService->refundOrderPayment(
                 $transaction,
@@ -352,10 +402,12 @@ class OrderCheckoutService
         }
 
         $order->update([
-            'payment_status' => 'paid',
-            'paid_at' => $confirmResponse['paid_at'] ?? now(),
+            'payment_status' => $resolvedPaymentStatus,
+            'paid_at' => $resolvedPaymentStatus === CustomerOrder::PAYMENT_STATUS_PAID
+                ? ($paymentResponse['paid_at'] ?? now())
+                : $order->paid_at,
             'wallet_transaction_id' => $transaction->id,
-            'elim_service_fee_cny' => $confirmResponse['service_fee_cny'] ?? $order->elim_service_fee_cny,
+            'elim_service_fee_cny' => $paymentResponse['service_fee_cny'] ?? $order->elim_service_fee_cny,
             'status' => OrderStatus::CODE_PAID,
         ]);
 

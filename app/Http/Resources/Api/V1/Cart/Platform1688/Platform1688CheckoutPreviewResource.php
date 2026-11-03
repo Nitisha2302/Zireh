@@ -18,6 +18,9 @@ class Platform1688CheckoutPreviewResource extends JsonResource
             'checkout' => $this->resource['checkout'] ?? [],
             'demo_mode' => (bool) ($this->resource['demo_mode'] ?? false),
             'final_amount' => (float) ($this->resource['final_amount'] ?? 0),
+            'preview_token' => $this->resource['preview_token'] ?? null,
+            'goods_subtotal_cny' => (float) ($this->resource['goods_subtotal_cny'] ?? 0),
+            'shipping_fee_cny' => (float) ($this->resource['shipping_fee_cny'] ?? 0),
         ];
     }
 }

@@ -22,7 +22,13 @@ class CustomerOrder extends Model
 
     public const PAYMENT_STATUS_UNPAID = 'unpaid';
 
+    public const PAYMENT_STATUS_REQUESTED = 'requested';
+
+    public const PAYMENT_STATUS_APPROVED = 'approved';
+
     public const PAYMENT_STATUS_PAID = 'paid';
+
+    public const PAYMENT_STATUS_REJECTED = 'rejected';
 
     public const PAYMENT_STATUS_REFUNDED = 'refunded';
 

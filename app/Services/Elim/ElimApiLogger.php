@@ -97,14 +97,24 @@ class ElimApiLogger
     {
         $normalized = strtolower($key);
 
+        if (in_array($normalized, ['preview_token', 'pickup_token'], true)) {
+            return false;
+        }
+
         return in_array($normalized, [
             'password',
+            'oldpassword',
+            'newpassword',
+            'confirmpassword',
             'access_token',
             'refresh_token',
             'authorization',
             'api_key',
             'x-api-key',
-        ], true) || str_contains($normalized, 'password') || str_contains($normalized, 'token');
+            'secret',
+            'webhook_secret',
+            'x-elim-signature',
+        ], true) || str_contains($normalized, 'password') || str_contains($normalized, 'token') || str_contains($normalized, 'secret');
     }
 
     /**

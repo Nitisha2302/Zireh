@@ -18,6 +18,10 @@ class Admin extends Authenticatable
 
     public const ROLE_TAJIKISTAN_WAREHOUSE = 'tajikistan_warehouse';
 
+    protected $attributes = [
+        'role' => self::ROLE_SUPER_ADMIN,
+    ];
+
     protected $fillable = [
         'name',
         'username',

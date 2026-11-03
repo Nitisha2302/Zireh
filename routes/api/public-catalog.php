@@ -30,10 +30,15 @@ return function (): void {
 
     Route::get('order-statuses', [OrderStatusController::class, 'index']);
 
+    Route::match(['get', 'post'], 'utils/unshorten', [TaobaoCatalogController::class, 'unshorten']);
+
     Route::prefix('taobao')->group(function () {
         Route::get('products', [TaobaoCatalogController::class, 'products']);
         Route::get('search', [TaobaoCatalogController::class, 'search']);
         Route::get('products/{id}', [TaobaoCatalogController::class, 'show']);
+        Route::get('products/{id}/detail', [TaobaoCatalogController::class, 'detail']);
+        Route::post('shipping-fee', [TaobaoCatalogController::class, 'shippingFee']);
+        Route::match(['get', 'post'], 'unshorten', [TaobaoCatalogController::class, 'unshorten']);
         Route::get('categories', [TaobaoCatalogController::class, 'categories']);
         Route::post('image-search', [TaobaoCatalogController::class, 'imageSearch']);
         Route::post('search-by-image', [TaobaoCatalogController::class, 'imageSearch']);
@@ -44,6 +49,8 @@ return function (): void {
         Route::get('products', [Alibaba1688CatalogController::class, 'products']);
         Route::get('search', [Alibaba1688CatalogController::class, 'search']);
         Route::get('products/{id}', [Alibaba1688CatalogController::class, 'show']);
+        Route::get('products/{id}/detail', [Alibaba1688CatalogController::class, 'detail']);
+        Route::match(['get', 'post'], 'unshorten', [Alibaba1688CatalogController::class, 'unshorten']);
         Route::get('categories', [Alibaba1688CatalogController::class, 'categories']);
         Route::post('image-search', [Alibaba1688CatalogController::class, 'imageSearch']);
         Route::post('search-by-image', [Alibaba1688CatalogController::class, 'imageSearch']);

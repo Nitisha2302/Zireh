@@ -20,8 +20,7 @@ class ElimAuthService
     public function __construct(
         private readonly ElimApiConfig $config,
         private readonly ElimApiLogger $logger,
-    ) {
-    }
+    ) {}
 
     public function accessToken(): string
     {
@@ -164,6 +163,90 @@ class ElimAuthService
         }
     }
 
+    public function testApiKey(string $baseUrl, string $apiKey): void
+    {
+        if ($apiKey === '') {
+            throw new ElimAuthenticationException(__('admin.elim_api_password_required_for_test'));
+        }
+
+        try {
+            $startedAt = microtime(true);
+            $response = Http::baseUrl(rtrim($baseUrl, '/'))
+                ->acceptJson()
+                ->withHeaders(['x-api-key' => $apiKey])
+                ->timeout($this->timeout())
+                ->get('/v1/me/plan-status');
+
+            $this->recordAuthResponse(
+                'get',
+                '/v1/me/plan-status',
+                null,
+                $response,
+                $startedAt,
+                ElimApiLog::SOURCE_AUTH_TEST
+            );
+        } catch (\Throwable $exception) {
+            throw new ElimAuthenticationException(
+                __('admin.elim_api_test_unreachable', ['message' => $exception->getMessage()]),
+                context: ['message' => $exception->getMessage()]
+            );
+        }
+
+        if ($response->status() === 401 || $response->status() === 403) {
+            $body = $response->json();
+            $message = is_array($body) ? ($body['message'] ?? $body['error'] ?? null) : null;
+
+            throw new ElimAuthenticationException(
+                is_string($message) && $message !== '' ? $message : __('admin.elim_api_test_invalid_credentials'),
+                $response->status(),
+                context: [
+                    'status' => $response->status(),
+                    'body' => $body,
+                ]
+            );
+        }
+    }
+
+    public function changePassword(string $oldPassword, string $newPassword, string $confirmPassword): array
+    {
+        $startedAt = microtime(true);
+        $payload = [
+            'oldPassword' => $oldPassword,
+            'newPassword' => $newPassword,
+            'confirmPassword' => $confirmPassword,
+        ];
+
+        $request = Http::baseUrl($this->baseUrl())
+            ->acceptJson()
+            ->timeout($this->timeout());
+
+        if ($this->config->apiKey() !== null) {
+            $request = $request->withHeaders(['x-api-key' => $this->config->apiKey()]);
+        } else {
+            $request = $request->withToken($this->accessToken());
+        }
+
+        $response = $request->post('/v1/auth/change-password', $payload);
+        $this->recordAuthResponse('post', '/v1/auth/change-password', $payload, $response, $startedAt);
+
+        if (! $response->successful()) {
+            $body = $response->json();
+            $message = is_array($body) ? ($body['message'] ?? $body['error'] ?? 'Failed to change password.') : 'Failed to change password.';
+
+            throw new ElimAuthenticationException((string) $message, $response->status(), context: [
+                'status' => $response->status(),
+                'body' => $body,
+            ]);
+        }
+
+        return $response->json() ?? [];
+    }
+
+    public function planStatus(): array
+    {
+        return app(ElimApiClient::class)->get('/v1/me/plan-status');
+    }
+
     private function storeTokens(array $payload): array
     {
         $accessToken = $payload['access_token'] ?? null;
@@ -179,7 +262,7 @@ class ElimAuthService
         Cache::put(self::ACCESS_TOKEN_KEY, $accessToken, $accessTtl);
 
         if (is_string($refreshToken) && $refreshToken !== '') {
-            Cache::put(self::REFRESH_TOKEN_KEY, $refreshToken, now()->addDays(14));
+            Cache::put(self::REFRESH_TOKEN_KEY, $refreshToken, now()->addDays(90));
         }
 
         return [

@@ -24,6 +24,10 @@ class ProductImageSearchRequest extends ApiRequest
             }
         }
 
+        if (! $this->filled('image_handle') && $this->filled('imageHandle')) {
+            $merged['image_handle'] = $this->input('imageHandle');
+        }
+
         if (! $this->filled('keyword') && $this->filled('q')) {
             $merged['keyword'] = $this->input('q');
         }
@@ -41,13 +45,14 @@ class ProductImageSearchRequest extends ApiRequest
     {
         return [
             'img_url' => [
-                'required_without_all:img_id,file',
+                'required_without_all:img_id,image_handle,file',
                 'nullable',
                 'url',
                 'max:2048',
             ],
-            'img_id' => ['required_without_all:img_url,file', 'nullable', 'string', 'max:255'],
-            'file' => ['required_without_all:img_url,img_id', 'nullable', 'image', 'max:5120'],
+            'img_id' => ['required_without_all:img_url,image_handle,file', 'nullable', 'string', 'max:255'],
+            'image_handle' => ['required_without_all:img_url,img_id,file', 'nullable', 'string', 'max:255'],
+            'file' => ['required_without_all:img_url,img_id,image_handle', 'nullable', 'image', 'max:5120'],
             'lang' => ['nullable', 'in:vi,en,ru,ko,ja'],
             'sort' => ['nullable', 'in:PRICE_ASC,PRICE_DESC,SALE_QTY_ASC,SALE_QTY_DESC'],
             'page' => ['nullable', 'integer', 'min:1'],

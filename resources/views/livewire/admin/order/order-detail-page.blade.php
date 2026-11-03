@@ -1,12 +1,22 @@
 <div class="container-xxl flex-grow-1 container-p-y">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
         <div>
             <h4 class="mb-1">{{ __('admin.order_number', ['id' => $order->id]) }}</h4>
             <p class="mb-0 text-body-secondary">{{ $order->elim_order_id ?? __('admin.no_elim_order_id') }}</p>
         </div>
-        <a href="{{ route('admin.orders.index') }}" class="btn btn-label-secondary">
-            <i class="icon-base ti tabler-arrow-left me-1"></i> {{ __('admin.back_to_orders') }}
-        </a>
+        <div class="d-flex flex-wrap gap-2">
+            @if ($order->elim_order_id && ! $order->is_demo_order && in_array($order->platform, ['taobao', '1688'], true))
+                <button type="button" class="btn btn-label-primary" wire:click="syncElimOrder" wire:loading.attr="disabled" wire:target="syncElimOrder,refreshElimOrder">
+                    <i class="icon-base ti tabler-refresh me-1"></i> {{ __('admin.sync_from_elim') }}
+                </button>
+                <button type="button" class="btn btn-label-info" wire:click="refreshElimOrder" wire:loading.attr="disabled" wire:target="syncElimOrder,refreshElimOrder">
+                    <i class="icon-base ti tabler-cloud-download me-1"></i> {{ __('admin.force_refresh_elim') }}
+                </button>
+            @endif
+            <a href="{{ route('admin.orders.index') }}" class="btn btn-label-secondary">
+                <i class="icon-base ti tabler-arrow-left me-1"></i> {{ __('admin.back_to_orders') }}
+            </a>
+        </div>
     </div>
 
     <div class="row g-4">

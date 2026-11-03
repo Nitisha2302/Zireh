@@ -9,7 +9,7 @@ class ProductDetailRequest extends ApiRequest
     public function rules(): array
     {
         return [
-            'lang' => ['nullable', 'in:vi,en'],
+            'lang' => ['nullable', 'in:vi,en,ru,ko,ja'],
         ];
     }
 }

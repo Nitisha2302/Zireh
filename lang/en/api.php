@@ -180,4 +180,17 @@ return [
     'pickup_shipping_unpaid_cannot_deliver' => 'Pickup shipping must be paid before the order can be delivered.',
     'pickup_shipping_amount_invalid' => 'Pickup shipping amount is invalid.',
     'pickup_token_invalid' => 'Invalid pickup QR code.',
+    'elim_product_detail_fetched' => 'Product detail fetched successfully.',
+    'elim_shipping_fee_fetched' => 'Shipping fee fetched successfully.',
+    'elim_url_unshortened' => 'Short URL resolved successfully.',
+    'order_refreshed' => 'Order refreshed from Elim successfully.',
+    'order_payment_requested' => 'Order payment request submitted successfully.',
+    'order_payment_request_cancelled' => 'Pending payment request cancelled and refunded.',
+    'order_payment_request_not_cancellable' => 'Only pending payment requests can be cancelled.',
+    'order_payment_detail_fetched' => 'Order payment details fetched successfully.',
+    'elim_purchasing_transactions_fetched' => 'Elim purchasing wallet transactions fetched successfully.',
+    'elim' => [
+        'webhook_invalid_signature' => 'Invalid or expired Elim webhook signature.',
+        'webhook_received' => 'Elim webhook processed successfully.',
+    ],
 ];

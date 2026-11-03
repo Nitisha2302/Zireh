@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\V1\Cart\Taobao\TaobaoCheckoutController;
 use App\Http\Controllers\Api\V1\Order\CustomerOrderController;
 use App\Http\Controllers\Api\V1\WarehouseController;
 use App\Http\Controllers\Api\V1\Webhooks\DcNextWebhookController;
+use App\Http\Controllers\Api\V1\Webhooks\ElimWebhookController;
 use Illuminate\Support\Facades\Route;
 
 $publicCatalogRoutes = require __DIR__.'/api/public-catalog.php';
@@ -31,6 +32,9 @@ Route::prefix('v1')->group(function () use ($publicCatalogRoutes) {
 
     Route::post('webhooks/dc-next/invoice', [DcNextWebhookController::class, 'invoice'])
         ->name('webhooks.dc-next.invoice');
+
+    Route::post('webhooks/elim', [ElimWebhookController::class, 'handle'])
+        ->name('webhooks.elim');
 
     Route::prefix('auth')->group(function () {
         Route::prefix('register')->group(function () {
@@ -74,12 +78,17 @@ Route::prefix('v1')->group(function () use ($publicCatalogRoutes) {
             Route::get('wallet/dc-next/status/{orderId}', [DcNextWalletPaymentController::class, 'status']);
 
             Route::get('orders/elim/purchasing-wallet', [CustomerOrderController::class, 'elimPurchasingWallet']);
+            Route::get('orders/elim/purchasing-wallet/transactions', [CustomerOrderController::class, 'elimPurchasingTransactions']);
             Route::get('orders/elim/exchange-rates', [CustomerOrderController::class, 'elimExchangeRates']);
             Route::get('orders/{order}/pickup', [CustomerOrderController::class, 'pickup']);
             Route::post('orders/{order}/pickup/pay', [CustomerOrderController::class, 'payPickup']);
             Route::get('orders/{order}/payment-preview', [CustomerOrderController::class, 'paymentPreview']);
             Route::post('orders/{order}/pay', [CustomerOrderController::class, 'pay']);
+            Route::post('orders/{order}/request-payment', [CustomerOrderController::class, 'requestPayment']);
+            Route::post('orders/{order}/cancel-payment-request', [CustomerOrderController::class, 'cancelPaymentRequest']);
+            Route::get('orders/{order}/payment', [CustomerOrderController::class, 'paymentDetail']);
             Route::post('orders/{order}/sync', [CustomerOrderController::class, 'sync']);
+            Route::post('orders/{order}/refresh', [CustomerOrderController::class, 'refresh']);
             Route::post('orders/{order}/cancel', [CustomerOrderController::class, 'cancel']);
             Route::get('orders/{order}/logistics', [CustomerOrderController::class, 'logistics']);
 

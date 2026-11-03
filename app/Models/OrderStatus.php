@@ -137,10 +137,10 @@ class OrderStatus extends Model
         }
 
         return match ($elimStatus) {
-            'creating', 'pending_payment', 'paid' => self::CODE_PAID,
-            'shipped' => self::CODE_SHIPPED_TO_TAJIKISTAN,
-            'completed' => self::CODE_DELIVERED_TO_CUSTOMER,
-            'cancelled' => self::CODE_CANCELLED,
+            'creating', 'pending', 'pending_payment', 'ordered', 'paid', 'processing' => self::CODE_PAID,
+            'shipped', 'in_transit' => self::CODE_SHIPPED_TO_TAJIKISTAN,
+            'completed', 'delivered' => self::CODE_DELIVERED_TO_CUSTOMER,
+            'cancelled', 'closed' => self::CODE_CANCELLED,
             default => null,
         };
     }

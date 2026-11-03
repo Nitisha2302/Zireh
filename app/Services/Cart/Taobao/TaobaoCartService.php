@@ -45,9 +45,9 @@ class TaobaoCartService
             ->where('sku_id', $skuId)
             ->first();
 
-        $unitPrice = $this->normalizer->resolveUnitPrice($detail, $sku);
-        $snapshot = $this->normalizer->cartSnapshot($detail, $sku);
         $newQuantity = ($existing?->quantity ?? 0) + $quantity;
+        $unitPrice = $this->normalizer->resolveUnitPrice($detail, $sku, $newQuantity);
+        $snapshot = $this->normalizer->cartSnapshot($detail, $sku, $newQuantity);
 
         $item = $this->cartQuery($user)->updateOrCreate(
             [
@@ -97,9 +97,9 @@ class TaobaoCartService
             'sku_id' => $skuId,
             'marketplace_id' => (string) ($detail['marketplace_id'] ?? $item->product_id),
             'quantity' => $quantity,
-            'unit_price' => $this->normalizer->resolveUnitPrice($detail, $sku),
+            'unit_price' => $this->normalizer->resolveUnitPrice($detail, $sku, $quantity),
             'final_amount_tjs' => $this->lineFinalAmountTjs((float) $data['final_amount'], $quantity),
-            'product_snapshot' => $this->normalizer->cartSnapshot($detail, $sku),
+            'product_snapshot' => $this->normalizer->cartSnapshot($detail, $sku, $quantity),
             'selected_attributes' => $data['selected_attributes'] ?? $item->selected_attributes,
             'synced_at' => now(),
         ]);
