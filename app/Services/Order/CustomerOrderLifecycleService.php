@@ -6,11 +6,13 @@ use App\Exceptions\Elim\ElimRequestException;
 use App\Models\Admin;
 use App\Models\CustomerOrder;
 use App\Models\OrderStatus;
+use App\Models\OrderStatusHistory;
 use App\Models\User;
 use App\Models\UserCartItem;
 use App\Models\UserWallet;
 use App\Services\Elim\ElimOrderApiService;
 use App\Services\Wallet\WalletService;
+use App\Services\Warehouse\OrderExceptionService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -21,6 +23,8 @@ class CustomerOrderLifecycleService
         private readonly WalletService $walletService,
         private readonly OrderCheckoutService $checkoutService,
         private readonly OrderPickupService $pickupService,
+        private readonly OrderAuditLogger $auditLogger,
+        private readonly OrderExceptionService $exceptionService,
     ) {}
 
     public function syncFromElim(User $user, CustomerOrder $order, bool $forceRefresh = false): CustomerOrder
@@ -61,6 +65,12 @@ class CustomerOrderLifecycleService
                 ? $this->elimOrders->refreshOrder($order->elim_order_id)
                 : $this->elimOrders->detail($order->elim_order_id);
         } catch (ElimRequestException $exception) {
+            $this->exceptionService->reportElimApiError(
+                $order,
+                $forceRefresh ? 'refreshOrder' : 'detail',
+                $exception->getMessage()
+            );
+
             throw ValidationException::withMessages([
                 'sync' => [$exception->getMessage()],
             ]);
@@ -109,6 +119,14 @@ class CustomerOrderLifecycleService
             try {
                 $this->elimOrders->cancel($order->elim_order_id);
             } catch (ElimRequestException $exception) {
+                $this->exceptionService->reportElimApiError(
+                    $order,
+                    'cancel',
+                    $exception->getMessage(),
+                    [],
+                    $admin
+                );
+
                 throw ValidationException::withMessages([
                     'cancel' => [$exception->getMessage()],
                 ]);
@@ -148,13 +166,21 @@ class CustomerOrderLifecycleService
                 $admin
             );
 
-            $lockedOrder->update([
-                'status' => OrderStatus::CODE_CANCELLED,
-                'payment_status' => CustomerOrder::PAYMENT_STATUS_REFUNDED,
-                'cancellation_refund_transaction_id' => $refundTransaction->id,
-                'cancelled_by_admin_id' => $admin?->id,
-                'cancelled_at' => now(),
-            ]);
+            $this->auditLogger->withContext(
+                OrderStatusHistory::SOURCE_MANUAL,
+                $admin,
+                'Order cancelled and refunded',
+                ['refund_amount_tjs' => $refundAmount],
+                function () use ($lockedOrder, $refundTransaction, $admin): void {
+                    $lockedOrder->update([
+                        'status' => OrderStatus::CODE_CANCELLED,
+                        'payment_status' => CustomerOrder::PAYMENT_STATUS_REFUNDED,
+                        'cancellation_refund_transaction_id' => $refundTransaction->id,
+                        'cancelled_by_admin_id' => $admin?->id,
+                        'cancelled_at' => now(),
+                    ]);
+                }
+            );
 
             return $lockedOrder->fresh()->load([
                 'items',
@@ -702,7 +728,19 @@ class CustomerOrderLifecycleService
             $updates['wallet_transaction_id'] = null;
         }
 
-        $lockedOrder->update($updates);
+        $this->auditLogger->withContext(
+            OrderStatusHistory::SOURCE_ELIM_API,
+            null,
+            sprintf('Synchronized from Elim API (elim_status: %s)', (string) ($elimStatus ?? '—')),
+            [
+                'elim_order_id' => $lockedOrder->elim_order_id,
+                'elim_status' => $elimStatus,
+                'payment_status' => $paymentStatus,
+            ],
+            function () use ($lockedOrder, $updates): void {
+                $lockedOrder->update($updates);
+            }
+        );
 
         return $lockedOrder->fresh()->load(['items', 'orderStatus']);
     }

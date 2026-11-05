@@ -27,7 +27,7 @@ class OrderDetailPage extends Component
         $admin = Auth::guard('admin')->user();
         $warehousePanelService->ensureChinaOrderAccessible($admin, $order);
 
-        $this->order = $order->load(['user', 'items', 'orderStatus', 'warehouse', 'shippingMethod']);
+        $this->order = $order->load(['user', 'items', 'orderStatus', 'warehouse', 'shippingMethod', 'shipment']);
         $this->statusCode = $order->status;
         $this->parcelTrackingId = (string) ($order->parcel_tracking_id ?? '');
     }
@@ -38,9 +38,16 @@ class OrderDetailPage extends Component
             'statusCode' => ['required', 'string', 'max:50'],
         ]);
 
+        $this->order->loadMissing('shipment');
+        if ($this->order->hasShipment() && $this->order->shipment?->isReceivedInTajikistan()) {
+            $this->addError('statusCode', __('admin.shipment_status_locked_in_tajikistan'));
+
+            return;
+        }
+
         try {
             $this->order = $warehousePanelService->updateOrderStatus($this->order, $this->statusCode)
-                ->load(['user', 'items', 'orderStatus', 'warehouse', 'shippingMethod']);
+                ->load(['user', 'items', 'orderStatus', 'warehouse', 'shippingMethod', 'shipment']);
         } catch (ValidationException $exception) {
             $this->setErrorBag($exception->validator->getMessageBag());
 

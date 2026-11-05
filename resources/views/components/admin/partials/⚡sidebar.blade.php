@@ -72,7 +72,7 @@ new class extends Component {
                 </a>
             </li>
 
-            <li class="menu-item {{ request()->routeIs('admin.orders.*') || request()->routeIs('admin.order-statuses.*') ? 'open active' : '' }}">
+            <li class="menu-item {{ request()->routeIs('admin.orders.*') || request()->routeIs('admin.order-statuses.*') || request()->routeIs('admin.exceptions.*') || request()->routeIs('admin.order-audit-logs.*') ? 'open active' : '' }}">
                 <a href="javascript:void(0);" class="menu-link menu-toggle">
                     <i class="menu-icon icon-base ti tabler-shopping-cart"></i>
                     <div>{{ __('admin.orders') }}</div>
@@ -86,6 +86,16 @@ new class extends Component {
                     <li class="menu-item {{ request()->routeIs('admin.order-statuses.*') ? 'active' : '' }}">
                         <a href="{{ route('admin.order-statuses.index') }}" class="menu-link">
                             <div>{{ __('admin.order_statuses') }}</div>
+                        </a>
+                    </li>
+                    <li class="menu-item {{ request()->routeIs('admin.exceptions.*') ? 'active' : '' }}">
+                        <a href="{{ route('admin.exceptions.index') }}" class="menu-link">
+                            <div>{{ __('admin.exception_management') }}</div>
+                        </a>
+                    </li>
+                    <li class="menu-item {{ request()->routeIs('admin.order-audit-logs.*') ? 'active' : '' }}">
+                        <a href="{{ route('admin.order-audit-logs.index') }}" class="menu-link">
+                            <div>{{ __('admin.order_audit_log') }}</div>
                         </a>
                     </li>
                 </ul>

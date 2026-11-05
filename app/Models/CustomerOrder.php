@@ -2,14 +2,69 @@
 
 namespace App\Models;
 
+use App\Services\Order\OrderAuditLogger;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 /** @property-read float $payment_amount_cny */
 /** @property-read float $payment_amount_tjs */
 class CustomerOrder extends Model
 {
+    protected static function booted(): void
+    {
+        static::creating(function (CustomerOrder $order): void {
+            if (empty($order->parcel_code)) {
+                $order->parcel_code = self::generateUniqueParcelCode();
+            }
+        });
+
+        static::created(function (CustomerOrder $order): void {
+            if (! empty($order->status)) {
+                $logger = app(OrderAuditLogger::class);
+                $defaultSource = $logger->currentContext()['source']
+                    ?? OrderStatusHistory::SOURCE_ELIM_API;
+
+                $logger->recordTransition(
+                    $order,
+                    null,
+                    (string) $order->status,
+                    $defaultSource
+                );
+            }
+        });
+
+        static::updated(function (CustomerOrder $order): void {
+            if ($order->wasChanged('status')) {
+                $fromStatus = $order->getOriginal('status');
+                $toStatus = $order->status;
+
+                app(OrderAuditLogger::class)->recordTransition(
+                    $order,
+                    $fromStatus !== null ? (string) $fromStatus : null,
+                    (string) $toStatus
+                );
+            }
+        });
+    }
+
+    public static function generateUniqueParcelCode(): string
+    {
+        $year = date('Y');
+
+        do {
+            $candidate = sprintf('PCL-%s-%s', $year, strtoupper(Str::random(8)));
+        } while (self::query()->where('parcel_code', $candidate)->exists());
+
+        return $candidate;
+    }
+
+    public function parcelQrPayload(): string
+    {
+        return 'cargo-parcel:'.($this->parcel_code ?? $this->id);
+    }
+
     public const PLATFORM_TAOBAO = 'taobao';
 
     public const PLATFORM_1688 = '1688';
@@ -52,11 +107,13 @@ class CustomerOrder extends Model
     protected $fillable = [
         'user_id',
         'warehouse_id',
+        'shipment_id',
         'user_address_id',
         'shipping_method_id',
         'platform_id',
         'platform',
         'elim_order_id',
+        'parcel_code',
         'status',
         'payment_status',
         'payment_method',
@@ -248,6 +305,33 @@ class CustomerOrder extends Model
         return $this->belongsTo(Warehouse::class);
     }
 
+    public function shipment(): BelongsTo
+    {
+        return $this->belongsTo(Shipment::class);
+    }
+
+    public function hasShipment(): bool
+    {
+        return $this->shipment_id !== null;
+    }
+
+    public function isManagedByShipment(): bool
+    {
+        if ($this->shipment_id === null) {
+            return false;
+        }
+
+        $shipment = $this->relationLoaded('shipment')
+            ? $this->shipment
+            : $this->shipment()->first();
+
+        if (! $shipment) {
+            return false;
+        }
+
+        return ! $shipment->isReceivedInTajikistan();
+    }
+
     public function userAddress(): BelongsTo
     {
         return $this->belongsTo(UserAddress::class);
@@ -271,6 +355,18 @@ class CustomerOrder extends Model
     public function items(): HasMany
     {
         return $this->hasMany(CustomerOrderItem::class);
+    }
+
+    public function statusHistories(): HasMany
+    {
+        return $this->hasMany(OrderStatusHistory::class, 'customer_order_id')
+            ->latest('id');
+    }
+
+    public function exceptions(): HasMany
+    {
+        return $this->hasMany(OrderException::class, 'customer_order_id')
+            ->latest('id');
     }
 
     public function orderStatus(): BelongsTo

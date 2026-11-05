@@ -24,6 +24,24 @@ new class extends Component {};
                     <div>{{ __('admin.china_warehouse_orders') }}</div>
                 </a>
             </li>
+            <li class="menu-item {{ request()->routeIs('china.shipments.*') ? 'active' : '' }}">
+                <a href="{{ route('china.shipments.index') }}" class="menu-link">
+                    <i class="menu-icon icon-base ti tabler-truck-delivery"></i>
+                    <div>{{ __('admin.shipment_management') }}</div>
+                </a>
+            </li>
+            <li class="menu-item {{ request()->routeIs('china.scanner') ? 'active' : '' }}">
+                <a href="{{ route('china.scanner') }}" class="menu-link">
+                    <i class="menu-icon icon-base ti tabler-barcode"></i>
+                    <div>{{ __('admin.parcel_barcode_scanner') }}</div>
+                </a>
+            </li>
+            <li class="menu-item {{ request()->routeIs('china.exceptions.*') ? 'active' : '' }}">
+                <a href="{{ route('china.exceptions.index') }}" class="menu-link">
+                    <i class="menu-icon icon-base ti tabler-alert-triangle"></i>
+                    <div>{{ __('admin.exception_management') }}</div>
+                </a>
+            </li>
             <li class="menu-item {{ request()->routeIs('china.profile') ? 'active' : '' }}">
                 <a href="{{ route('china.profile') }}" class="menu-link">
                     <i class="menu-icon icon-base ti tabler-user"></i>

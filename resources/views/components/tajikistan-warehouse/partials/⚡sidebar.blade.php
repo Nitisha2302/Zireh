@@ -32,6 +32,30 @@ new class extends Component {
                     <div>{{ __('admin.tajikistan_warehouse_orders') }}</div>
                 </a>
             </li>
+            <li class="menu-item {{ request()->routeIs('tajikistan.shipments.*') ? 'active' : '' }}">
+                <a href="{{ route('tajikistan.shipments.index') }}" class="menu-link">
+                    <i class="menu-icon icon-base ti tabler-truck-delivery"></i>
+                    <div>{{ __('admin.shipments') }}</div>
+                </a>
+            </li>
+            <li class="menu-item {{ request()->routeIs('tajikistan.scanner') ? 'active' : '' }}">
+                <a href="{{ route('tajikistan.scanner') }}" class="menu-link">
+                    <i class="menu-icon icon-base ti tabler-barcode"></i>
+                    <div>{{ __('admin.parcel_barcode_scanner') }}</div>
+                </a>
+            </li>
+            <li class="menu-item {{ request()->routeIs('tajikistan.processing') ? 'active' : '' }}">
+                <a href="{{ route('tajikistan.processing') }}" class="menu-link">
+                    <i class="menu-icon icon-base ti tabler-scale"></i>
+                    <div>{{ __('admin.tajikistan_warehouse_processing') }}</div>
+                </a>
+            </li>
+            <li class="menu-item {{ request()->routeIs('tajikistan.exceptions.*') ? 'active' : '' }}">
+                <a href="{{ route('tajikistan.exceptions.index') }}" class="menu-link">
+                    <i class="menu-icon icon-base ti tabler-alert-triangle"></i>
+                    <div>{{ __('admin.exception_management') }}</div>
+                </a>
+            </li>
             <li class="menu-item {{ request()->routeIs('tajikistan.pickup.*') ? 'active' : '' }}">
                 <a href="{{ route('tajikistan.pickup.index') }}" class="menu-link">
                     <i class="menu-icon icon-base ti tabler-scan"></i>

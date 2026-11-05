@@ -9,7 +9,30 @@
         </a>
     </div>
 
-    @include('livewire.admin.warehouse.partials.order-detail-cards', ['order' => $order, 'statusOptions' => $statusOptions])
+    @include('livewire.admin.warehouse.partials.order-detail-cards', [
+        'order' => $order,
+        'statusOptions' => $statusOptions,
+        'hideStatusForm' => $order->hasShipment(),
+        'shipmentRoutePrefix' => 'china',
+    ])
+
+    @if ($order->hasShipment())
+        <div class="alert alert-info mt-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <i class="icon-base ti tabler-package me-1"></i>
+                @if ($order->shipment?->isStatusUpdateLocked())
+                    {{ __('admin.shipment_status_locked_in_tajikistan') }}
+                @else
+                    {{ __('admin.order_status_managed_by_shipment', ['shipment' => $order->shipment?->shipment_code ?? '#'.$order->shipment_id]) }}
+                @endif
+            </div>
+            @if ($order->shipment)
+                <a href="{{ route('china.shipments.show', $order->shipment) }}" class="btn btn-sm btn-primary">
+                    {{ __('admin.view_shipment') }} ({{ $order->shipment->shipment_code }})
+                </a>
+            @endif
+        </div>
+    @endif
 
     <div class="card mt-4">
         <div class="card-header"><h5 class="mb-0">{{ __('admin.parcel_tracking_id') }}</h5></div>

@@ -41,7 +41,7 @@ class OrderDetailPage extends Component
         $admin = Auth::guard('admin')->user();
         $warehousePanelService->ensureTajikistanOrderAccessible($admin, $order);
 
-        $this->order = $order->load(['user', 'items', 'orderStatus', 'warehouse', 'shippingMethod']);
+        $this->order = $order->load(['user', 'items', 'orderStatus', 'warehouse', 'shippingMethod', 'shipment']);
         $this->statusCode = $order->status;
         $this->shippingMethodId = $order->shipping_method_id;
     }
@@ -120,17 +120,14 @@ class OrderDetailPage extends Component
 
     public function updateStatus(WarehousePanelService $warehousePanelService): void
     {
-        if ($this->order->isReadyForPickup()) {
-            return;
-        }
-
         $this->validate([
             'statusCode' => ['required', 'string', 'max:50'],
         ]);
 
         try {
             $this->order = $warehousePanelService->updateOrderStatus($this->order, $this->statusCode)
-                ->load(['user', 'items', 'orderStatus', 'warehouse', 'shippingMethod']);
+                ->load(['user', 'items', 'orderStatus', 'warehouse', 'shippingMethod', 'shipment']);
+            $this->statusCode = $this->order->status;
         } catch (ValidationException $exception) {
             $this->setErrorBag($exception->validator->getMessageBag());
 
@@ -162,8 +159,11 @@ class OrderDetailPage extends Component
 
     public function render(OrderStatusService $orderStatusService)
     {
+        $isManagedByShipment = $this->order->isManagedByShipment();
+
         return view('livewire.warehouse.tajikistan.order-detail-page', [
-            'canMeasure' => in_array($this->order->status, CustomerOrder::PRE_PICKUP_STATUSES, true),
+            'isManagedByShipment' => $isManagedByShipment,
+            'canMeasure' => ! $isManagedByShipment && in_array($this->order->status, CustomerOrder::PRE_PICKUP_STATUSES, true),
             'isReadyForPickup' => $this->order->isReadyForPickup(),
             'canCancelOrder' => $this->order->isCancellable(),
             'statusOptions' => $orderStatusService->listActiveForManualUpdate(),

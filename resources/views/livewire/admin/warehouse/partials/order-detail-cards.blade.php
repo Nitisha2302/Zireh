@@ -29,8 +29,23 @@
                     {{ trans()->has('admin.payment_status_'.$order->payment_status) ? __('admin.payment_status_'.$order->payment_status) : $order->payment_status }}
                     ({{ trans()->has('admin.payment_method_'.$order->payment_method) ? __('admin.payment_method_'.$order->payment_method) : $order->payment_method }})
                 </p>
+                @if ($order->parcel_code)
+                    <p class="mb-2"><strong>{{ __('admin.parcel_code') }}:</strong> <code>{{ $order->parcel_code }}</code></p>
+                @endif
                 @if ($order->parcel_tracking_id)
                     <p class="mb-2"><strong>{{ __('admin.parcel_tracking_id') }}:</strong> {{ $order->parcel_tracking_id }}</p>
+                @endif
+                @if ($order->shipment)
+                    <p class="mb-2">
+                        <strong>{{ __('admin.shipment_id') }}:</strong>
+                        @if (! empty($shipmentRoutePrefix) && Route::has($shipmentRoutePrefix.'.shipments.show'))
+                            <a href="{{ route($shipmentRoutePrefix.'.shipments.show', $order->shipment) }}" class="badge bg-label-primary">
+                                {{ $order->shipment->shipment_code }}
+                            </a>
+                        @else
+                            <span class="badge bg-label-primary">{{ $order->shipment->shipment_code }}</span>
+                        @endif
+                    </p>
                 @endif
                 @if ($order->is_demo_order)
                     <p class="mb-2"><span class="badge bg-label-warning">{{ __('admin.demo_order') }}</span></p>
@@ -149,3 +164,7 @@
         </div>
     </div>
 @endif
+
+@include('livewire.admin.warehouse.partials.parcel-barcode-card', ['order' => $order])
+
+@include('livewire.admin.warehouse.partials.order-audit-log-card', ['order' => $order])

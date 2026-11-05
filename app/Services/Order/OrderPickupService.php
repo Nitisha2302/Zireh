@@ -5,6 +5,7 @@ namespace App\Services\Order;
 use App\Models\Admin;
 use App\Models\CustomerOrder;
 use App\Models\OrderStatus;
+use App\Models\OrderStatusHistory;
 use App\Models\ShippingMethod;
 use App\Services\Shipping\ShippingRateService;
 use App\Services\Warehouse\WarehousePanelService;
@@ -16,6 +17,7 @@ class OrderPickupService
     public function __construct(
         private readonly ShippingRateService $shippingRateService,
         private readonly WarehousePanelService $warehousePanelService,
+        private readonly OrderAuditLogger $auditLogger,
     ) {}
 
     public function previewShipping(CustomerOrder $order, array $measurements): array
@@ -34,34 +36,94 @@ class OrderPickupService
         );
     }
 
-    public function confirmPickup(CustomerOrder $order, Admin $admin, array $measurements): CustomerOrder
-    {
+    public function confirmPickup(
+        CustomerOrder $order,
+        Admin $admin,
+        array $measurements,
+        string $source = OrderStatusHistory::SOURCE_MANUAL,
+    ): CustomerOrder {
         $this->warehousePanelService->ensureTajikistanOrderAccessible($admin, $order);
         $this->assertCanMeasure($order);
 
         $calculation = $this->previewShipping($order, $measurements);
         $package = $calculation['package'];
 
-        $order->update([
-            'package_length_cm' => $package['length_cm'],
-            'package_width_cm' => $package['width_cm'],
-            'package_height_cm' => $package['height_cm'],
-            'package_weight_kg' => $package['weight_kg'],
-            'package_volume_m3' => $package['volume_m3'],
-            'pickup_shipping_fee_tjs' => $calculation['shipping_cost'],
-            'pickup_shipping_weight_fee_tjs' => $calculation['weight_cost_tjs'],
-            'pickup_shipping_volume_fee_tjs' => $calculation['volume_cost_tjs'],
-            'pickup_shipping_calculation_method' => $calculation['applied_method'],
-            'pickup_shipping_snapshot' => $calculation,
-            'cargo_shipping_fee_tjs' => $calculation['shipping_cost'],
-            'pickup_payment_status' => CustomerOrder::PICKUP_PAYMENT_STATUS_PENDING,
-            'pickup_token' => (string) Str::uuid(),
-            'pickup_confirmed_at' => now(),
-            'pickup_confirmed_by' => $admin->id,
-            'status' => OrderStatus::CODE_READY_FOR_PICKUP,
-        ]);
+        $this->auditLogger->withContext(
+            $source,
+            $admin,
+            sprintf(
+                'Processed in Tajikistan warehouse: %s TJS (%s)',
+                number_format((float) $calculation['shipping_cost'], 2),
+                (string) $calculation['applied_method']
+            ),
+            [
+                'weight_kg' => $package['weight_kg'],
+                'length_cm' => $package['length_cm'],
+                'width_cm' => $package['width_cm'],
+                'height_cm' => $package['height_cm'],
+                'volume_m3' => $package['volume_m3'],
+                'shipping_cost_tjs' => $calculation['shipping_cost'],
+            ],
+            function () use ($order, $admin, $package, $calculation): void {
+                $order->update([
+                    'package_length_cm' => $package['length_cm'],
+                    'package_width_cm' => $package['width_cm'],
+                    'package_height_cm' => $package['height_cm'],
+                    'package_weight_kg' => $package['weight_kg'],
+                    'package_volume_m3' => $package['volume_m3'],
+                    'pickup_shipping_fee_tjs' => $calculation['shipping_cost'],
+                    'pickup_shipping_weight_fee_tjs' => $calculation['weight_cost_tjs'],
+                    'pickup_shipping_volume_fee_tjs' => $calculation['volume_cost_tjs'],
+                    'pickup_shipping_calculation_method' => $calculation['applied_method'],
+                    'pickup_shipping_snapshot' => $calculation,
+                    'cargo_shipping_fee_tjs' => $calculation['shipping_cost'],
+                    'pickup_payment_status' => CustomerOrder::PICKUP_PAYMENT_STATUS_PENDING,
+                    'pickup_token' => (string) Str::uuid(),
+                    'pickup_confirmed_at' => now(),
+                    'pickup_confirmed_by' => $admin->id,
+                    'status' => OrderStatus::CODE_READY_FOR_PICKUP,
+                ]);
+            }
+        );
 
         return $order->fresh(['user', 'items', 'orderStatus', 'warehouse', 'shippingMethod']);
+    }
+
+    /**
+     * Prepare an incoming scanned order in Tajikistan so it is in a measurable pre-pickup status.
+     */
+    public function prepareScannedOrderForProcessing(CustomerOrder $order, Admin $admin, string $scannedCode): CustomerOrder
+    {
+        $this->warehousePanelService->ensureTajikistanOrderAccessible($admin, $order);
+        $order->loadMissing('shipment');
+
+        if ($order->isManagedByShipment()) {
+            throw ValidationException::withMessages([
+                'order' => [__('admin.order_status_managed_by_shipment', [
+                    'shipment' => $order->shipment?->shipment_code ?? '#'.$order->shipment_id,
+                ])],
+            ]);
+        }
+
+        if ($order->status === OrderStatus::CODE_CANCELLED || $order->status === OrderStatus::CODE_DELIVERED_TO_CUSTOMER) {
+            throw ValidationException::withMessages([
+                'order' => [__('api.pickup_measurement_not_allowed')],
+            ]);
+        }
+
+        if (! $order->isReadyForPickup() && ! in_array($order->status, CustomerOrder::PRE_PICKUP_STATUSES, true)) {
+            $this->auditLogger->withContext(
+                OrderStatusHistory::SOURCE_BARCODE_SCAN,
+                $admin,
+                sprintf('Incoming parcel scanned at Tajikistan processing station (%s)', $scannedCode),
+                ['scanned_code' => $scannedCode, 'panel' => 'tajikistan'],
+                function () use ($order): void {
+                    $order->update(['status' => OrderStatus::CODE_ARRIVED_IN_TAJIKISTAN]);
+                }
+            );
+        }
+
+        return $order->fresh(['user', 'items', 'orderStatus', 'warehouse', 'shippingMethod', 'shipment']);
     }
 
     public function markPaymentReceived(CustomerOrder $order, Admin $admin): CustomerOrder
@@ -83,7 +145,7 @@ class OrderPickupService
         return $order->fresh(['user', 'items', 'orderStatus', 'warehouse', 'shippingMethod']);
     }
 
-    public function deliver(CustomerOrder $order, Admin $admin): CustomerOrder
+    public function deliver(CustomerOrder $order, Admin $admin, string $source = OrderStatusHistory::SOURCE_BARCODE_SCAN): CustomerOrder
     {
         $this->warehousePanelService->ensureTajikistanOrderAccessible($admin, $order);
         $this->assertReadyForPickup($order);
@@ -94,9 +156,17 @@ class OrderPickupService
             ]);
         }
 
-        $order->update([
-            'status' => OrderStatus::CODE_DELIVERED_TO_CUSTOMER,
-        ]);
+        $this->auditLogger->withContext(
+            $source,
+            $admin,
+            'Order delivered to customer at Tajikistan warehouse',
+            ['pickup_token' => $order->pickup_token],
+            function () use ($order): void {
+                $order->update([
+                    'status' => OrderStatus::CODE_DELIVERED_TO_CUSTOMER,
+                ]);
+            }
+        );
 
         return $order->fresh(['user', 'items', 'orderStatus', 'warehouse', 'shippingMethod']);
     }
@@ -151,6 +221,16 @@ class OrderPickupService
 
     protected function assertCanMeasure(CustomerOrder $order): void
     {
+        $order->loadMissing('shipment');
+
+        if ($order->isManagedByShipment()) {
+            throw ValidationException::withMessages([
+                'order' => [__('admin.order_status_managed_by_shipment', [
+                    'shipment' => $order->shipment?->shipment_code ?? '#'.$order->shipment_id,
+                ])],
+            ]);
+        }
+
         if ($order->isReadyForPickup()) {
             throw ValidationException::withMessages([
                 'order' => [__('api.pickup_already_confirmed')],

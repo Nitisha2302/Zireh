@@ -13,7 +13,38 @@
         'order' => $order,
         'statusOptions' => collect(),
         'hideStatusForm' => true,
+        'shipmentRoutePrefix' => 'tajikistan',
     ])
+
+    @if ($isManagedByShipment ?? false)
+        <div class="alert alert-warning mt-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <i class="icon-base ti tabler-lock me-1"></i>
+                {{ __('admin.order_status_managed_by_shipment', ['shipment' => $order->shipment?->shipment_code ?? '#'.$order->shipment_id]) }}
+            </div>
+            @if ($order->shipment)
+                <a href="{{ route('tajikistan.shipments.show', $order->shipment) }}" class="btn btn-sm btn-warning">
+                    {{ __('admin.view_shipment') }} ({{ $order->shipment->shipment_code }})
+                </a>
+            @endif
+        </div>
+    @else
+        <div class="card mt-4">
+            <div class="card-header"><h5 class="mb-0">{{ __('admin.order_status') }}</h5></div>
+            <div class="card-body">
+                <form wire:submit="updateStatus">
+                    <label class="form-label">{{ __('admin.change_order_status') }}</label>
+                    <select class="form-select mb-2 @error('statusCode') is-invalid @enderror" wire:model="statusCode">
+                        @foreach ($statusOptions as $status)
+                            <option value="{{ $status->code }}">{{ $status->name }}</option>
+                        @endforeach
+                    </select>
+                    @error('statusCode') <div class="invalid-feedback d-block mb-2">{{ $message }}</div> @enderror
+                    <button type="submit" class="btn btn-sm btn-primary" wire:loading.attr="disabled">{{ __('admin.update_order_status') }}</button>
+                </form>
+            </div>
+        </div>
+    @endif
 
     @if ($canMeasure)
         <div class="card mt-4">
@@ -168,22 +199,6 @@
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-    @else
-        <div class="card mt-4">
-            <div class="card-header"><h5 class="mb-0">{{ __('admin.order_status') }}</h5></div>
-            <div class="card-body">
-                <form wire:submit="updateStatus">
-                    <label class="form-label">{{ __('admin.change_order_status') }}</label>
-                    <select class="form-select mb-2 @error('statusCode') is-invalid @enderror" wire:model="statusCode">
-                        @foreach ($statusOptions as $status)
-                            <option value="{{ $status->code }}">{{ $status->name }}</option>
-                        @endforeach
-                    </select>
-                    @error('statusCode') <div class="invalid-feedback d-block mb-2">{{ $message }}</div> @enderror
-                    <button type="submit" class="btn btn-sm btn-primary" wire:loading.attr="disabled">{{ __('admin.update_order_status') }}</button>
-                </form>
             </div>
         </div>
     @endif

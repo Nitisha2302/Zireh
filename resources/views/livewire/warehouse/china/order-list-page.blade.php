@@ -46,6 +46,7 @@
                         <th>{{ __('admin.elim_order_id') }}</th>
                         <th>{{ __('admin.customer') }}</th>
                         <th>{{ __('admin.platforms') }}</th>
+                        <th>{{ __('admin.shipment_id') }}</th>
                         <th>{{ __('admin.status') }}</th>
                         <th>{{ __('admin.parcel_tracking_id') }}</th>
                         <th>{{ __('admin.tajikistan_warehouse') }}</th>
@@ -64,6 +65,15 @@
                             </td>
                             <td><span class="badge bg-label-info text-uppercase">{{ $order->platform }}</span></td>
                             <td>
+                                @if ($order->shipment)
+                                    <a href="{{ route('china.shipments.show', $order->shipment) }}" class="badge bg-label-primary">
+                                        {{ $order->shipment->shipment_code }}
+                                    </a>
+                                @else
+                                    —
+                                @endif
+                            </td>
+                            <td>
                                 @if ($order->orderStatus)
                                     <span class="badge {{ $order->orderStatus->badgeClass() }}">{{ $order->orderStatus->name }}</span>
                                 @else
@@ -81,7 +91,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="9" class="text-center py-4 text-body-secondary">{{ __('admin.no_orders_found') }}</td>
+                            <td colspan="10" class="text-center py-4 text-body-secondary">{{ __('admin.no_orders_found') }}</td>
                         </tr>
                     @endforelse
                 </tbody>

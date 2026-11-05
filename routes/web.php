@@ -10,6 +10,8 @@ use App\Livewire\Admin\Lesson\LessonListPage;
 use App\Livewire\Admin\News\NewsCreatePage;
 use App\Livewire\Admin\News\NewsEditPage;
 use App\Livewire\Admin\News\NewsListPage;
+use App\Livewire\Admin\Order\ExceptionListPage as AdminExceptionListPage;
+use App\Livewire\Admin\Order\OrderAuditLogListPage;
 use App\Livewire\Admin\Order\OrderDetailPage;
 use App\Livewire\Admin\Order\OrderListPage;
 use App\Livewire\Admin\OrderStatus\OrderStatusCreatePage;
@@ -57,15 +59,25 @@ use App\Livewire\Admin\Warehouse\WarehouseEditPage;
 use App\Livewire\Admin\Warehouse\WarehouseListPage;
 use App\Livewire\Admin\Warehouse\WarehouseShowPage;
 use App\Livewire\Authenticate\LoginPage;
+use App\Livewire\Warehouse\China\ExceptionListPage as ChinaExceptionListPage;
 use App\Livewire\Warehouse\China\LoginPage as ChinaLoginPage;
 use App\Livewire\Warehouse\China\OrderDetailPage as ChinaOrderDetailPage;
 use App\Livewire\Warehouse\China\OrderListPage as ChinaOrderListPage;
+use App\Livewire\Warehouse\China\ParcelScannerPage as ChinaParcelScannerPage;
 use App\Livewire\Warehouse\China\ProfilePage as ChinaProfilePage;
+use App\Livewire\Warehouse\China\ShipmentCreatePage as ChinaShipmentCreatePage;
+use App\Livewire\Warehouse\China\ShipmentDetailPage as ChinaShipmentDetailPage;
+use App\Livewire\Warehouse\China\ShipmentListPage as ChinaShipmentListPage;
+use App\Livewire\Warehouse\Tajikistan\ExceptionListPage as TajikistanExceptionListPage;
 use App\Livewire\Warehouse\Tajikistan\LoginPage as TajikistanLoginPage;
 use App\Livewire\Warehouse\Tajikistan\OrderDetailPage as TajikistanOrderDetailPage;
 use App\Livewire\Warehouse\Tajikistan\OrderListPage as TajikistanOrderListPage;
+use App\Livewire\Warehouse\Tajikistan\ParcelScannerPage as TajikistanParcelScannerPage;
 use App\Livewire\Warehouse\Tajikistan\PickupPage as TajikistanPickupPage;
+use App\Livewire\Warehouse\Tajikistan\ProcessingPage as TajikistanProcessingPage;
 use App\Livewire\Warehouse\Tajikistan\ProfilePage as TajikistanProfilePage;
+use App\Livewire\Warehouse\Tajikistan\ShipmentDetailPage as TajikistanShipmentDetailPage;
+use App\Livewire\Warehouse\Tajikistan\ShipmentListPage as TajikistanShipmentListPage;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -85,6 +97,11 @@ Route::prefix('china')->name('china.')->middleware(['is_auth:admin', 'admin.role
     Route::get('profile', ChinaProfilePage::class)->name('profile');
     Route::get('orders', ChinaOrderListPage::class)->name('orders.index');
     Route::get('orders/{order}', ChinaOrderDetailPage::class)->name('orders.show');
+    Route::get('shipments', ChinaShipmentListPage::class)->name('shipments.index');
+    Route::get('shipments/create', ChinaShipmentCreatePage::class)->name('shipments.create');
+    Route::get('shipments/{shipment}', ChinaShipmentDetailPage::class)->name('shipments.show');
+    Route::get('scanner', ChinaParcelScannerPage::class)->name('scanner');
+    Route::get('exceptions', ChinaExceptionListPage::class)->name('exceptions.index');
 });
 
 Route::get('tajikistan/login', TajikistanLoginPage::class)->name('tajikistan.login');
@@ -93,6 +110,11 @@ Route::prefix('tajikistan')->name('tajikistan.')->middleware(['is_auth:admin', '
     Route::get('profile', TajikistanProfilePage::class)->name('profile');
     Route::get('orders', TajikistanOrderListPage::class)->name('orders.index');
     Route::get('orders/{order}', TajikistanOrderDetailPage::class)->name('orders.show');
+    Route::get('shipments', TajikistanShipmentListPage::class)->name('shipments.index');
+    Route::get('shipments/{shipment}', TajikistanShipmentDetailPage::class)->name('shipments.show');
+    Route::get('scanner', TajikistanParcelScannerPage::class)->name('scanner');
+    Route::get('processing', TajikistanProcessingPage::class)->name('processing');
+    Route::get('exceptions', TajikistanExceptionListPage::class)->name('exceptions.index');
     Route::get('pickup', TajikistanPickupPage::class)->name('pickup.index');
     Route::get('pickup/{token}', TajikistanPickupPage::class)->name('pickup.show');
 });
@@ -121,6 +143,8 @@ Route::prefix('admin')->name('admin.')->middleware(['is_auth:admin'])->group(fun
 
         Route::get('orders', OrderListPage::class)->name('orders.index');
         Route::get('orders/{order}', OrderDetailPage::class)->name('orders.show');
+        Route::get('exceptions', AdminExceptionListPage::class)->name('exceptions.index');
+        Route::get('order-audit-logs', OrderAuditLogListPage::class)->name('order-audit-logs.index');
 
         Route::get('order-statuses', OrderStatusListPage::class)->name('order-statuses.index');
         Route::get('order-statuses/create', OrderStatusCreatePage::class)->name('order-statuses.create');

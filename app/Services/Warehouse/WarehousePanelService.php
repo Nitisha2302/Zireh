@@ -92,6 +92,16 @@ class WarehousePanelService
 
     public function updateOrderStatus(CustomerOrder $order, string $statusCode): CustomerOrder
     {
+        $order->loadMissing('shipment');
+
+        if ($order->isManagedByShipment()) {
+            throw ValidationException::withMessages([
+                'statusCode' => [__('admin.order_status_managed_by_shipment', [
+                    'shipment' => $order->shipment?->shipment_code ?? '#'.$order->shipment_id,
+                ])],
+            ]);
+        }
+
         return $this->orderStatusService->updateOrderStatus($order, $statusCode);
     }
 
@@ -120,11 +130,14 @@ class WarehousePanelService
         ?string $platformFilter,
     ): Builder {
         return CustomerOrder::query()
-            ->with(['user', 'items', 'orderStatus', 'warehouse'])
+            ->with(['user', 'items', 'orderStatus', 'warehouse', 'shipment'])
             ->when($search, function (Builder $query) use ($search): void {
                 $query->where(function (Builder $inner) use ($search): void {
                     $inner->where('elim_order_id', 'like', '%'.$search.'%')
+                        ->orWhere('parcel_code', 'like', '%'.$search.'%')
                         ->orWhere('parcel_tracking_id', 'like', '%'.$search.'%')
+                        ->orWhereHas('shipment', fn (Builder $shipmentQuery) => $shipmentQuery
+                            ->where('shipment_code', 'like', '%'.$search.'%'))
                         ->orWhereHas('user', fn (Builder $userQuery) => $userQuery
                             ->where('name', 'like', '%'.$search.'%')
                             ->orWhere('phone', 'like', '%'.$search.'%'));
