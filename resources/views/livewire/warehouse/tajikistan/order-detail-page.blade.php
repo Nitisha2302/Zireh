@@ -75,7 +75,7 @@
                 <div class="row g-3">
                     <div class="col-12">
                         <label class="form-label">{{ __('admin.shipping_method') }}</label>
-                        <select class="form-select @error('shippingMethodId') is-invalid @enderror" wire:model="shippingMethodId">
+                        <select class="form-select @error('shippingMethodId') is-invalid @enderror" wire:model.live="shippingMethodId">
                             <option value="">{{ __('admin.select_shipping_method') }}</option>
                             @foreach ($shippingMethods as $method)
                                 <option value="{{ $method->id }}">{{ $method->name }} ({{ $method->code }})</option>

@@ -129,7 +129,7 @@ class ParcelScannerPage extends Component
         $admin = Auth::guard('admin')->user();
 
         return view('livewire.warehouse.tajikistan.parcel-scanner-page', [
-            'statusOptions' => $orderStatusService->listActiveForManualUpdate(),
+            'statusOptions' => $orderStatusService->listActiveForWarehouseUpdate(),
             'panel' => 'tajikistan',
             'orderShowRoute' => 'tajikistan.orders.show',
             'exceptionsRoute' => 'tajikistan.exceptions.index',

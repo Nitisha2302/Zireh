@@ -1,10 +1,12 @@
 <?php
 
+use App\Models\Admin;
 use App\Models\CustomerOrder;
 use App\Models\OrderStatus;
 use App\Models\User;
 use App\Models\WalletTransaction;
 use App\Services\Wallet\WalletService;
+use App\Support\Elim\ElimApiConfig;
 use Database\Seeders\OrderStatusSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
@@ -19,7 +21,7 @@ beforeEach(function () {
         'services.elim.base_url' => 'https://openapi.elim.asia',
         'services.elim.demo_mode' => false,
     ]);
-    Cache::forget(\App\Support\Elim\ElimApiConfig::CACHE_KEY);
+    Cache::forget(ElimApiConfig::CACHE_KEY);
     Cache::put('elim:auth:access_token', 'test-elim-token', 3600);
 });
 
@@ -29,7 +31,7 @@ function makeCustomerOrder(User $user, array $overrides = []): CustomerOrder
         'user_id' => $user->id,
         'platform' => 'taobao',
         'elim_order_id' => 'ORD0000000001',
-        'status' => \App\Models\OrderStatus::CODE_PAID,
+        'status' => OrderStatus::CODE_PAID,
         'payment_status' => 'unpaid',
         'goods_subtotal_cny' => 100,
         'shipping_fee_cny' => 10,
@@ -70,7 +72,7 @@ it('pays order by deducting wallet and confirming with elim', function () {
         $user,
         200,
         'Test funds',
-        \App\Models\Admin::create([
+        Admin::create([
             'name' => 'Admin',
             'username' => 'admin',
             'email' => 'admin@test.com',
@@ -119,7 +121,7 @@ it('syncs order status from elim', function () {
         'https://openapi.elim.asia/v1/orders/ORD0000000001' => Http::response([
             'data' => [
                 'id' => 'ORD0000000001',
-                'status' => 'shipped',
+                'status' => 'completed',
                 'payment_status' => 'paid',
             ],
         ], 200),
@@ -129,11 +131,12 @@ it('syncs order status from elim', function () {
 
     $response = $this->postJson("/api/v1/auth/orders/{$order->id}/sync");
 
+    // Elim `completed` = receipt confirmed at our China warehouse address.
     $response->assertOk()
-        ->assertJsonPath('data.status', OrderStatus::CODE_SHIPPED_TO_TAJIKISTAN)
+        ->assertJsonPath('data.status', OrderStatus::CODE_RECEIVED_AT_CHINA_WAREHOUSE)
         ->assertJsonPath('data.payment_status', 'paid');
 
-    expect($order->fresh()->status)->toBe(OrderStatus::CODE_SHIPPED_TO_TAJIKISTAN);
+    expect($order->fresh()->status)->toBe(OrderStatus::CODE_RECEIVED_AT_CHINA_WAREHOUSE);
 });
 
 it('cancels order via elim when status allows', function () {
@@ -175,13 +178,13 @@ it('rejects cancel when order is not cancellable', function () {
 
 it('refunds wallet payment amount once when cancelling a wallet-paid order', function () {
     $user = User::factory()->create();
-    $admin = \App\Models\Admin::create([
+    $admin = Admin::create([
         'name' => 'Wallet Admin',
         'username' => 'walletadmin',
         'email' => 'walletadmin@test.com',
         'password' => bcrypt('password'),
         'email_verified_at' => now(),
-        'role' => \App\Models\Admin::ROLE_SUPER_ADMIN,
+        'role' => Admin::ROLE_SUPER_ADMIN,
     ]);
 
     $walletService = app(WalletService::class);
@@ -291,7 +294,7 @@ it('refunds customer wallet when elim payment confirm fails', function () {
         $user,
         200,
         'Test funds',
-        \App\Models\Admin::create([
+        Admin::create([
             'name' => 'Admin2',
             'username' => 'admin2',
             'email' => 'admin2@test.com',

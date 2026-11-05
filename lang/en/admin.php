@@ -1091,4 +1091,7 @@ return [
     'system_automated' => 'System / ElimAPI',
     'search_audit_logs_placeholder' => 'Search by order code, Elim ID, employee, or notes...',
     'no_audit_logs_found' => 'No status history records found.',
+    'order_status_cancelled_locked' => 'This order is cancelled and refunded. Its status can no longer be changed.',
+    'order_status_requires_pickup_flow' => 'This status can only be set through Tajikistan processing (Ready for Pickup) or pickup QR delivery (Delivered).',
+    'processing_order_not_shipped_yet' => 'This parcel has not left the China warehouse yet (current status: :status). Log an exception if it physically arrived.',
 ];

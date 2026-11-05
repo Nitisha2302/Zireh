@@ -165,7 +165,7 @@ class ProcessingPage extends Component
         $this->resetErrorBag();
 
         try {
-            $order = $this->syncSelectedShippingMethod();
+            $order = $this->orderWithSelectedShippingMethod();
             $this->shippingPreview = $pickupService->previewShipping($order, $this->measurementPayload());
         } catch (ValidationException $exception) {
             $this->shippingPreview = null;
@@ -269,6 +269,23 @@ class ProcessingPage extends Component
             && is_numeric($this->packageLengthCm) && (float) $this->packageLengthCm > 0
             && is_numeric($this->packageWidthCm) && (float) $this->packageWidthCm > 0
             && is_numeric($this->packageHeightCm) && (float) $this->packageHeightCm > 0;
+    }
+
+    /**
+     * In-memory copy of the order using the currently selected shipping method.
+     * Used for live previews so nothing is persisted until processing is completed.
+     */
+    protected function orderWithSelectedShippingMethod(): CustomerOrder
+    {
+        if (! $this->shippingMethodId || (int) $this->order->shipping_method_id === (int) $this->shippingMethodId) {
+            return $this->order;
+        }
+
+        $previewOrder = clone $this->order;
+        $previewOrder->setAttribute('shipping_method_id', (int) $this->shippingMethodId);
+        $previewOrder->setRelation('shippingMethod', ShippingMethod::query()->find($this->shippingMethodId));
+
+        return $previewOrder;
     }
 
     protected function syncSelectedShippingMethod(): CustomerOrder

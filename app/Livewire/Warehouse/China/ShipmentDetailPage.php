@@ -128,7 +128,7 @@ class ShipmentDetailPage extends Component
     public function render(ShipmentService $shipmentService, OrderStatusService $orderStatusService)
     {
         return view('livewire.warehouse.china.shipment-detail-page', [
-            'statusOptions' => $orderStatusService->listActiveForManualUpdate(),
+            'statusOptions' => $orderStatusService->listActiveForWarehouseUpdate(),
             'unassignedOrders' => $this->shipment->isStatusUpdateLocked()
                 ? collect()
                 : $shipmentService->listUnassignedOrders(),

@@ -13,6 +13,18 @@ class OrderAuditLogger
     /** @var list<array{source: string, admin_id: ?int, notes: ?string, metadata: array<string, mixed>}> */
     protected static array $contextStack = [];
 
+    /** Only a positive result is cached so a later migration is still picked up. */
+    protected static bool $historyTableConfirmed = false;
+
+    protected static function historyTableExists(): bool
+    {
+        if (self::$historyTableConfirmed) {
+            return true;
+        }
+
+        return self::$historyTableConfirmed = Schema::hasTable('order_status_histories');
+    }
+
     /**
      * Execute a callback within a specific audit context (e.g., elim_api, barcode_scan, manual).
      *
@@ -61,7 +73,7 @@ class OrderAuditLogger
             return null;
         }
 
-        if (! Schema::hasTable('order_status_histories')) {
+        if (! self::historyTableExists()) {
             return null;
         }
 

@@ -8,6 +8,7 @@ use App\Models\OrderStatus;
 use App\Models\OrderStatusHistory;
 use App\Models\Shipment;
 use App\Services\Order\OrderAuditLogger;
+use App\Services\Order\OrderStatusService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
@@ -370,6 +371,12 @@ class ShipmentService
 
     protected function resolveValidStatus(string $statusCode): OrderStatus
     {
+        if (in_array($statusCode, OrderStatusService::FLOW_ONLY_STATUS_CODES, true)) {
+            throw ValidationException::withMessages([
+                'statusCode' => [__('admin.order_status_requires_pickup_flow')],
+            ]);
+        }
+
         if ($statusCode === OrderStatus::CODE_CANCELLED) {
             throw ValidationException::withMessages([
                 'statusCode' => [__('admin.order_status_cancel_via_button_only')],

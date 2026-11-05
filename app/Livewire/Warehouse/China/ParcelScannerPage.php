@@ -125,7 +125,7 @@ class ParcelScannerPage extends Component
     public function render(OrderStatusService $orderStatusService)
     {
         return view('livewire.warehouse.china.parcel-scanner-page', [
-            'statusOptions' => $orderStatusService->listActiveForManualUpdate(),
+            'statusOptions' => $orderStatusService->listActiveForWarehouseUpdate(),
             'panel' => 'china',
             'orderShowRoute' => 'china.orders.show',
             'exceptionsRoute' => 'china.exceptions.index',

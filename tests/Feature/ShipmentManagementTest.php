@@ -272,12 +272,13 @@ it('locks shipment status updates once received in tajikistan and enables indepe
         ->call('updateStatus')
         ->assertHasNoErrors();
 
+    // Flow-only statuses (Delivered / Ready for Pickup) cannot be set manually by warehouse staff.
     Livewire::test(TajikistanOrderDetailPage::class, ['order' => $order2])
         ->set('statusCode', OrderStatus::CODE_DELIVERED_TO_CUSTOMER)
         ->call('updateStatus')
-        ->assertHasNoErrors();
+        ->assertHasErrors(['statusCode']);
 
     expect($order1->fresh()->status)->toBe(OrderStatus::CODE_SORTING_CENTER)
-        ->and($order2->fresh()->status)->toBe(OrderStatus::CODE_DELIVERED_TO_CUSTOMER)
+        ->and($order2->fresh()->status)->toBe(OrderStatus::CODE_ARRIVED_IN_TAJIKISTAN)
         ->and($shipment->fresh()->status)->toBe(OrderStatus::CODE_ARRIVED_IN_TAJIKISTAN);
 });

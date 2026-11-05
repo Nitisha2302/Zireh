@@ -130,6 +130,14 @@ class OrderStatus extends Model
             ?: $this->code;
     }
 
+    /**
+     * Map an Elim purchasing-order status to a local fulfilment status.
+     *
+     * Per Elim docs, `shipped` means the seller dispatched the goods towards OUR China
+     * receiver address (domestic China logistics), and `completed` means receipt was
+     * confirmed at that China address. Neither means the parcel left China or reached
+     * the customer, so later stages are driven only by warehouse staff.
+     */
     public static function mapFromElimStatus(?string $elimStatus): ?string
     {
         if ($elimStatus === null || $elimStatus === '') {
@@ -138,9 +146,9 @@ class OrderStatus extends Model
 
         return match ($elimStatus) {
             'creating', 'pending', 'pending_payment', 'ordered', 'paid', 'processing' => self::CODE_PAID,
-            'shipped', 'in_transit' => self::CODE_SHIPPED_TO_TAJIKISTAN,
-            'completed', 'delivered' => self::CODE_DELIVERED_TO_CUSTOMER,
+            'completed', 'delivered' => self::CODE_RECEIVED_AT_CHINA_WAREHOUSE,
             'cancelled', 'closed' => self::CODE_CANCELLED,
+            // 'shipped' / 'in_transit' = still moving inside China → no local status change.
             default => null,
         };
     }

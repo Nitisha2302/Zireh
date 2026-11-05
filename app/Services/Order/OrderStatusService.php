@@ -136,11 +136,38 @@ class OrderStatusService
         $this->clearCache();
     }
 
-    public function updateOrderStatus(CustomerOrder $order, string $statusCode): CustomerOrder
-    {
+    /**
+     * Statuses that must only be reached through their dedicated flows:
+     * ready_for_pickup → Tajikistan processing / pickup measurement (creates fee + pickup QR),
+     * delivered_to_customer → pickup QR delivery after the pickup fee is paid.
+     *
+     * @var list<string>
+     */
+    public const FLOW_ONLY_STATUS_CODES = [
+        OrderStatus::CODE_READY_FOR_PICKUP,
+        OrderStatus::CODE_DELIVERED_TO_CUSTOMER,
+    ];
+
+    public function updateOrderStatus(
+        CustomerOrder $order,
+        string $statusCode,
+        bool $allowFlowOnlyStatuses = true,
+    ): CustomerOrder {
         if ($statusCode === OrderStatus::CODE_CANCELLED) {
             throw ValidationException::withMessages([
-                'status' => [__('admin.order_status_cancel_via_button_only')],
+                'statusCode' => [__('admin.order_status_cancel_via_button_only')],
+            ]);
+        }
+
+        if ($order->status === OrderStatus::CODE_CANCELLED) {
+            throw ValidationException::withMessages([
+                'statusCode' => [__('admin.order_status_cancelled_locked')],
+            ]);
+        }
+
+        if (! $allowFlowOnlyStatuses && in_array($statusCode, self::FLOW_ONLY_STATUS_CODES, true)) {
+            throw ValidationException::withMessages([
+                'statusCode' => [__('admin.order_status_requires_pickup_flow')],
             ]);
         }
 
@@ -151,7 +178,7 @@ class OrderStatusService
 
         if (! $status) {
             throw ValidationException::withMessages([
-                'status' => [__('admin.order_status_not_available')],
+                'statusCode' => [__('admin.order_status_not_available')],
             ]);
         }
 
@@ -164,6 +191,16 @@ class OrderStatusService
     {
         return $this->listActive()
             ->reject(fn (OrderStatus $status): bool => $status->code === OrderStatus::CODE_CANCELLED)
+            ->values();
+    }
+
+    /**
+     * Statuses warehouse staff may set via manual update, scanner, or shipment cascade.
+     */
+    public function listActiveForWarehouseUpdate(): Collection
+    {
+        return $this->listActiveForManualUpdate()
+            ->reject(fn (OrderStatus $status): bool => in_array($status->code, self::FLOW_ONLY_STATUS_CODES, true))
             ->values();
     }
 

@@ -85,7 +85,7 @@ class ShipmentCreatePage extends Component
         return view('livewire.warehouse.china.shipment-create-page', [
             'unassignedOrders' => $unassignedOrders,
             'selectedOrders' => $unassignedOrders->whereIn('id', $selectedIds)->values(),
-            'statusOptions' => $orderStatusService->listActiveForManualUpdate(),
+            'statusOptions' => $orderStatusService->listActiveForWarehouseUpdate(),
         ])->title(__('admin.create_shipment'));
     }
 }

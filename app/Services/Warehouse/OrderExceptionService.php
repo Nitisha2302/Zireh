@@ -75,6 +75,33 @@ class OrderExceptionService
             return null;
         }
 
+        $summary = sprintf('Elim API (%s): %s', $operation, mb_strimwidth($message, 0, 180, '...'));
+
+        // Reuse an existing open exception for the same order + operation instead of piling up duplicates.
+        $existing = OrderException::query()
+            ->where('customer_order_id', $order->id)
+            ->where('type', OrderException::TYPE_API_ERROR)
+            ->where('status', '!=', OrderException::STATUS_RESOLVED)
+            ->where('error_payload->operation', $operation)
+            ->latest('id')
+            ->first();
+
+        if ($existing) {
+            $previous = is_array($existing->error_payload) ? $existing->error_payload : [];
+
+            $existing->update([
+                'summary' => $summary,
+                'details' => $message,
+                'error_payload' => array_merge($previous, $payload, [
+                    'operation' => $operation,
+                    'occurrences' => ((int) ($previous['occurrences'] ?? 1)) + 1,
+                    'last_occurred_at' => now()->toIso8601String(),
+                ]),
+            ]);
+
+            return $existing->fresh();
+        }
+
         return OrderException::query()->create([
             'customer_order_id' => $order->id,
             'shipment_id' => $order->shipment_id,
@@ -83,11 +110,45 @@ class OrderExceptionService
             'status' => OrderException::STATUS_OPEN,
             'origin_panel' => 'elim_api',
             'scanned_code' => $order->elim_order_id ?: $order->parcel_code,
-            'summary' => sprintf('Elim API (%s): %s', $operation, mb_strimwidth($message, 0, 180, '...')),
+            'summary' => $summary,
             'details' => $message,
-            'error_payload' => array_merge(['operation' => $operation], $payload),
+            'error_payload' => array_merge(['operation' => $operation, 'occurrences' => 1], $payload),
             'reported_by_admin_id' => $admin?->id,
         ]);
+    }
+
+    /**
+     * Load an exception only if it is visible in the given panel for this admin (prevents ID tampering).
+     */
+    public function findForPanel(Admin $admin, string $panel, int $exceptionId): OrderException
+    {
+        $query = OrderException::query()->whereKey($exceptionId);
+        $this->applyPanelScope($query, $admin, $panel);
+
+        $exception = $query->first();
+
+        if (! $exception) {
+            abort(404);
+        }
+
+        return $exception;
+    }
+
+    /**
+     * @param  Builder<OrderException>  $query
+     */
+    protected function applyPanelScope(Builder $query, Admin $admin, string $panel): void
+    {
+        if ($panel === 'tajikistan' && $admin->isTajikistanWarehouseStaff()) {
+            $query->where(function (Builder $q) use ($admin): void {
+                $q->where('warehouse_id', $admin->warehouse_id)
+                    ->orWhere(function (Builder $inner) use ($admin): void {
+                        $inner->whereNull('warehouse_id')
+                            ->where('origin_panel', 'tajikistan')
+                            ->where('reported_by_admin_id', $admin->id);
+                    });
+            });
+        }
     }
 
     public function updateStatus(
@@ -144,16 +205,7 @@ class OrderExceptionService
         $query = OrderException::query()
             ->with(['order.user', 'order.orderStatus', 'shipment', 'warehouse', 'reportedByAdmin', 'resolvedByAdmin']);
 
-        if ($panel === 'tajikistan' && $admin->isTajikistanWarehouseStaff()) {
-            $query->where(function (Builder $q) use ($admin): void {
-                $q->where('warehouse_id', $admin->warehouse_id)
-                    ->orWhere(function (Builder $inner) use ($admin): void {
-                        $inner->whereNull('warehouse_id')
-                            ->where('origin_panel', 'tajikistan')
-                            ->where('reported_by_admin_id', $admin->id);
-                    });
-            });
-        }
+        $this->applyPanelScope($query, $admin, $panel);
 
         return $query
             ->when($search, function (Builder $q) use ($search): void {
@@ -177,23 +229,27 @@ class OrderExceptionService
     public function findOrderByIdentifier(string $identifier, ?Admin $admin = null): ?CustomerOrder
     {
         $clean = trim($identifier);
-        if (str_starts_with($clean, 'cargo-parcel:')) {
+        if (str_starts_with(strtolower($clean), 'cargo-parcel:')) {
             $clean = substr($clean, strlen('cargo-parcel:'));
         }
-        $clean = ltrim($clean, '#');
+
+        // Internal order IDs are only accepted with an explicit "#" prefix.
+        $explicitId = preg_match('/^#(\d+)$/', $clean, $idMatch) === 1 ? (int) $idMatch[1] : null;
 
         if ($clean === '') {
             return null;
         }
 
-        $query = CustomerOrder::query()->where(function (Builder $q) use ($clean): void {
-            $q->where('parcel_code', $clean)
+        $query = CustomerOrder::query()->where(function (Builder $q) use ($clean, $explicitId): void {
+            if ($explicitId !== null) {
+                $q->where('id', $explicitId);
+
+                return;
+            }
+
+            $q->where('parcel_code', strtoupper($clean))
                 ->orWhere('parcel_tracking_id', $clean)
                 ->orWhere('elim_order_id', $clean);
-
-            if (ctype_digit($clean)) {
-                $q->orWhere('id', (int) $clean);
-            }
         });
 
         if ($admin && $admin->isTajikistanWarehouseStaff()) {

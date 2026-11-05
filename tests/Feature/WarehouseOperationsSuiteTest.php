@@ -287,10 +287,11 @@ it('records every status change in the order history and audit log with date, ti
         ->call('updateStatus')
         ->assertHasNoErrors();
 
-    // 4. Elim API webhook update records 'elim_api' source
+    // 4. Elim API webhook update records 'elim_api' source.
+    // Elim `cancelled` is applied regardless of current stage → shipped_to_tajikistan → cancelled.
     app(CustomerOrderLifecycleService::class)->applyWebhookOrderUpdate(
         $order->fresh(),
-        ['id' => 'ORD-AUDIT-001', 'status' => 'delivered', 'payment_status' => 'paid'],
+        ['id' => 'ORD-AUDIT-001', 'status' => 'closed'],
         ['id' => 'evt_1', 'event' => 'order.updated']
     );
 
@@ -311,7 +312,7 @@ it('records every status change in the order history and audit log with date, ti
         ->and($histories[2]->source)->toBe(OrderStatusHistory::SOURCE_MANUAL)
         ->and($histories[2]->admin_id)->toBe($chinaAdmin->id)
         ->and($histories[3]->from_status)->toBe(OrderStatus::CODE_SHIPPED_TO_TAJIKISTAN)
-        ->and($histories[3]->to_status)->toBe(OrderStatus::CODE_DELIVERED_TO_CUSTOMER)
+        ->and($histories[3]->to_status)->toBe(OrderStatus::CODE_CANCELLED)
         ->and($histories[3]->source)->toBe(OrderStatusHistory::SOURCE_ELIM_API);
 
     // Verify Admin Order Audit Log List Page renders all entries cleanly

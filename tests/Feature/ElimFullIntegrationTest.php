@@ -526,7 +526,8 @@ it('supports request-payment, cancel-payment-request with wallet refund, payment
     // 4. Force refresh order from China marketplace
     $this->postJson("/api/v1/auth/orders/{$order->id}/refresh")
         ->assertOk()
-        ->assertJsonPath('data.status', OrderStatus::CODE_IN_TRANSIT)
+        // Elim `in_transit` = still moving inside China (to our receiver address) → no local status change.
+        ->assertJsonPath('data.status', OrderStatus::CODE_PAID)
         ->assertJsonPath('data.parcel_tracking_id', 'SF999888777');
 
     // 5. Domestic logistics for 1688 with package_id & lang
@@ -610,7 +611,7 @@ it('verifies Elim HMAC-SHA256 webhooks, processes order.updated & payment.update
         ->assertJsonPath('data.processed', true);
 
     $order->refresh();
-    expect($order->status)->toBe(OrderStatus::CODE_IN_TRANSIT)
+    expect($order->status)->toBe(OrderStatus::CODE_PAID)
         ->and($order->parcel_tracking_id)->toBe('YT123456789');
 
     // 4. Out-of-order stale webhook delivery (older `updated_at`) is skipped
@@ -636,7 +637,7 @@ it('verifies Elim HMAC-SHA256 webhooks, processes order.updated & payment.update
         ->assertJsonPath('data.reason', 'stale_webhook_delivery');
 
     $order->refresh();
-    expect($order->status)->toBe(OrderStatus::CODE_IN_TRANSIT);
+    expect($order->status)->toBe(OrderStatus::CODE_PAID);
 
     // 5. Valid `payment.updated` with `payment_status = refunded` & `status = cancelled` -> auto-refunds customer TJS wallet once
     $bodyRefund = json_encode([
@@ -727,7 +728,7 @@ it('manages Elim webhooks via ElimWebhookService and Admin OrderDetailPage actio
     $order = createElimOrderForUser($customer, [
         'platform' => 'taobao',
         'elim_order_id' => 'ORD_STAFF_1',
-        'status' => OrderStatus::CODE_IN_TRANSIT,
+        'status' => OrderStatus::CODE_PAID,
         'payment_status' => CustomerOrder::PAYMENT_STATUS_PAID,
     ]);
 
@@ -737,7 +738,7 @@ it('manages Elim webhooks via ElimWebhookService and Admin OrderDetailPage actio
         ->call('refreshElimOrder');
 
     $order->refresh();
-    expect($order->status)->toBe(OrderStatus::CODE_DELIVERED);
+    expect($order->status)->toBe(OrderStatus::CODE_RECEIVED_AT_CHINA_WAREHOUSE);
 });
 
 it('auto-refunds customer TJS wallet when sync or refresh detects upstream cancellation/refund or payment rejection, and prevents status regression', function () {

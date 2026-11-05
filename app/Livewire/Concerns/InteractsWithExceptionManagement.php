@@ -85,9 +85,11 @@ trait InteractsWithExceptionManagement
         flash()->success(__('admin.exception_created_success'));
     }
 
-    public function startReview(int $exceptionId): void
+    public function startReview(int $exceptionId, OrderExceptionService $exceptionService): void
     {
-        $exception = OrderException::query()->findOrFail($exceptionId);
+        /** @var Admin $admin */
+        $admin = Auth::guard('admin')->user();
+        $exception = $exceptionService->findForPanel($admin, $this->exceptionPanelName(), $exceptionId);
 
         $this->editingExceptionId = $exception->id;
         $this->editStatus = $exception->status === OrderException::STATUS_OPEN
@@ -111,10 +113,10 @@ trait InteractsWithExceptionManagement
             return;
         }
 
-        $exception = OrderException::query()->findOrFail($this->editingExceptionId);
-
         /** @var Admin $admin */
         $admin = Auth::guard('admin')->user();
+
+        $exception = $exceptionService->findForPanel($admin, $this->exceptionPanelName(), $this->editingExceptionId);
 
         try {
             $exceptionService->updateStatus(

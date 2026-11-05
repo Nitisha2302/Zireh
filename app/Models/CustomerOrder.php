@@ -15,7 +15,10 @@ class CustomerOrder extends Model
     protected static function booted(): void
     {
         static::creating(function (CustomerOrder $order): void {
-            if (empty($order->parcel_code)) {
+            if (
+                empty($order->parcel_code)
+                || self::query()->where('parcel_code', $order->parcel_code)->exists()
+            ) {
                 $order->parcel_code = self::generateUniqueParcelCode();
             }
         });
@@ -58,6 +61,17 @@ class CustomerOrder extends Model
         } while (self::query()->where('parcel_code', $candidate)->exists());
 
         return $candidate;
+    }
+
+    /**
+     * Never copy per-parcel unique identifiers when duplicating an order.
+     */
+    public function replicate(?array $except = null): static
+    {
+        return parent::replicate(array_values(array_unique(array_merge(
+            $except ?? [],
+            ['parcel_code', 'pickup_token']
+        ))));
     }
 
     public function parcelQrPayload(): string

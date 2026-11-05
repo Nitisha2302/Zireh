@@ -46,32 +46,32 @@ class OrderDetailPage extends Component
         $this->shippingMethodId = $order->shipping_method_id;
     }
 
-    public function updatedPackageLengthCm(): void
+    public function updatedPackageLengthCm(OrderPickupService $pickupService): void
     {
-        $this->shippingPreview = null;
+        $this->autoPreviewShipping($pickupService);
     }
 
-    public function updatedPackageWidthCm(): void
+    public function updatedPackageWidthCm(OrderPickupService $pickupService): void
     {
-        $this->shippingPreview = null;
+        $this->autoPreviewShipping($pickupService);
     }
 
-    public function updatedPackageHeightCm(): void
+    public function updatedPackageHeightCm(OrderPickupService $pickupService): void
     {
-        $this->shippingPreview = null;
+        $this->autoPreviewShipping($pickupService);
     }
 
-    public function updatedPackageWeightG(): void
+    public function updatedPackageWeightG(OrderPickupService $pickupService): void
     {
-        $this->shippingPreview = null;
+        $this->autoPreviewShipping($pickupService);
     }
 
-    public function updatedShippingMethodId(): void
+    public function updatedShippingMethodId(OrderPickupService $pickupService): void
     {
-        $this->shippingPreview = null;
+        $this->autoPreviewShipping($pickupService);
     }
 
-    public function updatedMeasurementMode(): void
+    public function updatedMeasurementMode(OrderPickupService $pickupService): void
     {
         if ($this->measurementMode === 'weight') {
             $this->packageLengthCm = null;
@@ -82,7 +82,63 @@ class OrderDetailPage extends Component
         }
 
         $this->resetErrorBag();
+        $this->autoPreviewShipping($pickupService);
+    }
+
+    /**
+     * Recalculate the shipping preview automatically once measurements are complete.
+     * Runs on an in-memory order so nothing is persisted until "Confirm" is pressed.
+     */
+    protected function autoPreviewShipping(OrderPickupService $pickupService): void
+    {
         $this->shippingPreview = null;
+
+        if (! $this->hasCompleteMeasurements()) {
+            return;
+        }
+
+        $method = ShippingMethod::query()
+            ->whereKey($this->shippingMethodId)
+            ->where('is_active', true)
+            ->first();
+
+        if (! $method) {
+            return;
+        }
+
+        $previewOrder = clone $this->order;
+        $previewOrder->setAttribute('shipping_method_id', $method->id);
+        $previewOrder->setRelation('shippingMethod', $method);
+
+        try {
+            $data = [
+                'packageWeightG' => $this->packageWeightG,
+                'packageLengthCm' => $this->packageLengthCm,
+                'packageWidthCm' => $this->packageWidthCm,
+                'packageHeightCm' => $this->packageHeightCm,
+            ];
+            $this->shippingPreview = $pickupService->previewShipping($previewOrder, $this->measurementPayload($data));
+            $this->resetErrorBag();
+        } catch (ValidationException $exception) {
+            $this->setErrorBag($exception->validator->getMessageBag());
+        }
+    }
+
+    protected function hasCompleteMeasurements(): bool
+    {
+        if (! $this->shippingMethodId) {
+            return false;
+        }
+
+        $positive = fn (?string $value): bool => is_numeric($value) && (float) $value > 0;
+        $hasWeight = $positive($this->packageWeightG);
+        $hasDimensions = $positive($this->packageLengthCm) && $positive($this->packageWidthCm) && $positive($this->packageHeightCm);
+
+        return match ($this->measurementMode) {
+            'weight' => $hasWeight,
+            'cm' => $hasDimensions,
+            default => $hasWeight && $hasDimensions,
+        };
     }
 
     public function previewPickupShipping(OrderPickupService $pickupService): void
@@ -166,7 +222,7 @@ class OrderDetailPage extends Component
             'canMeasure' => ! $isManagedByShipment && in_array($this->order->status, CustomerOrder::PRE_PICKUP_STATUSES, true),
             'isReadyForPickup' => $this->order->isReadyForPickup(),
             'canCancelOrder' => $this->order->isCancellable(),
-            'statusOptions' => $orderStatusService->listActiveForManualUpdate(),
+            'statusOptions' => $orderStatusService->listActiveForWarehouseUpdate(),
             'shippingMethods' => ShippingMethod::query()
                 ->where('is_active', true)
                 ->orderBy('name')

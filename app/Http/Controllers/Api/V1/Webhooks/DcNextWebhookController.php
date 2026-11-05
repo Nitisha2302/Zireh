@@ -29,7 +29,7 @@ class DcNextWebhookController extends Controller
             return response()->json(['success' => false], 400);
         }
 
-        if ($sign !== '' && ! $this->dcNext->verifySign($orderId, $sign)) {
+        if (! $this->dcNext->verifySign($orderId, $sign)) {
             Log::warning('DC NEXT callback sign mismatch', ['order_id' => $orderId]);
 
             return response()->json(['success' => false, 'message' => 'Invalid sign'], 401);

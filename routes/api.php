@@ -102,6 +102,7 @@ Route::prefix('v1')->group(function () use ($publicCatalogRoutes) {
                 Route::post('cart/checkout', [TaobaoCheckoutController::class, 'checkout']);
                 Route::get('orders', [TaobaoCheckoutController::class, 'orders']);
                 Route::get('orders/{order}', [TaobaoCheckoutController::class, 'show']);
+                Route::post('orders/{order}/cancel', [CustomerOrderController::class, 'cancel']);
             });
 
             Route::prefix('1688')->group(function () {
@@ -114,6 +115,7 @@ Route::prefix('v1')->group(function () use ($publicCatalogRoutes) {
                 Route::post('cart/checkout', [Platform1688CheckoutController::class, 'checkout']);
                 Route::get('orders', [Platform1688CheckoutController::class, 'orders']);
                 Route::get('orders/{order}', [Platform1688CheckoutController::class, 'show']);
+                Route::post('orders/{order}/cancel', [CustomerOrderController::class, 'cancel']);
             });
 
             Route::prefix('jd')->group(function () {
@@ -126,6 +128,7 @@ Route::prefix('v1')->group(function () use ($publicCatalogRoutes) {
                 Route::post('cart/checkout', [JdCheckoutController::class, 'checkout']);
                 Route::get('orders', [JdCheckoutController::class, 'orders']);
                 Route::get('orders/{order}', [JdCheckoutController::class, 'show']);
+                Route::post('orders/{order}/cancel', [CustomerOrderController::class, 'cancel']);
             });
         });
     });

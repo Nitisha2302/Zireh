@@ -14,7 +14,7 @@ use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
 
-function makeWarehouseAdmin(): Admin
+function makeWarehouseLoginAdmin(): Admin
 {
     return Admin::create([
         'name' => 'Super Admin',
@@ -26,7 +26,7 @@ function makeWarehouseAdmin(): Admin
     ]);
 }
 
-function validWarehousePayload(array $overrides = []): array
+function validWarehouseLoginPayload(array $overrides = []): array
 {
     return array_merge([
         'warehouse_name' => 'Dushanbe Hub',
@@ -41,11 +41,11 @@ function validWarehousePayload(array $overrides = []): array
 }
 
 it('creates warehouse with embedded tajikistan login account', function () {
-    $admin = makeWarehouseAdmin();
+    $admin = makeWarehouseLoginAdmin();
     $this->actingAs($admin, 'admin');
 
     Livewire::test(WarehouseCreatePage::class)
-        ->set(validWarehousePayload())
+        ->set(validWarehouseLoginPayload())
         ->call('save')
         ->assertRedirect(route('admin.warehouses.index'));
 
@@ -61,11 +61,11 @@ it('creates warehouse with embedded tajikistan login account', function () {
 });
 
 it('updates warehouse login credentials on edit', function () {
-    $admin = makeWarehouseAdmin();
+    $admin = makeWarehouseLoginAdmin();
     $this->actingAs($admin, 'admin');
 
     Livewire::test(WarehouseCreatePage::class)
-        ->set(validWarehousePayload())
+        ->set(validWarehouseLoginPayload())
         ->call('save');
 
     $warehouse = Warehouse::query()->where('warehouse_name', 'Dushanbe Hub')->first();
@@ -85,11 +85,11 @@ it('updates warehouse login credentials on edit', function () {
 });
 
 it('allows tajikistan login with warehouse credentials', function () {
-    $admin = makeWarehouseAdmin();
+    $admin = makeWarehouseLoginAdmin();
     $this->actingAs($admin, 'admin');
 
     Livewire::test(WarehouseCreatePage::class)
-        ->set(validWarehousePayload([
+        ->set(validWarehouseLoginPayload([
             'login_username' => 'tj_login_user',
             'login_email' => 'tjlogin@example.com',
         ]))
@@ -103,11 +103,11 @@ it('allows tajikistan login with warehouse credentials', function () {
 });
 
 it('deletes linked login account when warehouse is deleted', function () {
-    $admin = makeWarehouseAdmin();
+    $admin = makeWarehouseLoginAdmin();
     $this->actingAs($admin, 'admin');
 
     Livewire::test(WarehouseCreatePage::class)
-        ->set(validWarehousePayload())
+        ->set(validWarehouseLoginPayload())
         ->call('save');
 
     $warehouse = Warehouse::query()->where('warehouse_name', 'Dushanbe Hub')->first();
@@ -122,11 +122,11 @@ it('deletes linked login account when warehouse is deleted', function () {
 });
 
 it('rejects login for inactive warehouse', function () {
-    $admin = makeWarehouseAdmin();
+    $admin = makeWarehouseLoginAdmin();
     $this->actingAs($admin, 'admin');
 
     Livewire::test(WarehouseCreatePage::class)
-        ->set(validWarehousePayload([
+        ->set(validWarehouseLoginPayload([
             'login_username' => 'inactive_wh',
             'login_email' => 'inactive@example.com',
             'status' => Warehouse::STATUS_INACTIVE,
@@ -141,7 +141,7 @@ it('rejects login for inactive warehouse', function () {
 });
 
 it('saves china warehouse login from settings page', function () {
-    $admin = makeWarehouseAdmin();
+    $admin = makeWarehouseLoginAdmin();
     $this->actingAs($admin, 'admin');
 
     Livewire::test(ChinaWarehouseLoginSettingsPage::class)

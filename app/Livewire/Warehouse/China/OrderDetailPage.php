@@ -101,7 +101,7 @@ class OrderDetailPage extends Component
     public function render(OrderStatusService $orderStatusService)
     {
         return view('livewire.warehouse.china.order-detail-page', [
-            'statusOptions' => $orderStatusService->listActiveForManualUpdate(),
+            'statusOptions' => $orderStatusService->listActiveForWarehouseUpdate(),
             'canCancelOrder' => $this->order->isCancellable(),
         ])->title(__('admin.china_warehouse_order').' #'.$this->order->id);
     }

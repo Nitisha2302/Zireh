@@ -102,7 +102,7 @@ class WarehousePanelService
             ]);
         }
 
-        return $this->orderStatusService->updateOrderStatus($order, $statusCode);
+        return $this->orderStatusService->updateOrderStatus($order, $statusCode, allowFlowOnlyStatuses: false);
     }
 
     public function updateParcelTracking(CustomerOrder $order, ?string $trackingId): CustomerOrder

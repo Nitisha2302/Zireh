@@ -14,6 +14,17 @@ use Illuminate\Validation\ValidationException;
 
 class OrderPickupService
 {
+    /**
+     * Statuses from which scanning at the Tajikistan processing station may auto-mark arrival.
+     *
+     * @var list<string>
+     */
+    public const AUTO_ARRIVAL_SOURCE_STATUSES = [
+        OrderStatus::CODE_RECEIVED_AT_CHINA_WAREHOUSE,
+        OrderStatus::CODE_PREPARING_FOR_SHIPMENT,
+        OrderStatus::CODE_SHIPPED_TO_TAJIKISTAN,
+    ];
+
     public function __construct(
         private readonly ShippingRateService $shippingRateService,
         private readonly WarehousePanelService $warehousePanelService,
@@ -112,6 +123,16 @@ class OrderPickupService
         }
 
         if (! $order->isReadyForPickup() && ! in_array($order->status, CustomerOrder::PRE_PICKUP_STATUSES, true)) {
+            // Only parcels that have actually left (or been received at) the China warehouse may be
+            // auto-marked as arrived in Tajikistan. Orders still "paid" (Order Created) are rejected.
+            if (! in_array($order->status, self::AUTO_ARRIVAL_SOURCE_STATUSES, true)) {
+                throw ValidationException::withMessages([
+                    'order' => [__('admin.processing_order_not_shipped_yet', [
+                        'status' => $order->orderStatus?->name ?? $order->status,
+                    ])],
+                ]);
+            }
+
             $this->auditLogger->withContext(
                 OrderStatusHistory::SOURCE_BARCODE_SCAN,
                 $admin,

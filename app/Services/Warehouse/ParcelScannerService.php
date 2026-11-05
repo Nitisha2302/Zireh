@@ -4,6 +4,7 @@ namespace App\Services\Warehouse;
 
 use App\Models\Admin;
 use App\Models\CustomerOrder;
+use App\Models\OrderStatus;
 use App\Models\OrderStatusHistory;
 use App\Services\Order\OrderAuditLogger;
 use Illuminate\Validation\ValidationException;
@@ -72,16 +73,18 @@ class ParcelScannerService
 
         $order = null;
         $matchedBy = 'parcel_code';
+        $relations = ['user', 'items', 'orderStatus', 'warehouse', 'shippingMethod', 'shipment'];
 
+        // Parcel codes are generated upper-case; scanners/keyboards may send lower-case.
         $order = CustomerOrder::query()
-            ->with(['user', 'items', 'orderStatus', 'warehouse', 'shippingMethod', 'shipment'])
-            ->where('parcel_code', $code)
+            ->with($relations)
+            ->where('parcel_code', strtoupper($code))
             ->first();
 
         if (! $order) {
             $matchedBy = 'parcel_tracking_id';
             $order = CustomerOrder::query()
-                ->with(['user', 'items', 'orderStatus', 'warehouse', 'shippingMethod', 'shipment'])
+                ->with($relations)
                 ->where('parcel_tracking_id', $code)
                 ->first();
         }
@@ -89,7 +92,7 @@ class ParcelScannerService
         if (! $order) {
             $matchedBy = 'elim_order_id';
             $order = CustomerOrder::query()
-                ->with(['user', 'items', 'orderStatus', 'warehouse', 'shippingMethod', 'shipment'])
+                ->with($relations)
                 ->where('elim_order_id', $code)
                 ->first();
         }
@@ -97,22 +100,29 @@ class ParcelScannerService
         if (! $order) {
             $matchedBy = 'pickup_token';
             $order = CustomerOrder::query()
-                ->with(['user', 'items', 'orderStatus', 'warehouse', 'shippingMethod', 'shipment'])
+                ->with($relations)
                 ->where('pickup_token', $code)
                 ->first();
         }
 
-        $cleanId = ltrim($code, '#');
-        if (! $order && ctype_digit($cleanId)) {
+        // Internal order IDs are only matched with an explicit "#" prefix (e.g. "#123"),
+        // so an unknown numeric carrier barcode can never update an unrelated order.
+        if (! $order && preg_match('/^#(\d+)$/', $code, $idMatch) === 1) {
             $matchedBy = 'order_id';
             $order = CustomerOrder::query()
-                ->with(['user', 'items', 'orderStatus', 'warehouse', 'shippingMethod', 'shipment'])
-                ->find((int) $cleanId);
+                ->with($relations)
+                ->find((int) $idMatch[1]);
         }
 
         if (! $order) {
             throw ValidationException::withMessages([
                 'scanInput' => [__('admin.parcel_scan_order_not_found', ['code' => $code])],
+            ]);
+        }
+
+        if ($order->status === OrderStatus::CODE_CANCELLED) {
+            throw ValidationException::withMessages([
+                'scanInput' => [__('admin.order_status_cancelled_locked')],
             ]);
         }
 

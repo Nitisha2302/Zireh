@@ -49,7 +49,7 @@
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>{{ __('admin.elim_order_id') }}</th>
+                        <th>{{ __('admin.elim_order_id') }} / {{ __('admin.parcel_code') }}</th>
                         <th>{{ __('admin.customer') }}</th>
                         <th>{{ __('admin.platforms') }}</th>
                         <th>{{ __('admin.shipment_id') }}</th>
@@ -64,7 +64,12 @@
                     @forelse ($orders as $order)
                         <tr>
                             <td class="fw-semibold">#{{ $order->id }}</td>
-                            <td>{{ $order->elim_order_id ?? '—' }}</td>
+                            <td>
+                                <div>{{ $order->elim_order_id ?: '—' }}</div>
+                                @if ($order->parcel_code)
+                                    <small class="text-body-secondary font-monospace">{{ $order->parcel_code }}</small>
+                                @endif
+                            </td>
                             <td>
                                 <div class="fw-medium">{{ $order->user?->name ?? '—' }}</div>
                                 <small class="text-body-secondary">{{ $order->user?->phone }}</small>

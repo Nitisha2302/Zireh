@@ -4101,6 +4101,54 @@
                         "description": "Single order with full item snapshots, warehouse, shipping method, `cargo_shipping_fee_tjs`, and `pickup` block (token + `cargo-pickup:{token}` payload) when ready for pickup. Use `pickup.qr.payload` to render the customer pickup QR in the mobile app."
                     },
                     "response": []
+                },
+                {
+                    "name": "Cancel Order",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "const json = pm.response.json();",
+                                    "pm.test(\"Order cancelled\", function () {",
+                                    "  pm.expect(json.data.status).to.eql(\"cancelled\");",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Accept-Language",
+                                "value": "{{locale}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/v1/auth/taobao/orders/{{order_id}}/cancel",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "v1",
+                                "auth",
+                                "taobao",
+                                "orders",
+                                "{{order_id}}",
+                                "cancel"
+                            ]
+                        },
+                        "description": "Cancels an order while its status is `paid` (Order Created):\n1. If `payment_status` is `requested`, automatically calls `POST /v1/orders/{elimOrderId}/cancel-payment-request` on Elim first.\n2. Calls `POST /v1/purchasing/orders/{elimOrderId}/cancel` on Elim (for non-demo Taobao/1688 orders).\n3. If the customer had already paid (`paid` / `requested` / `approved`), automatically refunds the customer TJS wallet and sets `payment_status` = `refunded`.\n4. Updates order `status` = `cancelled` and records an audit log entry."
+                    },
+                    "response": []
                 }
             ],
             "auth": {
@@ -4574,6 +4622,54 @@
                         "description": "Single 1688 order with full item snapshots, warehouse, shipping method, `cargo_shipping_fee_tjs`, and `pickup` block (token + `cargo-pickup:{token}` payload) when ready for pickup."
                     },
                     "response": []
+                },
+                {
+                    "name": "Cancel Order",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "const json = pm.response.json();",
+                                    "pm.test(\"Order cancelled\", function () {",
+                                    "  pm.expect(json.data.status).to.eql(\"cancelled\");",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Accept-Language",
+                                "value": "{{locale}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/v1/auth/1688/orders/{{order_id}}/cancel",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "v1",
+                                "auth",
+                                "1688",
+                                "orders",
+                                "{{order_id}}",
+                                "cancel"
+                            ]
+                        },
+                        "description": "Cancels an order while its status is `paid` (Order Created):\n1. If `payment_status` is `requested`, automatically calls `POST /v1/orders/{elimOrderId}/cancel-payment-request` on Elim first.\n2. Calls `POST /v1/purchasing/orders/{elimOrderId}/cancel` on Elim (for non-demo Taobao/1688 orders).\n3. If the customer had already paid (`paid` / `requested` / `approved`), automatically refunds the customer TJS wallet and sets `payment_status` = `refunded`.\n4. Updates order `status` = `cancelled` and records an audit log entry."
+                    },
+                    "response": []
                 }
             ],
             "auth": {
@@ -5012,6 +5108,54 @@
                             ]
                         },
                         "description": "JD sync is not supported (local orders only)."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Cancel Order",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "const json = pm.response.json();",
+                                    "pm.test(\"Order cancelled\", function () {",
+                                    "  pm.expect(json.data.status).to.eql(\"cancelled\");",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Accept-Language",
+                                "value": "{{locale}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/v1/auth/jd/orders/{{order_id}}/cancel",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "v1",
+                                "auth",
+                                "jd",
+                                "orders",
+                                "{{order_id}}",
+                                "cancel"
+                            ]
+                        },
+                        "description": "Cancels an order while its status is `paid` (Order Created):\n1. If `payment_status` is `requested`, automatically calls `POST /v1/orders/{elimOrderId}/cancel-payment-request` on Elim first.\n2. Calls `POST /v1/purchasing/orders/{elimOrderId}/cancel` on Elim (for non-demo Taobao/1688 orders).\n3. If the customer had already paid (`paid` / `requested` / `approved`), automatically refunds the customer TJS wallet and sets `payment_status` = `refunded`.\n4. Updates order `status` = `cancelled` and records an audit log entry."
                     },
                     "response": []
                 }
@@ -5732,6 +5876,20 @@
                 },
                 {
                     "name": "Cancel Order",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "const json = pm.response.json();",
+                                    "pm.test(\"Order cancelled\", function () {",
+                                    "  pm.expect(json.data.status).to.eql(\"cancelled\");",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ],
                     "request": {
                         "method": "POST",
                         "header": [
@@ -5758,7 +5916,8 @@
                                 "{{order_id}}",
                                 "cancel"
                             ]
-                        }
+                        },
+                        "description": "Cancels an order while its status is `paid` (Order Created):\n1. If `payment_status` is `requested`, automatically calls `POST /v1/orders/{elimOrderId}/cancel-payment-request` on Elim first.\n2. Calls `POST /v1/purchasing/orders/{elimOrderId}/cancel` on Elim (for non-demo Taobao/1688 orders).\n3. If the customer had already paid (`paid` / `requested` / `approved`), automatically refunds the customer TJS wallet and sets `payment_status` = `refunded`.\n4. Updates order `status` = `cancelled` and records an audit log entry."
                     },
                     "response": []
                 },
@@ -6336,6 +6495,16 @@
         {
             "key": "elim_webhook_secret",
             "value": "whsec_test_secret"
+        },
+        {
+            "key": "parcel_code",
+            "value": "PCL-2026-00000001",
+            "type": "string"
+        },
+        {
+            "key": "parcel_qr_payload",
+            "value": "cargo-parcel:PCL-2026-00000001",
+            "type": "string"
         }
     ]
 }

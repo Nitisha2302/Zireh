@@ -89,7 +89,7 @@ class CustomerOrderLifecycleService
             ]);
         }
 
-        return $this->cancelAndRefund($order);
+        return $this->cancelAndRefund($order, null, $user);
     }
 
     public function cancelByStaff(Admin $admin, CustomerOrder $order): CustomerOrder
@@ -97,7 +97,7 @@ class CustomerOrderLifecycleService
         return $this->cancelAndRefund($order, $admin);
     }
 
-    public function cancelAndRefund(CustomerOrder $order, ?Admin $admin = null): CustomerOrder
+    public function cancelAndRefund(CustomerOrder $order, ?Admin $admin = null, ?User $customer = null): CustomerOrder
     {
         if (! $order->isCancellable()) {
             throw ValidationException::withMessages([
@@ -105,7 +105,7 @@ class CustomerOrderLifecycleService
             ]);
         }
 
-        if (! $order->is_demo_order) {
+        if (! $order->is_demo_order && $order->platform !== UserCartItem::PLATFORM_JD) {
             $this->assertHasElimOrderId($order);
 
             if ($order->payment_status === CustomerOrder::PAYMENT_STATUS_REQUESTED) {
@@ -133,7 +133,7 @@ class CustomerOrderLifecycleService
             }
         }
 
-        return DB::transaction(function () use ($order, $admin): CustomerOrder {
+        return DB::transaction(function () use ($order, $admin, $customer): CustomerOrder {
             $lockedOrder = CustomerOrder::query()
                 ->whereKey($order->id)
                 ->lockForUpdate()
@@ -145,39 +145,64 @@ class CustomerOrderLifecycleService
                 ]);
             }
 
-            $refundAmount = $lockedOrder->paymentAmountTjs();
+            $needsWalletRefund = $lockedOrder->wallet_transaction_id !== null
+                || in_array($lockedOrder->payment_status, [
+                    CustomerOrder::PAYMENT_STATUS_PAID,
+                    CustomerOrder::PAYMENT_STATUS_REQUESTED,
+                    CustomerOrder::PAYMENT_STATUS_APPROVED,
+                ], true);
 
-            if ($refundAmount <= 0) {
-                throw ValidationException::withMessages([
-                    'order' => [__('admin.order_refund_amount_invalid')],
+            $refundTransaction = null;
+            $refundAmount = 0.0;
+
+            if ($needsWalletRefund) {
+                $refundAmount = $lockedOrder->paymentAmountTjs();
+
+                if ($refundAmount <= 0) {
+                    throw ValidationException::withMessages([
+                        'order' => [__('admin.order_refund_amount_invalid')],
+                    ]);
+                }
+
+                $description = __('admin.order_cancellation_refund_description', [
+                    'id' => $lockedOrder->id,
+                    'elim' => $lockedOrder->elim_order_id ?: '#'.$lockedOrder->id,
+                    'method' => $lockedOrder->payment_method ?: 'unknown',
                 ]);
+
+                $refundTransaction = $this->walletService->creditOrderCancellationRefund(
+                    $lockedOrder,
+                    $refundAmount,
+                    $description,
+                    $admin
+                );
             }
 
-            $description = __('admin.order_cancellation_refund_description', [
-                'id' => $lockedOrder->id,
-                'elim' => $lockedOrder->elim_order_id ?: '#'.$lockedOrder->id,
-                'method' => $lockedOrder->payment_method ?: 'unknown',
-            ]);
-
-            $refundTransaction = $this->walletService->creditOrderCancellationRefund(
-                $lockedOrder,
-                $refundAmount,
-                $description,
-                $admin
-            );
+            $actorLabel = $customer !== null
+                ? sprintf(' by customer #%d (%s)', $customer->id, $customer->name ?? $customer->phone ?? '—')
+                : '';
 
             $this->auditLogger->withContext(
                 OrderStatusHistory::SOURCE_MANUAL,
                 $admin,
-                'Order cancelled and refunded',
-                ['refund_amount_tjs' => $refundAmount],
-                function () use ($lockedOrder, $refundTransaction, $admin): void {
+                ($needsWalletRefund ? 'Order cancelled and refunded' : 'Unpaid order cancelled').$actorLabel,
+                array_filter([
+                    'refund_amount_tjs' => $needsWalletRefund ? $refundAmount : null,
+                    'cancelled_by' => $customer !== null ? 'customer' : ($admin !== null ? 'staff' : null),
+                    'customer_id' => $customer?->id,
+                    'detached_shipment_id' => $lockedOrder->shipment_id,
+                ], fn ($value) => $value !== null),
+                function () use ($lockedOrder, $refundTransaction, $needsWalletRefund, $admin): void {
                     $lockedOrder->update([
                         'status' => OrderStatus::CODE_CANCELLED,
-                        'payment_status' => CustomerOrder::PAYMENT_STATUS_REFUNDED,
-                        'cancellation_refund_transaction_id' => $refundTransaction->id,
+                        'payment_status' => $needsWalletRefund
+                            ? CustomerOrder::PAYMENT_STATUS_REFUNDED
+                            : $lockedOrder->payment_status,
+                        'cancellation_refund_transaction_id' => $refundTransaction?->id,
                         'cancelled_by_admin_id' => $admin?->id,
                         'cancelled_at' => now(),
+                        // A cancelled order must not stay inside a shipment.
+                        'shipment_id' => null,
                     ]);
                 }
             );
@@ -682,9 +707,12 @@ class CustomerOrderLifecycleService
             $updates['parcel_tracking_id'] = trim($trackingNumbers[0]);
         }
 
-        // Automatic customer wallet refund when Elim cancels a paid order or refunds payment
+        // Automatic customer wallet refund when Elim cancels/closes a paid order or refunds payment
+        $elimCancelled = $elimStatus !== null
+            && OrderStatus::mapFromElimStatus($elimStatus) === OrderStatus::CODE_CANCELLED;
+
         if (
-            ($paymentStatus === CustomerOrder::PAYMENT_STATUS_REFUNDED || $elimStatus === 'cancelled')
+            ($paymentStatus === CustomerOrder::PAYMENT_STATUS_REFUNDED || $elimCancelled)
             && $lockedOrder->cancellation_refund_transaction_id === null
             && (
                 $lockedOrder->wallet_transaction_id !== null

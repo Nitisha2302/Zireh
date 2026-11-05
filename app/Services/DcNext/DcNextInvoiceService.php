@@ -4,20 +4,39 @@ namespace App\Services\DcNext;
 
 use App\Support\DcNext\DcNextConfig;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use RuntimeException;
 
 class DcNextInvoiceService
 {
+    public function __construct(
+        private readonly DcNextConfig $config,
+    ) {}
+
+    /**
+     * Verify a DC NEXT callback signature: md5(merchant + order_id + secret).
+     */
+    public function verifySign(string $orderId, string $sign): bool
+    {
+        $merchant = $this->config->merchant();
+        $secret = $this->config->secret();
+        $sign = strtolower(trim($sign));
+
+        if ($merchant === '' || $secret === '' || $orderId === '' || $sign === '') {
+            return false;
+        }
+
+        return hash_equals(self::signCreateOrCheck($merchant, $orderId, $secret), $sign);
+    }
+
     public function createInvoice(
         string $orderId,
         float $amountTjs,
         string $phone,
         string $description,
     ): array {
-        $merchant = config('dc_next.merchant');
-        $secret = config('dc_next.secret');
-        $callbackUrl = config('dc_next.callback_url');
+        $merchant = $this->config->merchant();
+        $secret = $this->config->secret();
+        $callbackUrl = $this->config->callbackUrl();
 
         if ($merchant === '' || $secret === '') {
             throw new RuntimeException('DC NEXT is not configured.');
@@ -26,9 +45,9 @@ class DcNextInvoiceService
         $payload = [
             'merchant' => $merchant,
             'order_id' => $orderId,
-            'currency' => config('dc_next.default_currency', 'TJS'),
+            'currency' => $this->config->currency(),
             'amount' => self::toMinorUnits($amountTjs),
-            'exp_time' => config('dc_next.invoice_exp_minutes', 40),
+            'exp_time' => $this->config->expMinutes(),
             'phone' => self::normalizePhone($phone),
             'description' => mb_substr($description, 0, 150),
             'callback_url' => $callbackUrl,
@@ -36,10 +55,11 @@ class DcNextInvoiceService
         ];
 
         $response = Http::acceptJson()
-            ->post(config('dc_next.create_url'), $payload);
+            ->timeout($this->config->timeout())
+            ->post($this->config->createUrl(), $payload);
 
         $body = $response->json();
-        if (!$response->successful() || ($body['status'] ?? '') !== 'success') {
+        if (! $response->successful() || ($body['status'] ?? '') !== 'success') {
             $message = $body['message'] ?? $response->body();
             throw new RuntimeException('DC NEXT create failed: '.$message);
         }
@@ -55,8 +75,8 @@ class DcNextInvoiceService
 
     public function checkInvoice(string $orderId, string $invoiceId): array
     {
-        $merchant = config('dc_next.merchant');
-        $secret = config('dc_next.secret');
+        $merchant = $this->config->merchant();
+        $secret = $this->config->secret();
 
         $payload = [
             'merchant' => $merchant,
@@ -66,7 +86,8 @@ class DcNextInvoiceService
         ];
 
         $response = Http::acceptJson()
-            ->post(config('dc_next.check_url'), $payload);
+            ->timeout($this->config->timeout())
+            ->post($this->config->checkUrl(), $payload);
 
         return $response->json() ?? [];
     }
